@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Name Your Radios
+GenericName=Name Your Radios
+Comment=Change the title bars of certain apps to something other then Left Radio and Right Radio
+Exec=lxterminal --geometry=90x30 -t "Update Apps/OS" -e "/usr/local/bin/name-radios.sh"
+Icon=/usr/share/raspberrypi-artwork/raspitr.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Comment[en_US]=Name Your Radios Something
