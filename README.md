@@ -43,7 +43,7 @@ Alternatively, you can install these utilities manually as follows:
 		
 ## check piano script
 
-`check-piano.sh` is called by [initialize-pi.sh](#initialize-pi.sh) whenever the Pi starts.  It reads the position of the piano switches on the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board and launches a script based on which switch levers are up or down.
+`check-piano.sh` is called by [initialize-pi.sh](#initialize-pi-script) whenever the Pi starts.  It reads the position of the piano switches on the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board and launches a script based on which switch levers are up or down.
 
 The script that `check-piano.sh` calls must be in the user's home directory, be marked as executable, and be named `pianoX.sh` where X is one of these:
 
@@ -59,7 +59,7 @@ The script that `check-piano.sh` calls must be in the user's home directory, be 
 
 	@reboot sleep 5 && /usr/local/bin/initialize-pi.sh
 
-The script checks for the presence of a file called `DO_NOT_DELETE_THIS_FILE` in the user's home directory.  If the file is present, the script runs [check-piano.sh](#check-piano.sh) and then exits.
+The script checks for the presence of a file called `DO_NOT_DELETE_THIS_FILE` in the user's home directory.  If the file is present, the script runs [check-piano.sh](#check-piano-script) and then exits.
 
 If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the script will reset various configuration files for ham radio applications to default values and reset the VNC Server and SSH keys.
 
@@ -73,11 +73,11 @@ If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the sc
 
 ## test piano script
 
-`test-piano.sh` allows you to test the operation of your `pianoX.sh` script by simulating what the [check-piano.sh](#check-piano.sh) does when the Pi starts.  Set the piano switches as desired, then open a Terminal and run `test-piano.sh`.  The script will tell you which script will run based on which switch levers are down.  It will not actually run the `pianoX.sh` script.
+`test-piano.sh` allows you to test the operation of your `pianoX.sh` script by simulating what the [check-piano.sh](#check-piano-script) does when the Pi starts.  Set the piano switches as desired, then open a Terminal and run `test-piano.sh`.  The script will tell you which script will run based on which switch levers are down.  It will not actually run the `pianoX.sh` script.
 
 ## tnc left tnc right configuration files
 
-`tnc-left.conf` and `tnc-right.conf` configuration files are required by [/usr/local/bin/tnc.sh](#tnc.sh) script.  They contain the configuration that `tnc.sh` needs in order to operate with Direwolf as an APRS Digitpeater, iGate, Digipeater+iGate, or ax25 TNC.
+`tnc-left.conf` and `tnc-right.conf` configuration files are required by [/usr/local/bin/tnc.sh](#tnc-script) script.  They contain the configuration that `tnc.sh` needs in order to operate with Direwolf as an APRS Digitpeater, iGate, Digipeater+iGate, or ax25 TNC.
 
 `tnc.sh` will look for `tnc.conf` in the user's home folder.  To use `tnc.sh`, you must make a symlink to the appropriate tnc configuration file for the left or right radio. 
  
@@ -96,7 +96,7 @@ __IMPORTANT__: You must edit tnc-{left|right}.conf with your own settings.
 
 ## tnc script
 
-`tnc.sh` launches Direwolf, and optionally other related apps, in different modes.  The script will look for [tnc.conf](#tnc-left.conf-tnc-right.conf) in the user's home directory.  The script will set up Direwolf to operate in any one of these modes TNC: ax25, APRS Digipeater, APRS iGate, APRS Digipeater+iGate.  It can also launch pat, ardop, pat+ax25, or pat+ardop provided those apps are also installed and configured.
+`tnc.sh` launches Direwolf, and optionally other related apps, in different modes.  The script will look for [tnc.conf](#tnc-left-tnc-right-configuration-files) in the user's home directory.  The script will set up Direwolf to operate in any one of these modes TNC: ax25, APRS Digipeater, APRS iGate, APRS Digipeater+iGate.  It can also launch pat, ardop, pat+ax25, or pat+ardop provided those apps are also installed and configured.
 
 ## trim scripts
 
@@ -116,7 +116,7 @@ To change it to trim log entries older than 2 weeks ago rather than yesterday, t
 
 ## watchdog tnc script
 
-`watchdog-tnc.sh` runs via cron.  It launches tnc.sh and restarts it automatically if it stops for some reason.  It is intended for use when [tnc.sh](#tnc.sh) is run in one of the APRS modes.  The script takes one argument, which it passes on to tnc.sh as the "mode" argument.  These are examples of entries you could use in crontab (only ONE can be used at one time):
+`watchdog-tnc.sh` runs via cron.  It launches tnc.sh and restarts it automatically if it stops for some reason.  It is intended for use when [tnc.sh](#tnc-script) is run in one of the APRS modes.  The script takes one argument, which it passes on to tnc.sh as the "mode" argument.  These are examples of entries you could use in crontab (only ONE can be used at one time):
 
 	# This one digipeats only - no internet
 	*/2 * * * * /usr/local/bin/watchdog-tnc.sh digi >/dev/null 2>&1
