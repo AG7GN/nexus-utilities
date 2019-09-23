@@ -15,7 +15,7 @@
 #						to keep it running.
 #						
 #===========================================================================================
-VERSION="3.0.2"
+VERSION="3.1.0"
 
 # BEGINNING OF USER CONFIGURATION SECTION ########################################################
 
@@ -24,6 +24,11 @@ TNC_CONFIG_FILE="$HOME/tnc.conf"
 if [ -s "$TNC_CONFIG_FILE" ]
 then
 	source $HOME/tnc.conf
+	if [[ $MYCALL =~ "N0ONE" ]]
+	then
+	   echo >&2 "Error: You must set the MYCALL variable in $TNC_CONFIG_FILE."
+   	exit 1
+	fi	
 else
    echo >&2 "Error: Configuration file $TNC_CONFIG_FILE is missing or empty."
    exit 1
