@@ -2,23 +2,23 @@
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.  Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
 
-[check-piano.sh](#check\-piano.sh)
+[check-piano.sh](#check-piano)
 
-[initialize-pi.sh](#initialize\-pi.sh)
+[initialize-pi.sh](#initialize-pi)
 
-[name-radios.sh](#name\-radios.sh)
+[name-radios.sh](#name-radios)
 
-[patmail.sh](#patmail.sh)
+[patmail.sh](#patmail)
 
-[tnc-left.conf tnc-right.conf](#tnc\-left.conf-tnc\-right.conf)
+[tnc-left.conf tnc-right.conf](#tnc-left-tnc-right)
 
-[test-piano.sh](#test\-piano.sh)
+[test-piano.sh](#test-piano)
 
 [tnc.sh](#tnc.sh)
 
 [trim scripts](#trim-scripts)
 
-[watchdog-tnc.sh](#watchdog\-tnc.sh)
+[watchdog-tnc.sh](#watchdog-tnc)
 
 ## Installation
 
@@ -41,7 +41,7 @@ Alternatively, you can install these utilities manually as follows:
 		cp hampi-utilities/hampi-utilities.version /usr/local/src/hampi/
 		rm -rf hampi-utilities
 		
-## check-piano.sh
+## check piano
 
 This script is called by [initialize-pi.sh](#initialize-pi.sh) whenever the Pi starts.  It reads the position of the piano switches on the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board and launches a script based on which switch levers are up or down.
 
@@ -53,7 +53,7 @@ The script that `check-piano.sh` calls must be in the user's home directory, be 
  
  If a pianoX.sh script is not present, no action is taken and the pi boots normally.
  
-## initialize-pi.sh
+## initialize pi
 
 This script is run whenever the Pi starts.  It runs via this line in user pi's crontab:
 
@@ -63,19 +63,19 @@ The script checks for the presence of a file called `DO_NOT_DELETE_THIS_FILE` in
 
 If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the script will reset various configuration files for ham radio applications to default values and reset the VNC Server and SSH keys.
 
-## name-radios.sh
+## name radios
 
 This script allows the user to change the title bar of Fldigi suite and Direwolf applications so they say something other than "Left Radio" or "Right Radio".  The associated menu item file is `nameradios.desktop`.
 
-## patmail.sh
+## patmail
 
 This script allows the user to run [pat](https://getpat.io) within scripts rather than interactively.  Obviously, pat must be installed for it to work.  You can install Pat via __Raspberry > Hamradio > Update Pi and Ham Apps__. 
 
-## test-piano.sh
+## test piano
 
 This script allows you to test the operation of your `pianoX.sh` script by simulating what the [check-piano.sh](#check-piano.sh) does when the Pi starts.  Set the piano switches as desired, then open a Terminal and run `test-piano.sh`.  The script will tell you which script will run based on which switch levers are down.  It will not actually run the `pianoX.sh` script.
 
-## tnc-left.conf tnc-right.conf
+## tnc left tnc right
 
 These configuration files are required by [/usr/local/bin/tnc.sh](#tnc.sh) script.  They contain the configuration that `tnc.sh` needs in order to operate with Direwolf as an APRS Digitpeater, iGate, Digipeater+iGate, or ax25 TNC.
 
@@ -94,7 +94,7 @@ These configuration files are required by [/usr/local/bin/tnc.sh](#tnc.sh) scrip
 __IMPORTANT__: You must edit tnc-{left|right}.conf with your own settings.
 
 
-## tnc.sh
+## tnc
 
 This is a script that launches Direwolf, and optionally other related apps, in different modes.  The script will look for [tnc.conf](#tnc-left.conf-tnc-right.conf) in the user's home directory.  The script will set up Direwolf to operate in any one of these modes TNC: ax25, APRS Digipeater, APRS iGate, APRS Digipeater+iGate.  It can also launch pat, ardop, pat+ax25, or pat+ardop provided those apps are also installed and configured.
 
@@ -114,7 +114,7 @@ To change it to trim log entries older than 2 weeks ago rather than yesterday, t
 
 	Exec=sh -c '/usr/local/bin/trim-fldigi-log.sh "2 weeks ago";PULSE_SINK=fepi-playback PULSE_SOURCE=fepi-capture fldigi --config-dir /home/pi/.fldigi-left -title "Fldigi (Left Radio)" --flmsg-dir /home/pi/.nbems-left'	
 
-## watchdog-tnc.sh
+## watchdog tnc
 
 This script is run via cron.  It launches tnc.sh and restarts it automatically if it stops for some reason.  It is intended for use when [tnc.sh](#tnc.sh) is run in one of the APRS modes.  The script takes one argument, which it passes on to tnc.sh as the "mode" argument.  These are examples of entries you could use in crontab (only ONE can be used at one time):
 
