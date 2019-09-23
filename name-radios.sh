@@ -2,8 +2,8 @@
 
 VERSION="1.0.3"
 
-# This script allows the user to change the title bar of Fldigi suite and Direwolf applications so they
-# say something other than "Left Radio" or "Right Radio"
+# This script allows the user to change the title bar of Fldigi suite and Direwolf
+# applications so they say something other than "Left Radio" or "Right Radio"
 
 TITLE="Left/Right Radio Name Editor $VERSION"
 CONFIG_FILE="$HOME/radionames.conf"

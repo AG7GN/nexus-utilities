@@ -15,59 +15,9 @@
 #						to keep it running.
 #						
 #===========================================================================================
-VERSION="3.1.2"
-
-# BEGINNING OF USER CONFIGURATION SECTION ########################################################
+VERSION="3.1.3"
 
 TNC_CONFIG_FILE="$HOME/tnc.conf"
-
-if [ -s "$TNC_CONFIG_FILE" ]
-then
-	source $HOME/tnc.conf
-	if [[ $MYCALL =~ N0CALL || $MYCALL =~ N0ONE ]]
-	then
-	   echo >&2 "Error: You must set the MYCALL variable in $TNC_CONFIG_FILE."
-   	exit 1
-	fi	
-else
-   echo >&2 "Error: Configuration file $TNC_CONFIG_FILE is missing or empty."
-   exit 1
-fi
-
-# END OF USER CONFIGURATION SECTION ########################################################
-
-# Initializations ##########################################################################
-
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
-
-LOGFILE="/tmp/tnc.log"
-SCREENCONFIG="/tmp/tnc.sh.screenrc"
-ACTION="${1,,}" # start|stop
-DMODE="${2,,}" # direwolf mode: digi,igate,digi+igate,ax25
-SPEED="${3,,}" # speed.  No value implies 1200. Otherwise, allowed values are 300 or 9600.
-AUDIO_CHANNELS="$4"
-[[ $SPEED == "" ]] && SPEED="1200"
-[[ $AUDIO_CHANNELS == "" ]] && AUDIO_CHANNELS="1"
-declare -a ORDERS
-declare -A CMDS
-CMDS[direwolf]="$(which direwolf) -a $AUDIOSTATS -t $COLORS -r $ARATE"
-cat > $SCREENCONFIG << EOF
-logfile $LOGFILE
-logfile flush 1
-logtstamp on
-logtstamp after 60
-log on
-logtstamp string "[ %n:%t ] ---- TIMESTAMP ---- %Y-%m-%d %c:%s ---- Press Ctrl-C to Quit\012"
-EOF
-
-# Functions ################################################################################
-
-function ctrl_c () {
-	# Do cleanup if Ctrl-C is pressed.  Stop all the screens.
-	$0 stop
-	exit 0
-}
 
 function Usage() {
   	echo 
@@ -130,6 +80,57 @@ function Usage() {
    echo
    exit 1
 }
+
+# BEGINNING OF USER CONFIGURATION SECTION ########################################################
+
+if [ -s "$TNC_CONFIG_FILE" ]
+then
+	source $HOME/tnc.conf
+	if [[ $MYCALL =~ N0CALL || $MYCALL =~ N0ONE ]]
+	then
+	   echo >&2 "Error: You must set the MYCALL variable in $TNC_CONFIG_FILE."
+   	exit 1
+	fi	
+else
+   echo >&2 "Error: Configuration file $TNC_CONFIG_FILE is missing or empty."
+   echo Usage
+fi
+
+# END OF USER CONFIGURATION SECTION ########################################################
+
+# Initializations ##########################################################################
+
+# trap ctrl-c and call ctrl_c()
+trap ctrl_c INT
+
+LOGFILE="/tmp/tnc.log"
+SCREENCONFIG="/tmp/tnc.sh.screenrc"
+ACTION="${1,,}" # start|stop
+DMODE="${2,,}" # direwolf mode: digi,igate,digi+igate,ax25
+SPEED="${3,,}" # speed.  No value implies 1200. Otherwise, allowed values are 300 or 9600.
+AUDIO_CHANNELS="$4"
+[[ $SPEED == "" ]] && SPEED="1200"
+[[ $AUDIO_CHANNELS == "" ]] && AUDIO_CHANNELS="1"
+declare -a ORDERS
+declare -A CMDS
+CMDS[direwolf]="$(which direwolf) -a $AUDIOSTATS -t $COLORS -r $ARATE"
+cat > $SCREENCONFIG << EOF
+logfile $LOGFILE
+logfile flush 1
+logtstamp on
+logtstamp after 60
+log on
+logtstamp string "[ %n:%t ] ---- TIMESTAMP ---- %Y-%m-%d %c:%s ---- Press Ctrl-C to Quit\012"
+EOF
+
+# Functions ################################################################################
+
+function ctrl_c () {
+	# Do cleanup if Ctrl-C is pressed.  Stop all the screens.
+	$0 stop
+	exit 0
+}
+
 
 function checkApp () {
 	APP="$(which $1)"	
