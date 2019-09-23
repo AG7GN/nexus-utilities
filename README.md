@@ -1,6 +1,7 @@
 # Hampi Utilities
 
-This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.  Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
+This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
+Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
 
 [check-piano.sh](#check-piano-script)
 
@@ -61,11 +62,11 @@ The script that `check-piano.sh` calls must be in the user's home directory, be 
 
 The script checks for the presence of a file called `DO_NOT_DELETE_THIS_FILE` in the user's home directory.  If the file is present, the script runs [check-piano.sh](#check-piano-script) and then exits.
 
-If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the script will reset various configuration files for ham radio applications to default values and reset the VNC Server and SSH keys.
+If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the script will reset various configuration files for ham radio applications to default values and reset the VNC Server and SSH keys.  It will then create the `DO_NOT_DELETE_THIS_FILE` file in the user's home directory.
 
 ## name radios script
 
-`name-radios.sh` allows the user to change the title bar of Fldigi suite and Direwolf applications so they say something other than "Left Radio" or "Right Radio".  The associated menu item file is `nameradios.desktop`.
+`name-radios.sh` allows you to change the title bar of Fldigi suite and Direwolf applications so they say something other than "Left Radio" or "Right Radio".  The associated menu entry file is `/usr/local/share/applications/nameradios.desktop`.
 
 ## patmail script
 
@@ -91,12 +92,12 @@ If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the sc
 		cd ~
 		ln -s tnc-right.conf tnc.conf
 		
-__IMPORTANT__: You must edit tnc-{left|right}.conf with your own settings.
+__IMPORTANT__: You must edit tnc-{left|right}.conf with your own settings before running `tnc.sh` for the first time.
 
 
 ## tnc script
 
-`tnc.sh` launches Direwolf, and optionally other related apps, in different modes.  The script will look for [tnc.conf](#tnc-left-tnc-right-configuration-files) in the user's home directory.  The script will set up Direwolf to operate in any one of these modes TNC: ax25, APRS Digipeater, APRS iGate, APRS Digipeater+iGate.  It can also launch pat, ardop, pat+ax25, or pat+ardop provided those apps are also installed and configured.
+`tnc.sh` launches Direwolf, and optionally other related apps, in different modes.  The script will look for [tnc.conf](#tnc-left-tnc-right-configuration-files) in the user's home directory.  The script will set up and run Direwolf to operate in any one of these modes TNC: ax25, APRS Digipeater, APRS iGate, APRS Digipeater+iGate.  It can also launch pat, ardop, pat+ax25, or pat+ardop provided those apps are also installed and configured.
 
 ## trim scripts
 
@@ -116,7 +117,7 @@ To change it to trim log entries older than 2 weeks ago rather than yesterday, t
 
 ## watchdog tnc script
 
-`watchdog-tnc.sh` runs via cron.  It launches tnc.sh and restarts it automatically if it stops for some reason.  It is intended for use when [tnc.sh](#tnc-script) is run in one of the APRS modes.  The script takes one argument, which it passes on to tnc.sh as the "mode" argument.  These are examples of entries you could use in crontab (only ONE can be used at one time):
+`watchdog-tnc.sh` runs via cron.  It launches [tnc.sh](#tnc-script) and restarts it automatically if it stops for some reason.  It is intended for use when `tnc.sh` is run in one of the APRS modes.  The script takes one argument, which it passes to `tnc.sh` as the "mode" argument.  These are examples of entries you could use in crontab (only ONE can be used at one time):
 
 	# This one digipeats only - no internet
 	*/2 * * * * /usr/local/bin/watchdog-tnc.sh digi >/dev/null 2>&1
