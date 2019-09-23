@@ -2,23 +2,23 @@
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.  Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
 
-[check-piano.sh](#check-piano.sh)
+[check-piano.sh](#check\-piano.sh)
 
-[initialize-pi.sh](#initialize-pi.sh)
+[initialize-pi.sh](#initialize\-pi.sh)
 
-[name-radios.sh](#name-radios.sh)
+[name-radios.sh](#name\-radios.sh)
 
-[patmail.sh](#patmmail.sh)
+[patmail.sh](#patmail.sh)
 
-[tnc-left.conf tnc-right.conf](#tnc-left.conf-tnc-right.conf)
+[tnc-left.conf tnc-right.conf](#tnc\-left.conf-tnc\-right.conf)
 
-[test-piano.sh](#test-piano.sh)
+[test-piano.sh](#test\-piano.sh)
 
 [tnc.sh](#tnc.sh)
 
 [trim scripts](#trim-scripts)
 
-[watchdog-tnc.sh](#watchdog-tnc.sh)
+[watchdog-tnc.sh](#watchdog\-tnc.sh)
 
 ## Installation
 
