@@ -1,5 +1,7 @@
 # Hampi Utilities
 
+VERSION 20190923
+
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
 
@@ -80,6 +82,8 @@ If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the sc
 
 `tnc-left.conf` and `tnc-right.conf` configuration files are required by [/usr/local/bin/tnc.sh](#tnc-script) script.  They contain the configuration that `tnc.sh` needs in order to operate with Direwolf as an APRS Digitpeater, iGate, Digipeater+iGate, or ax25 TNC.
 
+__IMPORTANT__: You must edit `tnc-{left|right}.conf` with your own settings before running `tnc.sh` for the first time.
+
 `tnc.sh` will look for `tnc.conf` in the user's home folder.  To use `tnc.sh`, you must make a symlink to the appropriate tnc configuration file for the left or right radio. 
  
 - For the left radio:
@@ -91,9 +95,6 @@ If `DO_NOT_DELETE_THIS_FILE` is not present in the user's home directory, the sc
 
 		cd ~
 		ln -s tnc-right.conf tnc.conf
-		
-__IMPORTANT__: You must edit tnc-{left|right}.conf with your own settings before running `tnc.sh` for the first time.
-
 
 ## tnc script
 
