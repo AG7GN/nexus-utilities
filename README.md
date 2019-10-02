@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 20190923
+VERSION 20191002
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
@@ -22,6 +22,8 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 [trim scripts](#trim-scripts)
 
 [watchdog-tnc.sh](#watchdog-tnc-script)
+
+[shutdown_button.py](#shutdown-button-script)
 
 ## Installation
 
@@ -128,4 +130,31 @@ To change it to trim log entries older than 2 weeks ago rather than yesterday, t
 
 	# This one igates only
 	*/2 * * * * /usr/local/bin/watchdog-tnc.sh igate >/dev/null 2>&1
+
+## Shutdown Button Script
+
+`shutdown_button.py` monitors the shutdown button found on the DigiLink REV DS and [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) boards.  It reboots the Pi if the button is pressed more than 2 but less than 5 seconds, or shuts down the Pi if the button is pressed for more than 5 seconds.
+
+Your Hampi image already has the systemd service file for the shutdown script installed and enabled.  No further action is required to enable it, but __for documentation purposes only__, here's how to enable the service:
+
+- As sudo, create a file called `/etc/systemd/system/shutdown_button.service` with the following text:
+
+		[Unit]
+		Description=GPIO shutdown button
+		After=network.target
+
+		[Service]
+		Type=simple
+		Restart=always
+		RestartSec=1
+		User=root
+		ExecStart=/usr/bin/python3 /usr/local/bin/shutdown_button.py
+
+		[Install]
+		WantedBy=multi-user.target
+
+- Run these commands in a Terminal to enable the service:
+
+		sudo systemctl enable shutdown_button.service
+		sudo systemctl start shutdown_button.service
 
