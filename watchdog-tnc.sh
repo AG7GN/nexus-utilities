@@ -11,13 +11,13 @@
 #  CLI mode is suited for say a Raspberry Pi running the Jessie LITE version
 #      where it will run from the CLI w/o requiring Xwindows - uses screen
 
-VERSION="2.1"
+VERSION="2.2.1"
 
 RUNMODE=AUTO
 
 #Where will logs go - needs to be writable by non-root users
 LOGFILE=/tmp/tnc.log
-TNC_SCRIPT="$(command -v tnc.sh)"
+TNC_SCRIPT=/usr/local/bin/tnc.sh
 
 #-------------------------------------
 # Main functions of the script
@@ -83,9 +83,10 @@ function GUI {
 # including PATH=/usr/bin:/bin.
 #
 export PATH=/usr/local/bin:$PATH
+export XDG_RUNTIME_DIR=/run/user/`id -u`
 
 # Check log file size.  Delete it if it's too big
-find /tmp -type f -name tnc.log -size +100k -delete 
+find /tmp -type f -name tnc.log -size +100k -delete  2>/dev/null
 
 #Log the start of the script run and re-run
 #date >> $LOGFILE
@@ -102,9 +103,9 @@ case "${1,,}" in
    	SCR="$($SCREEN -list | grep direwolf | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
    	if [[ $SCR != "" ]]
    	then
-      	pgrep direwolf 2>&1 >/dev/null && exit 0 # Direwolf already running
+      	pgrep direwolf >/dev/null 2>&1 && exit 0 # Direwolf already running
    	fi
-		$TNC_SCRIPT stop 2>&1 >/dev/null
+		$TNC_SCRIPT stop >/dev/null 2>&1
    	CMD="$TNC_SCRIPT start ${1,,}"
 		pkill -f "(terminal|x-term).*$TNC_SCRIPT"
 		if [ $RUNMODE == "AUTO" ]
@@ -127,4 +128,5 @@ case "${1,,}" in
 	*)
    	;;
 esac
+
 
