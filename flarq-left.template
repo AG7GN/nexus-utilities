@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Flarq (_LEFT_RADIO_)
+GenericName=Fldigi ARQ Utility
+Comment=Amateur Radio Data Transfer with ARQ
+Exec=flarq -ti "Flarq (_LEFT_RADIO_) --arq-server-port 7322"
+Icon=flarq
+Terminal=false
+Type=Application
+Categories=HamRadio;

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Exec=lxterminal --geometry=120x20 -t "DireWolf TNC (_RIGHT_RADIO_)" -e "/usr/local/bin/dw-right.sh"
+Name=Dire Wolf TNC (_RIGHT_RADIO_)
+Comment=APRS Soundcard TNC
+Icon=/usr/share/direwolf/pixmaps/dw-icon.png
+Path=/home/pi
+#Terminal=true
+Categories=HamRadio;
+Keywords=Ham Radio;APRS;Soundcard TNC;KISS;AGWPE;AX.25

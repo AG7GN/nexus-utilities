@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Fldigi (_RIGHT_RADIO_)
+GenericName=Amateur Radio Digital Modem
+Comment=Amateur Radio Sound Card Communications
+Exec=sh -c '/usr/local/bin/trim-fldigi-log.sh "yesterday";PULSE_SINK=fepi-playback PULSE_SOURCE=fepi-capture fldigi --config-dir /home/pi/.fldigi-right -title "Fldigi (_RIGHT_RADIO_)" --flmsg-dir /home/pi/.nbems-right'
+Icon=fldigi
+Terminal=false
+Type=Application
+Categories=HamRadio;

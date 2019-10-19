@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Flmsg (_RIGHT_RADIO_)
+GenericName=Amateur Radio Message Generator
+Comment=Amateur Radio Communications
+Exec=sh -c '/usr/local/bin/trim-flmsg-log.sh "1 month ago";VER="$(flmsg --version | cut -d" " -f2)";flmsg --flmsg-dir /home/pi/.nbems-right --server-port 8090 -ti "Flmsg $VER (_RIGHT_RADIO_)"'
+Icon=flmsg
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Name[en_US]=Flmsg (_RIGHT_RADIO_)
+Path=/home/pi

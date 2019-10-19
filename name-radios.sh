@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.3"
+VERSION="1.0.4"
 
 # This script allows the user to change the title bar of Fldigi suite and Direwolf
 # applications so they say something other than "Left Radio" or "Right Radio"
@@ -41,7 +41,7 @@ fi
 
 ANS=""
 ANS="$(yad --title="$TITLE" \
-   --text="<b><big><big>Auto-HotSpot Configuration Parameters</big></big>\n\n</b>Status: <b><span color='blue'>$STATUS</span>\n\n \
+   --text="<b><big><big>Name Your Radios</big></big>\n\n</b>Status: <b><span color='blue'>$STATUS</span>\n\n \
 $MESSAGE</b>\n" \
    --item-separator="!" \
    --center \
