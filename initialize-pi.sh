@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.14"
+VERSION="1.14.1"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -22,7 +22,7 @@ INIT_DONE_FILE="$DIR/DO_NOT_DELETE_THIS_FILE"
 # check the status of the piano switch.
 if [ -e "$INIT_DONE_FILE" ] && [ -f "$INIT_DONE_FILE" ] && [ -s "$INIT_DONE_FILE" ]
 then
-   [ -s /usr/local/bin/check-piano.sh ] && /usr/local/bin/check-piano.sh
+#   [ -s /usr/local/bin/check-piano.sh ] && /usr/local/bin/check-piano.sh
    exit 0
 fi
 
