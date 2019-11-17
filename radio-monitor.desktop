@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Radio Monitor
+GenericName=Radio Monitor
+Comment=Shows your radio(s) TX and RX state
+Exec=/usr/local/bin/radio-monitor.py
+Icon=/usr/share/raspberrypi-artwork/raspitr.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Comment[en_US]=Radio Monitor
