@@ -1,0 +1,89 @@
+#!/bin/bash
+
+VERSION="1.2.0"
+
+# This an example pianoX.sh script.
+
+# piano scripts are user defined and they run automatically at startup 
+# depending on the position of the levers of the piano switch 
+# mounted on the Nexus board.
+
+# For example, if you want to run a particular script when the 
+# piano switch levers 1 and 4 are Up and 2 and 3 are down, name youor script
+# nexus23.sh.  Nexus scripts must be in your home directory and must be
+# executable.  You can make your script executable by running this command:
+
+# chmod +x <script name>
+
+# For example:
+
+# chmod +x piano1234.sh
+
+#===========================================================================
+# This example script will change the call sign and other parameters
+# in the Fldigi and Flmsg apps.  It makes these
+# changes for both the left and right radios.  Edit the variables below to
+# make your desired changes.
+
+OP_CALL="N0ONE"
+OP_NAME="John Doe"
+STATION_CALL="N0ONE"
+TEL="360-555-1212"
+ADDR="123 Main St"
+CITY="Anytown"
+EMAIL="n0one@example.com"
+QTH="Anytown"
+LOC="CN88ss"
+#==========================================================================
+
+killall -q flmsg || true
+DIRS=".nbems .nbems-left .nbems-right"
+for D in $DIRS
+do
+	if [ -f $HOME/$D/FLMSG.prefs ]
+	then
+		sed -i -e "s/^mycall:.*/mycall:$OP_CALL/" \
+				 -e "s/^mytel:.*/mytel:$TEL/" \
+				 -e "s/^myname:.*/myname:$OP_NAME/" \
+				 -e "s/^myaddr:.*/myaddr:$ADDR/" \
+				 -e "s/^mycity:.*/mycity:$CITY/" \
+				 -e "s/^myemail:.*/myemail:$EMAIL/" $HOME/$D/FLMSG.prefs
+	fi
+done
+
+killall -q fldigi || true
+DIRS=".fldigi .fldigi-left .fldigi-right"
+for D in $DIRS
+do
+	if [ -f $HOME/$D/fldigi_def.xml ]
+	then
+		sed -i -e "s/<MYCALL>.*<\/MYCALL>/<MYCALL>$STATION_CALL<\/MYCALL>/" \
+		       -e "s/<MYQTH>.*<\/MYQTH>/<MYQTH>$QTH<\/MYQTH>/" \
+		       -e "s/<MYNAME>.*<\/MYNAME>/<MYNAME>$OP_NAME<\/MYNAME>/" \
+		       -e "s/<MYLOC>.*<\/MYLOC>/<MYLOC>$LOC<\/MYLOC>/" \
+		       -e "s/<OPERCALL>.*<\/OPERCALL>/<OPERCALL>$OP_CALL<\/OPERCALL>/" $HOME/$D/fldigi_def.xml
+	fi
+done
+
+#==========================================================================
+# Another thing you can do with a pianoX.sh script is to manipulate the
+# desktop wallpaper, background and foreground, etc.
+# Those settings are stored in $HOME/.config/pcmanfm/LXDE-pi. You're on
+# your own for creating that script.
+#
+
+#==========================================================================
+# Another thing you can do with a pianoX.sh script is to automatically
+# start an application.  Anything that you can start from the menu,
+# you can autostart at boot time.  You can start any application that is
+# called from a desktop file in /usr/share/applications or 
+# /usr/local/share/applications.  Start applications by launching the desktop
+# files using gtk-launch.  For example, these commands will autostart
+# fldigi on the left radio and fldigi on the right radio:
+
+gtk-launch fldigi-left.desktop
+gtk-launch fldigi-right.desktop
+
+
+
+
