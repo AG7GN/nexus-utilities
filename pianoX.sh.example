@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.2.0"
+VERSION="1.2.1"
 
 # This an example pianoX.sh script.
 
@@ -20,7 +20,7 @@ VERSION="1.2.0"
 # chmod +x piano1234.sh
 
 #===========================================================================
-# This example script will change the call sign and other parameters
+# EXAMPLE 1: This script will change the call sign and other parameters
 # in the Fldigi and Flmsg apps.  It makes these
 # changes for both the left and right radios.  Edit the variables below to
 # make your desired changes.
@@ -66,23 +66,31 @@ do
 done
 
 #==========================================================================
-# Another thing you can do with a pianoX.sh script is to manipulate the
+# EXAMPLE 2: You can manipulate the
 # desktop wallpaper, background and foreground, etc.
 # Those settings are stored in $HOME/.config/pcmanfm/LXDE-pi. You're on
 # your own for creating that script.
 #
 
 #==========================================================================
-# Another thing you can do with a pianoX.sh script is to automatically
-# start an application.  Anything that you can start from the menu,
+# EXAMPLE 3: Automatically start one or more applications.  
+# Anything that you can start from the menu
 # you can autostart at boot time.  You can start any application that is
-# called from a desktop file in /usr/share/applications or 
-# /usr/local/share/applications.  Start applications by launching the desktop
-# files using gtk-launch.  For example, these commands will autostart
-# fldigi on the left radio and fldigi on the right radio:
+# called from a desktop file in /usr/share/applications, 
+# /usr/local/share/applications or $HOME/.local/share/applications.  
+# Start applications by launching the desktop files using 'gtk-launch'.  
+# For example, these commands will autostart
+# direwolf on the right radio, play a WAV file, and start fldigi on the 
+# right radio:
 
+gtk-launch direwolf-right.desktop
+aplay /usr/lib/libreoffice/share/gallery/sounds/kongas.wav
 gtk-launch fldigi-left.desktop
-gtk-launch fldigi-right.desktop
+
+# Note that you do not need to background (by appending the '&' syumbol)
+# each instance of gtk-launch.  All instances of gtk-launch will execute.
+# You also do not need to specify the location of the *.desktop file.
+# gtk-launch will look in the directories listed above for the desktop file.
 
 
 
