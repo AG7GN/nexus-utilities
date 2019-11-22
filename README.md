@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 20191117
+VERSION 20191122
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
@@ -69,7 +69,11 @@ The script that `check-piano.sh` calls must be in the user's home directory, be 
 
 	1, 12, 13, 14, 123, 124, 134, 1234, 2, 23, 234, 24, 3, 34, 4
 
-Example:  When the piano switch levers 2 and 4 are down, the script named `$HOME/piano24.sh` will run whenever the Raspberry Pi starts.
+NOTE: If no switch levers are in the down position, `piano.sh` will run, so there are 16 possible lever positions and corresponding scripts.
+
+Example 1:  When the piano switch levers 2 and 4 are down, the script named `$HOME/piano24.sh`, if present and executable, will run whenever the Raspberry Pi starts.
+
+Example 2:  When no levers on the piano switch are down, the script named `$HOME/piano.sh`, if present and executable, will run whenever the Raspberry Pi starts.
  
 See [pianoX.sh.example](#piano-script-example) for an example piano script.
  
