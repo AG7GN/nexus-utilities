@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.7"
+VERSION="1.0.8"
 
 # This script allows sending Winlink messages via the command line or script.
 # It requires pat (a Winlink client) and the dos2unix programs.
@@ -58,7 +58,7 @@ SUBJECT="$2"
 
 export EDITOR=ed
 TFILE="$(mktemp)"
-echo -e "$CALL\n$TO\n\n$SUBJECT" | pat compose 2>/dev/null 1> $TFILE
+echo -e "$CALL\n$TO\n\n$SUBJECT" | $PAT compose 2>/dev/null 1> $TFILE
 MSG="$(grep "MID:" $TFILE | tr -d ' \t' | cut -d':' -f3)" 
 [[ $MSG == "" ]] && Usage "Could not find the MID (Message ID)"
 MSG="$OUTDIR/$MSG.b2f"
