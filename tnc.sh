@@ -14,16 +14,20 @@
 #						Use the companion script watchdog-tnc.sh in crontab to launch this script
 #						to keep it running.
 #						
-#===========================================================================================
-VERSION="3.1.3"
+#=========================================================================================
+VERSION="3.2.3"
 
-TNC_CONFIG_FILE="$HOME/tnc.conf"
+# Functions ################################################################################
 
 function Usage() {
   	echo 
 	echo "Version $VERSION"
 	echo
-  	echo "$(basename $0) usage:"
+  	echo "Usage:"
+  	echo
+  	echo "$(basename $0) [-c CONFIG_FILE] start|stop APPLICATION(s) [OPTIONS]"
+  	echo
+  	echo "Examples:"
   	echo 
 	echo "$(basename $0) start ax25|ax25+pat [1200|9600 [2]]"
 	echo "                     Starts the ax25 TNC or the ax25 TNC and pat email client." 
@@ -39,21 +43,22 @@ function Usage() {
    echo "                     not work with a Signalink."
 	echo "                     If you specify the baud, you can optionally also specify"
    echo "                     2 to tell Direwolf to use both channels.  '2' assumes"
-	echo "                     you have a stereo audio card and direwolf uses both the left"
-	echo "                     and right channels.  Winlink clients can access Direwolf's"
-   echo "                     second channel by selecting Packet TNC Type 'KISS Port 2'"
-	echo "                     in Winlink.  Default is a single channel."
+	echo "                     you have a stereo audio card *and* direwolf is configured"
+	echo "                     to use *both* channels of the stereo sound card."
+	echo "                     Winlink clients can access Direwolf's second channel by"     
+	echo "                     selecting Packet TNC Type 'KISS Port 2' in Winlink."
+	echo "                     Default is a single channel."
 	echo "                     1200 baud uses Direwolf's AFSK 1200 & 2200 Hz modem."
 	echo "                     9600 baud uses Direwolf's K9NG/G3RUH modem."
   	echo 
   	echo "$(basename $0) start pat"
 	echo "                     Starts pat email client in telnet mode only (niether ax25"
-   echo "                     not ARDOP TNC is started)."	
+   echo "                     nor ARDOP TNC is started)."	
 	echo "                     Note that pat requires configuration in"
 	echo "                     $HOME/.wl2k/config.json."
    echo 
   	echo "$(basename $0) start ardop|ardop+pat"
-	echo "                     Starts the ARDOP TNC (piardop2) or the ARDFOP TNC and pat." 
+	echo "                     Starts the ARDOP TNC (piardop2) or the ARDOP TNC and pat." 
 	echo "                     Note that pat requires configuration in"
 	echo "                     $HOME/.wl2k/config.json."
    echo 
@@ -76,54 +81,16 @@ function Usage() {
 	echo "                     on stereo sound cards only."
    echo 
    echo "$(basename $0) stop"
-   echo "                     Stops all the apps."
+   echo "                     Stops all the apps.  Same as pressing Ctrl-C."
+   echo
+   echo "By default, this script will look for the required configuration file in"
+   echo "$HOME/tnc.conf.  You can override this by specifying the configuration file"
+   echo "with the '-c' option.  For example:"
+   echo
+   echo "   $(basename $0) -c $HOME/myTNCfile.conf start ax25"
    echo
    exit 1
 }
-
-# BEGINNING OF USER CONFIGURATION SECTION ########################################################
-
-if [ -s "$TNC_CONFIG_FILE" ]
-then
-	source $HOME/tnc.conf
-	if [[ $MYCALL =~ N0CALL || $MYCALL =~ N0ONE ]]
-	then
-	   echo >&2 "Error: You must set the MYCALL variable in $TNC_CONFIG_FILE."
-   	exit 1
-	fi	
-else
-   echo >&2 "Error: Configuration file $TNC_CONFIG_FILE is missing or empty."
-   echo Usage
-fi
-
-# END OF USER CONFIGURATION SECTION ########################################################
-
-# Initializations ##########################################################################
-
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
-
-LOGFILE="/tmp/tnc.log"
-SCREENCONFIG="/tmp/tnc.sh.screenrc"
-ACTION="${1,,}" # start|stop
-DMODE="${2,,}" # direwolf mode: digi,igate,digi+igate,ax25
-SPEED="${3,,}" # speed.  No value implies 1200. Otherwise, allowed values are 300 or 9600.
-AUDIO_CHANNELS="$4"
-[[ $SPEED == "" ]] && SPEED="1200"
-[[ $AUDIO_CHANNELS == "" ]] && AUDIO_CHANNELS="1"
-declare -a ORDERS
-declare -A CMDS
-CMDS[direwolf]="$(which direwolf) -a $AUDIOSTATS -t $COLORS -r $ARATE"
-cat > $SCREENCONFIG << EOF
-logfile $LOGFILE
-logfile flush 1
-logtstamp on
-logtstamp after 60
-log on
-logtstamp string "[ %n:%t ] ---- TIMESTAMP ---- %Y-%m-%d %c:%s ---- Press Ctrl-C to Quit\012"
-EOF
-
-# Functions ################################################################################
 
 function ctrl_c () {
 	# Do cleanup if Ctrl-C is pressed.  Stop all the screens.
@@ -131,9 +98,8 @@ function ctrl_c () {
 	exit 0
 }
 
-
 function checkApp () {
-	APP="$(which $1)"	
+	APP="$(command -v $1 2>/dev/null)"	
 	if [[ $APP == "" ]]
 	then
    	echo >&2 "Error: $1 is required but not installed."
@@ -330,14 +296,82 @@ function checkSerial () {
 		DEVICE="/dev/$SERIAL_PORT"
 		if [[ $RIGCTL_RADIO != "" ]]
 		then
-			CMDS[rigctld]="$(which rigctld) -m $RIGCTL_RADIO -r $DEVICE -s $RIGCTL_SPEED"
+			CMDS[rigctld]="$(command -v rigctld) -m $RIGCTL_RADIO -r $DEVICE -s $RIGCTL_SPEED"
 		else
 			CMDS[rigctld]=""
 		fi
 	fi 
 }
 
-# Main #############################################################################################
+# Initializations ##########################################################################
+
+# trap ctrl-c and call ctrl_c()
+trap ctrl_c INT
+
+TNC_CONFIG_FILE=""
+LOGFILE="/tmp/tnc.log"
+SCREENCONFIG="/tmp/tnc.sh.screenrc"
+cat > $SCREENCONFIG << EOF
+logfile $LOGFILE
+logfile flush 1
+logtstamp on
+logtstamp after 60
+log on
+logtstamp string "[ %n:%t ] ---- TIMESTAMP ---- %Y-%m-%d %c:%s ---- Press Ctrl-C to Quit\012"
+EOF
+
+# Check if user supplied configuration file with '-c' option
+declare -a ARGS
+while [ $# -gt 0 ]
+do
+   unset OPTIND
+   unset OPTARG
+   #while getopts as:c:  OPTIONS
+   while getopts c:  OPTIONS
+   do
+      case $OPTIONS in
+         c)
+            TNC_CONFIG_FILE="$OPTARG"
+         	;;
+         *)
+         	;;
+      esac
+   done
+   shift $((OPTIND-1))
+   ARGS+=($1)
+   shift
+done
+
+# No configuration file supplied, so use the default
+[[ $TNC_CONFIG_FILE == "" ]] && TNC_CONFIG_FILE="$HOME/tnc.conf"
+
+if [ -s "$TNC_CONFIG_FILE" ]
+then
+	MYCALL=""
+	source $TNC_CONFIG_FILE
+	if [[ $MYCALL =~ N0CALL || $MYCALL =~ N0ONE  || $MYCALL == "" ]]
+	then
+	   echo >&2 "Error: You must set the MYCALL variable in $TNC_CONFIG_FILE."
+   	exit 1
+	fi	
+else
+   echo >&2 "Error: Configuration file $TNC_CONFIG_FILE is missing or empty."
+   exit 1
+fi
+
+ACTION="${ARGS[0],,}" # start|stop
+DMODE="${ARGS[1],,}" # direwolf mode: digi,igate,digi+igate,ax25,ax25+pat
+SPEED="${ARGS[2],,}" # speed.  No value implies 1200. Otherwise, allowed values are 300 or 9600.
+AUDIO_CHANNELS="${ARGS[3]}"
+
+[[ $SPEED == "" ]] && SPEED="1200"
+[[ $AUDIO_CHANNELS == "" ]] && AUDIO_CHANNELS="1"
+
+declare -a ORDERS
+declare -A CMDS
+CMDS[direwolf]="$(command -v direwolf) -a $AUDIOSTATS -t $COLORS -r $ARATE"
+
+# Main #########################################################################################
 
 SCREEN="$(checkApp screen)"
 ARECORD="$(checkApp arecord)"
@@ -348,8 +382,10 @@ case "$ACTION" in
 		echo "" > $LOGFILE
 		echo
 		echo "Version $VERSION"
+		echo
 		echo "Running $0 $ACTION $DMODE $SPEED $AUDIO_CHANNELS"
-		echo "Mode: $DMODE   Speed: $SPEED   Audio Device: $CAP_DEV   Audio Channels: $AUDIO_CHANNELS"
+		echo "Using configuration file $TNC_CONFIG_FILE"
+		echo "Mode: $DMODE  Speed: $SPEED  Audio Device: $CAP_DEV  Audio Channels: $AUDIO_CHANNELS"
 		echo
 		case "$DMODE" in
 			pat)
@@ -365,7 +401,7 @@ case "$ACTION" in
 				echo "NOTE: If you haven't already done so, you must run 'pat configure' or manually"
 				echo "      configure $HOME/.wl2k/config.json to use pat."
 				echo
-				CMDS[pat]="$(which pat) -l telnet http"
+				CMDS[pat]="$(command -v pat) -l telnet http"
       		for i in ${!ORDERS[@]}
       		do
               	$SCREEN -c $SCREENCONFIG -L -d -m -S ${ORDERS[$i]} ${CMDS[${ORDERS[$i]}]}
@@ -383,7 +419,7 @@ case "$ACTION" in
 						GRID="${GRID^^}"
 						echo
       				echo "RMS Stations in grid square $GRID:"
-						$(which pat) rmslist | grep "${GRID}\|callsign" | sort -k 3,3 -n
+						$(command -v pat) rmslist | grep "${GRID}\|callsign" | sort -k 3,3 -n
 					fi
 			 	fi
       		echo
@@ -420,12 +456,12 @@ case "$ACTION" in
 					echo "NOTE: If you haven't already done so, you must run 'pat configure' or manually"
 					echo "      configure $HOME/.wl2k/config.json to use pat."
 					echo
-					CMDS[pat]="$(which pat) -l ax25,telnet http"
+					CMDS[pat]="$(command -v pat) -l ax25,telnet http"
 				fi
       		# Check that the app is installed.
       		for i in ${!ORDERS[@]}
       		do
-         		which ${ORDERS[$i]} >/dev/null
+         		command -v ${ORDERS[$i]} >/dev/null
          		[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || { echo >&2 "${ORDERS[$i]} required but not found.  Aborting."; exit 1; }
          		# Kill existing session if it exists
          		SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
@@ -436,7 +472,7 @@ case "$ACTION" in
 				## Are the apps installed?
       		for i in kissattach kissparms
       		do
-         		which $i >/dev/null
+         		command -v $i >/dev/null
          		[ $? -eq 0 ] && echo "$i found." || { echo >&2 "Error: $i required but not found.  Aborting."; exit 1; }
       		done
 			   CONFFILE="$(makeConfig ax25)"	
@@ -472,12 +508,12 @@ case "$ACTION" in
 								exit 1
 							fi
                		echo "Direwolf started."
-               		sudo $(which kissattach) $(readlink -f /tmp/kisstnc) $AX25PORT
+               		sudo $(command -v kissattach) $(readlink -f /tmp/kisstnc) $AX25PORT
                		[ $? -eq 0 ] || { echo "kissattach failed.  Aborting."; ctrl_c; exit 1; }
 							KISSPARMS="-c 1 -p $AX25PORT -t $TXDelay -l $TXTail -s $Slottime -r $Persist -f n"
-							echo "Setting $(which kissparms) $KISSPARMS"
+							echo "Setting $(command -v kissparms) $KISSPARMS"
 							sleep 2
-               		sudo $(which kissparms) $KISSPARMS
+               		sudo $(command -v kissparms) $KISSPARMS
                		[ $? -eq 0 ] || { echo "kissparms settings failed.  Aborting."; ctrl_c; exit 1; }
                		;;
             		*)
@@ -501,7 +537,7 @@ case "$ACTION" in
 						GRID="${GRID^^}"
 						echo
       				echo "RMS Stations in grid square $GRID:"
-						$(which pat) rmslist | grep "${GRID}\|callsign" | sort -k 3,3 -n
+						$(command -v pat) rmslist | grep "${GRID}\|callsign" | sort -k 3,3 -n
 					fi
 			 	fi
       		echo
@@ -514,7 +550,7 @@ case "$ACTION" in
       		# Check that the app is installed.
       		for i in ${!ORDERS[@]}
       		do
-         		which ${ORDERS[$i]} >/dev/null
+         		command -v ${ORDERS[$i]} >/dev/null
          		[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || { echo >&2 "${ORDERS[$i]} required but not found.  Aborting."; exit 1; }
          		# Kill existing session if it exists
          		SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
@@ -548,7 +584,7 @@ case "$ACTION" in
 						echo "NOTE: If you haven't already done so, you must run 'pat configure' or manually"
 						echo "      configure $HOME/.wl2k/config.json to use pat."
 						echo
-						CMDS[pat]="$(which pat) -l ardop,telnet http"
+						CMDS[pat]="$(command -v pat) -l ardop,telnet http"
 						;;
 					*)
 						ORDERS=( piardop2 )
@@ -557,13 +593,13 @@ case "$ACTION" in
      			# Check that the app is installed, and kill it if it is already running.
 	     		for i in ${!ORDERS[@]}
    	  		do
-		     		which ${ORDERS[$i]} >/dev/null
+		     		command -v ${ORDERS[$i]} >/dev/null
     				[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || { echo >&2 "${ORDERS[$i]} required but not found.  Aborting."; exit 1; }
    				# Kill existing session if it exists
   					SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
  					[[ "$SCR" != "" ]] && $SCREEN -S $SCR -X quit
 				done
-				CMDS[piardop2]="$(which piardop2) $ARDOP_PORT $ARDOP_DEV"
+				CMDS[piardop2]="$(command -v piardop2) $ARDOP_PORT $ARDOP_DEV"
 				if [[ $ARDOP_PTT == "" ]]
 				then
 					echo >&2 "Error: Please set PTT type (variable ARDOP_PTT) for ARDOP in this script."
