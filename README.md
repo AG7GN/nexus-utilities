@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 20191122
+VERSION 20191209
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
@@ -101,6 +101,12 @@ If `DO_NOT_DELETE_THIS_FILE` is present in the home folder, the script exits wit
 
 `test-piano.sh` allows you to test the operation of your `pianoX.sh` script by simulating what the [check-piano.sh](#check-piano-script) does when the Pi starts.  Set the piano switches as desired, then open a Terminal and run `test-piano.sh`.  The script will tell you which script will run based on which switch levers are down.  It will not actually run the `pianoX.sh` script.
 
+## TNC Script
+
+`tnc.sh` launches Direwolf and, optionally, other related apps in different modes.  The script will look for [tnc.conf](#tnc-left-tnc-right-configuration-files) in the user's home directory.  You can optionally override this behavior and specify the name and location of the configuration file using the '-c' parameter. 
+
+The script will set up and run Direwolf to operate in any one of these modes TNC: ax25, APRS Digipeater, APRS iGate, APRS Digipeater+iGate.  It can also launch pat, ardop, pat+ax25, or pat+ardop provided those apps are also installed and configured.
+
 ## TNC left TNC right Configuration Files
 
 `tnc-left.conf` and `tnc-right.conf` configuration files are required by [/usr/local/bin/tnc.sh](#tnc-script) script.  They contain the configuration that `tnc.sh` needs in order to operate with Direwolf as an APRS Digitpeater, iGate, Digipeater+iGate, or ax25 TNC.
@@ -119,9 +125,7 @@ __IMPORTANT__: You must edit `tnc-{left|right}.conf` with your own settings befo
 		cd ~
 		ln -s tnc-right.conf tnc.conf
 
-## TNC Script
-
-`tnc.sh` launches Direwolf, and optionally other related apps, in different modes.  The script will look for [tnc.conf](#tnc-left-tnc-right-configuration-files) in the user's home directory.  The script will set up and run Direwolf to operate in any one of these modes TNC: ax25, APRS Digipeater, APRS iGate, APRS Digipeater+iGate.  It can also launch pat, ardop, pat+ax25, or pat+ardop provided those apps are also installed and configured.
+You can also specify the name and location of the configuration file using the '-c' parameter.
 
 ## Trim Scripts
 
