@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.14.1"
+VERSION="1.15.0"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -19,7 +19,7 @@ DIR="$HOME"
 INIT_DONE_FILE="$DIR/DO_NOT_DELETE_THIS_FILE"
 
 # Does $INIT_DONE_FILE exist?  Is it a regular file? Is it not empty? If YES to all, then 
-# check the status of the piano switch.
+# exit.
 if [ -e "$INIT_DONE_FILE" ] && [ -f "$INIT_DONE_FILE" ] && [ -s "$INIT_DONE_FILE" ]
 then
 #   [ -s /usr/local/bin/check-piano.sh ] && /usr/local/bin/check-piano.sh
@@ -180,6 +180,12 @@ for F in `ls $D/*-left.template 2>/dev/null` `ls $D/*-right.template 2>/dev/null
 do
    sudo sed -e "s/_LEFT_RADIO_/Left Radio/" -e "s/_RIGHT_RADIO_/Right Radio/g" $F > ${F%.*}.desktop
 done
+
+# Expand the filesystem if it is < 8 GB 
+echo "Expand filesystem if needed" >> "$INIT_DONE_FILE"
+PARTSIZE=$( df | sed -n '/root/{s/  */ /gp}' | cut -d ' ' -f2 )
+THRESHOLD=$((8 * 1024 * 1024))
+(( $PARTSIZE < $THRESHOLD )) && sudo raspi-config --expand-rootfs >> "$INIT_DONE_FILE"
 
 echo "Raspberry Pi initialization complete" >> "$INIT_DONE_FILE"
 sudo shutdown -r now
