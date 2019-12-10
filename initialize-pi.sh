@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.15.0"
+VERSION="1.15.2"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -51,7 +51,7 @@ rm -f $DIR/.ssh/*~
 
 rm -f $DIR/*~
 
-echo "Remove fldigi suite logs and messages and personalized data" >> "$INIT_DONE_FILE"
+echo "Remove Fldigi suite logs and messages and personalized data" >> "$INIT_DONE_FILE"
 DIRS=".nbems .nbems-left .nbems-right"
 for D in $DIRS
 do
@@ -135,6 +135,9 @@ do
 	rm -f $DIR/$D/debug*
 	rm -f ${DIR}/${D}/*~
 done
+
+echo "Restore defaults for tnc-*.conf files" >> "$INIT_DONE_FILE"
+sed -i 's/^MYCALL=.*/MYCALL=\"N0ONE-10\"/' $(ls $DIR/tnc-*.conf)
 
 # Restore defaults for rmsgw
 
