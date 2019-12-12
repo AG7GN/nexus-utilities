@@ -9,7 +9,7 @@ VERSION="1.5"
 #
 # Parameter 1 is a date reference e.g. "10 days ago" or "1 hour ago"
 #
-# DO NOT run this script while Flmsg is running.  It must be run
+# This script will not run if Flmsg is running.  It must be run
 # prior to starting Flmsg.  If you want to run it every time you start
 # Flmsg on a Raspberry Pi, change the File Properties
 # of the Flmsg menu item to run this script and then Flmsg as follows:
@@ -19,11 +19,13 @@ VERSION="1.5"
 # In the Command field, replace 'flmsg' with the following (change the
 # time period as desired):
 #
-# sh -c '/usr/local/bin/trim-flmsg-log.sh "1 week ago"';flmsg
+# sh -c '/usr/local/bin/trim-flmsg-log.sh "1 week ago"';flmsg ...
 #
 # Leave the "Execute in Terminal" box unchecked, then click OK.
 #
 
+# Exit if Flmsg is already running
+pgrep flmsg >/dev/null && exit 0
 
 DIRS="$HOME/.nbems $HOME/.nbems-left $HOME/.nbems-right"
 SDIRS="/log_files/* /temp_files/* /ICS/*.htm /ICS/*.csv /ICS/messages/* /ICS/messages/archive/* /ICS/log_files/* /WRAP/auto/* /WRAP/recv/* /WRAP/send/* /TRANSFERS/* /FLAMP/*log* /FLAMP/rx/* /FLAMP/tx/* /ARQ/files/* /ARQ/mail/* /ARQ/recv/* /ARQ/send/*"

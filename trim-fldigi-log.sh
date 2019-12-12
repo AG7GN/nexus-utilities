@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.4"
+VERSION="1.5"
 
 #
 # This script removes log files from the $HOME/.fldigi* folder(s) and subfolders.
@@ -10,8 +10,7 @@ VERSION="1.4"
 #
 # Parameter 1 is a date reference e.g. "10 days ago" or "1 hour ago"
 #
-# DO NOT run this script while Fldigi is running.  Likewise,
-# DO NOT run this script using Fldigi's autostart feature.  It must be run
+# This script will not run if Fldigi is running.  It must be run
 # prior to starting Fldigi.  If you want to run it every time you start
 # Fldigi on a Raspberry Pi, change the File Properties
 # of the Fldigi menu item to run this script and then Fldigi as follows:
@@ -21,10 +20,13 @@ VERSION="1.4"
 # In the Command field, replace 'fldigi' with the following (change the
 # time period as desired):
 #
-# sh -c '/usr/local/bin/trim-fldigi-log.sh "1 week ago"';fldigi
+# sh -c '/usr/local/bin/trim-fldigi-log.sh "1 week ago"';fldigi ...
 #
 # Leave the "Execute in Terminal" box unchecked, then click OK.
 #
+
+# Exit if Fldigi is already running
+pgrep fldigi >/dev/null && exit 0
 
 DIRS="$HOME/.fldigi $HOME/.fldigi-left $HOME/.fldigi-right"
 

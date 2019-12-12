@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.4"
+VERSION="1.5"
 
 # This script trims the fsq_audit_log.txt file
 # in the ~/.fldigi/temp folder by removing content added aded earlier 
@@ -8,8 +8,7 @@ VERSION="1.4"
 #
 # Parameter 1 is a date reference e.g. "10 days ago" or "1 hour ago"
 #
-# DO NOT run this script while Fldigi is running.  Likewise,
-# DO NOT run this script using Fldigi's autostart feature.  It must be run
+# This script will not run if Fldigi is running.  It must be run
 # prior to starting Fldigi.  If you want to run it every time you start
 # Fldigi on a Raspberry Pi, change the File Properties
 # of the Fldigi menu item to run this script and then Fldigi as follows:
@@ -19,7 +18,7 @@ VERSION="1.4"
 # In the Command field, replace 'fldigi' with the following (change the
 # time period as desired):
 #
-# sh -c '/usr/local/bin/trim-fsq-audit.sh "30 days ago"';fldigi
+# sh -c '/usr/local/bin/trim-fsq-audit.sh "30 days ago"';fldigi ...
 #
 # Leave the "Execute in terminal" box unchecked, then click OK.
 #
@@ -30,6 +29,8 @@ VERSION="1.4"
 # sh -c '/usr/local/bin/trim-fsq-audit.sh "30 days ago";/usr/local/bin/trim-fsq-heard.sh "1 hour ago"';fldigi
 #
 
+# Exit if Fldigi is already running
+pgrep fldigi >/dev/null && exit 0
 
 DIRS="$HOME/.fldigi/temp $HOME/.fldigi-left/temp $HOME/.fldigi-right/temp"
 

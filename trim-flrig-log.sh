@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.4"
+VERSION="1.5"
 
 # This script removes log files from the $HOME/.flrig* folder(s) and subfolders.
 # Files with "last modified" timestamps that are before the specified time 
@@ -9,7 +9,7 @@ VERSION="1.4"
 #
 # Parameter 1 is a date reference e.g. "10 days ago" or "1 hour ago"
 #
-# DO NOT run this script while Flrig is running.  It must be run
+# This script will not run if Flrig is running.  It must be run
 # prior to starting Flrig.  If you want to run it every time you start
 # Flrig on a Raspberry Pi, change the File Properties
 # of the Flrig menu item to run this script and then Flrig as follows:
@@ -19,11 +19,13 @@ VERSION="1.4"
 # In the Command field, replace 'flrig' with the following (change the
 # time period as desired):
 #
-# sh -c '/usr/local/bin/trim-flrig-log.sh "1 week ago"';flrig
+# sh -c '/usr/local/bin/trim-flrig-log.sh "1 week ago"';flrig ...
 #
 # Leave the "Execute in Terminal" box unchecked, then click OK.
 #
 
+# Exit if Fldigi is already running
+pgrep flrig >/dev/null && exit 0
 
 DIRS="$HOME/.flrig $HOME/.flrig-left $HOME/.flrig-right"
 
