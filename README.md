@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 20191209
+VERSION 20191218
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
@@ -31,31 +31,15 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 
 [Desktop Template files](#desktop-template-files)
 
+[Edit Desktop Text script](#edit-desktop-text-script)
+
 ## Installation
 
-### Easy Install
+### Install
 
 - Click __Raspberry > Hamradio > Update Pi and Ham Apps__.
 - Check __hampi-utilities__, click __OK__.
 
-### Manual Install
-
-Alternatively, you can install these utilities manually as follows:
-
-- Open a terminal and run:
-
-		cd ~
-		rm -rf hampi-utilities 
-		git clone https://github.com/AG7GN/hampi-utilities  
-  		cp -f hampi-utilities/hampi-utilities.version /usr/local/src/hampi/
-  		cp -f hampi-utilities/*.conf /usr/local/src/hampi/
-  		cp -f hampi-utilities/*.example $HOME/
-  		sudo cp -f hampi-utilities/*.sh /usr/local/bin/
-  		sudo cp -f hampi-utilities/*.py /usr/local/bin/
-  		sudo cp -f hampi-utilities/*.desktop /usr/local/share/applications/
-  		sudo cp -f hampi-utilities/*.template /usr/local/share/applications/
-		rm -rf hampi-utilities
-		
 ## Check Piano script
 
 `check-piano.sh` is run whenever the Pi starts.  It reads the position of the piano switches on the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board and launches a script based on which switch levers are up or down.  The script is called by the `autostart` file located in `/etc/xdg/lxsession/LXDE-pi`.  That file looks like this:
@@ -194,6 +178,15 @@ Your Hampi image already has the systemd service file for the shutdown script in
 ## Desktop Template Files
 
 These files are stored in `/usr/local/share/applications` and are used as templates for application desktop files.  They are used by the __Name Your Radio__ script to change the radio names as they appear in the Hamradio menu.
+
+## Edit Desktop Text script
+
+`edit-desktop.sh` allows you to edit the default Nexus DR-X desktop background, which was introduced in Hampi version 20191214. 
+
+If your image is older than 20191214 and you want to install the customizable Nexus desktop background, you must do run these commands in the Terminal before you can run the new 'Edit Desktop Background Text’ script (__NOTE: This will REPLACE your current desktop background__):
+
+	cp /usr/local/src/hampi/desktop-items-0.conf $HOME/.config/pcmanfm/LXDE-pi/
+	pcmanfm --reconfigure
 
 
  
