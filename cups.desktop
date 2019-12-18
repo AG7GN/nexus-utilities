@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Manage Printers
+GenericName=Manage Printers
+Comment=Install and configure printers
+Exec=chromium-browser http://localhost:631/admin
+Icon=/usr/share/icons/Adwaita/32x32/devices/printer-symbolic.symbolic.png
+Terminal=false
+Type=Application
+Categories=Settings;DesktopSettings;GTK;X-LXDE-Settings;
+Comment[en_US]=Manage Auto-HotSpot
