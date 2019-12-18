@@ -188,5 +188,4 @@ If your image is older than 20191214 and you want to install the customizable Ne
 	cp /usr/local/src/hampi/desktop-items-0.conf $HOME/.config/pcmanfm/LXDE-pi/
 	pcmanfm --reconfigure
 
-
- 
+After you start the script (__Raspberry > Preferences > Edit Desktop Background Text__), enter the text you want to display and optionally check the box to show your Pi's host name, then click __OK__.  The script won't close until you Cancel, so click __Cancel__ when you're satisfied with your new desktop.
