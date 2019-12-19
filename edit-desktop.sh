@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.1.1"
+VERSION="1.0.1"
 
 # This script allows the user to change the text of the default Nexus desktop background 
 
@@ -34,8 +34,8 @@ function errorReport () {
 
 if ! command -v convert >/dev/null
 then
-	sudo port update
-	sudo port install imagemagick
+	sudo apt update
+	sudo apt install imagemagick
 fi
 
 if [ -s "$CONFIG_FILE" ]
