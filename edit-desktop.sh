@@ -179,8 +179,12 @@ $DEBUG && set -x
 
 if ! command -v convert >/dev/null
 then
-	sudo apt update || die "Could not run 'sudo apt update'"
-	sudo apt install -y imagemagick || die "Could not run 'sudo apt install -y imagemagick'"
+   yad --center --title="Desktop Text Editor - version $VERSION" --info --borders=30 \
+    --no-wrap --text="<b>The 'convert' application is not installed.  Run this command in the Terminal:\n\nsudo apt update && sudo apt install -y imagemagick, then run this script again.</b>" --buttons-layout=center \
+--button=Close:0
+	SafeExit
+	#sudo apt update || Die "Could not run 'sudo apt update'"
+	#sudo apt install -y imagemagick || Die "Could not run 'sudo apt install -y imagemagick'"
 fi
 
 if [ -s "$CONFIG_FILE" ]
