@@ -1,109 +1,171 @@
 #!/bin/bash
+#================================================================
+# HEADER
+#================================================================
+#% SYNOPSIS
+#+   ${SCRIPT_NAME} [-hv] 
+#+   ${SCRIPT_NAME} [-c FILE] start COMMAND [COMMAND ...]
+#+   ${SCRIPT_NAME} stop
+#%
+#% DESCRIPTION
+#%   This script will start direwolf in one of 3 APRS modes: igate, digipeater,
+#%   or igate + digipeater, OR in AX.25 mode as a TNC for Winlink or other apps.
+#%   Use the companion script watchdog-tnc.sh in crontab to launch this script
+#%   and keep it running.  
+#%
+#% OPTIONS
+#%    -c FILE, --config=FILE
+#%                                Override using the default configuration file. 
+#%                                Default configuration file is $HOME/tnc.conf
+#%                                
+#%    -h, --help                  Print this help
+#%    -v, --version               Print script information
+#%
+#% COMMANDS
+#%  ${SCRIPT_NAME} [-c FILE] start ax25|ax25+pat [1200|9600 [2]]
+#%                                Starts the ax25 TNC or the ax25 TNC and pat email 
+#%                                client." 
+#%                                Note that pat requires configuration in
+#%                                $HOME/.wl2k/config.json.
+#%                                
+#%                                Direwolf baud set to 1200 bps (for V/UHF) on a single
+#%                                audio channel by default. 
+#%                                You can optionally specify baud (1200 or 9600) and 
+#%                                number of audio channels.  9600 might work on V/UHF
+#%                                with another 9600 station depending on conditions and
+#%                                the capabilities of your soundcard.  9600 will likely
+#%                                not work with a Signalink.
+#%                                If you specify the baud, you can optionally also 
+#%                                specify '2' to tell Direwolf to use both channels.  
+#%                                '2' assumes" you have a stereo audio card *and* direwolf 
+#%                                is configured to use both channels of the stereo sound 
+#%                                card.
+#%                                Winlink clients can access Direwolf's second channel by     
+#%                                selecting Packet TNC Type 'KISS Port 2' in Winlink.
+#%                                Default is a single channel.
+#%                                1200 baud uses Direwolf's AFSK 1200 & 2200 Hz modem.
+#%                                9600 baud uses Direwolf's K9NG/G3RUH modem.
+#%                                
+#%  ${SCRIPT_NAME} [-c FILE] start pat
+#%                                Starts pat email client in telnet mode only (niether 
+#%                                ax25 nor ARDOP TNC is started).	
+#%                                Note that pat requires configuration in
+#%                                $HOME/.wl2k/config.json.
+#%
+#%  ${SCRIPT_NAME} [-c FILE] start ardop|ardop+pat
+#%                                Starts the ARDOP TNC (piardop2) or the ARDOP TNC and 
+#%                                pat.  Note that pat requires configuration in
+#%                                $HOME/.wl2k/config.json.
+#%
+#%  ${SCRIPT_NAME} [-c FILE] start digiigate [both]
+#%                                Starts the Direwolf APRS digipeater and iGate. 
+#%                                If you specify 'both', Direwolf will decode audio on 
+#%                                channel 1 (stereo left) and channel 2 (stereo right)
+#%                                on stereo sound cards only.
+#%                                
+#%  ${SCRIPT_NAME} [-c FILE] start digi [both]
+#%                                Starts the Direwolf APRS digipeater (only). 
+#%                                If you specify 'both', Direwolf will decode audio on 
+#%                                channel 1 (stereo left) and channel 2 (stereo right)
+#%                                on stereo sound cards only.
+#%                                
+#%  ${SCRIPT_NAME} [-c FILE] start igate [both]
+#%                                Starts the Direwolf APRS iGate (only). 
+#%                                If you specify 'both', Direwolf will decode audio on
+#%                                channel 1 (stereo left) and channel 2 (stereo right)
+#%                                on stereo sound cards only.
+#%                                
+#%  ${SCRIPT_NAME} stop
+#%                                Stops all the apps.  Same as pressing Ctrl-C.
+#%
+#% EXAMPLES
+#%    
+#%  Locate serial port file name containing ${DEFAULT_PORTSTRING} (default search string),
+#%  then set APO to 30 minutes:
+#%
+#%     ${SCRIPT_NAME} set apo 30
+#%
+#%  Override the default search string ${DEFAULT_PORTSTRING} to locate serial port
+#%  connected to radio, then get radio information:
+#%
+#%     ${SCRIPT_NAME} -s Prolific_Technology get info
+#%
+#%  Specify the serial port used to connect to your radio then set radio TX timeout 
+#%  to 3 minutes:
+#%
+#%     ${SCRIPT_NAME} -p /dev/ttyUSB0 set timeout 3
+#%
+#================================================================
+#- IMPLEMENTATION
+#-    version         ${SCRIPT_NAME} 3.3.2
+#-    author          Steve Magnuson, AG7GN
+#-    license         CC-BY-SA Creative Commons License
+#-    script_id       0
+#-
+#================================================================
+#  HISTORY
+#     20180125 : Steve Magnuson : Script creation
+#     20200203 : Steve Magnuson : New script template
+# 
+#================================================================
+#  DEBUG OPTION
+#    set -n  # Uncomment to check your syntax, without execution.
+#    set -x  # Uncomment to debug this shell script
 #
-# Script Name:		tnc.sh
-# Author:			Steve Magnuson AG7GN
-# Date Created:	20180601
-#
-# Description:		This script will start direwolf in one of 3 APRS modes: igate, digipeater,
-#						or igate + digipeater, OR in AX.25 mode as a TNC for Winlink or other apps.  
-#                 Run tnc.sh with no arguments for instructions.
-#
-# Usage:				tnc.sh start digi|igate|digiigate|ax25
-#						tnc.sh stop
-#
-#						Use the companion script watchdog-tnc.sh in crontab to launch this script
-#						to keep it running.
-#						
-#=========================================================================================
-VERSION="3.2.3"
+#================================================================
+# END_OF_HEADER
+#================================================================
 
-# Functions ################################################################################
+SYNTAX=false
+DEBUG=false
 
-function Usage() {
-  	echo 
-	echo "Version $VERSION"
-	echo
-  	echo "Usage:"
-  	echo
-  	echo "$(basename $0) [-c CONFIG_FILE] start|stop APPLICATION(s) [OPTIONS]"
-  	echo
-  	echo "Examples:"
-  	echo 
-	echo "$(basename $0) start ax25|ax25+pat [1200|9600 [2]]"
-	echo "                     Starts the ax25 TNC or the ax25 TNC and pat email client." 
-	echo "                     Note that pat requires configuration in"
-	echo "                     $HOME/.wl2k/config.json."
-	echo
-	echo "                     Direwolf baud set to 1200 bps (for V/UHF) on a single"
-	echo "                     audio channel by default."  
-	echo "                     You can optionally specify baud (1200 or 9600) and number"
-	echo "                     of audio channels.  9600 might work on V/UHF"
-   echo "                     with another 9600 station depending on conditions and"
-   echo "                     the capabilities of your soundcard.  9600 will likely"
-   echo "                     not work with a Signalink."
-	echo "                     If you specify the baud, you can optionally also specify"
-   echo "                     2 to tell Direwolf to use both channels.  '2' assumes"
-	echo "                     you have a stereo audio card *and* direwolf is configured"
-	echo "                     to use *both* channels of the stereo sound card."
-	echo "                     Winlink clients can access Direwolf's second channel by"     
-	echo "                     selecting Packet TNC Type 'KISS Port 2' in Winlink."
-	echo "                     Default is a single channel."
-	echo "                     1200 baud uses Direwolf's AFSK 1200 & 2200 Hz modem."
-	echo "                     9600 baud uses Direwolf's K9NG/G3RUH modem."
-  	echo 
-  	echo "$(basename $0) start pat"
-	echo "                     Starts pat email client in telnet mode only (niether ax25"
-   echo "                     nor ARDOP TNC is started)."	
-	echo "                     Note that pat requires configuration in"
-	echo "                     $HOME/.wl2k/config.json."
-   echo 
-  	echo "$(basename $0) start ardop|ardop+pat"
-	echo "                     Starts the ARDOP TNC (piardop2) or the ARDOP TNC and pat." 
-	echo "                     Note that pat requires configuration in"
-	echo "                     $HOME/.wl2k/config.json."
-   echo 
-   echo "$(basename $0) start digiigate [both]"
-   echo "                     Starts the Direwolf APRS digipeater and iGate." 
-	echo "                     If you specify 'both', Direwolf will decode audio on" 
-	echo "                     channel 1 (stereo left) and channel 2 (stereo right)"
-	echo "                     on stereo sound cards only."
-   echo	
-   echo "$(basename $0) start digi [both]"
-	echo "                     Starts the Direwolf APRS digipeater (only)." 
-	echo "                     If you specify 'both', Direwolf will decode audio on" 
-	echo "                     channel 1 (stereo left) and channel 2 (stereo right)"
-	echo "                     on stereo sound cards only."
-   echo 
-   echo "$(basename $0) start igate [both]"
-	echo "                     Starts the Direwolf APRS iGate (only)." 
-	echo "                     If you specify 'both', Direwolf will decode audio on" 
-	echo "                     channel 1 (stereo left) and channel 2 (stereo right)"
-	echo "                     on stereo sound cards only."
-   echo 
-   echo "$(basename $0) stop"
-   echo "                     Stops all the apps.  Same as pressing Ctrl-C."
-   echo
-   echo "By default, this script will look for the required configuration file in"
-   echo "$HOME/tnc.conf.  You can override this by specifying the configuration file"
-   echo "with the '-c' option.  For example:"
-   echo
-   echo "   $(basename $0) -c $HOME/myTNCfile.conf start ax25"
-   echo
-   exit 1
-}
+#============================
+#  FUNCTIONS
+#============================
 
-function ctrl_c () {
-	# Do cleanup if Ctrl-C is pressed.  Stop all the screens.
-	$0 stop
+function TrapCleanup() {
+   ${SCRIPT_NAME} stop
+  	rm -f /tmp/tnc*
+	rm -f $CONFFILE
 	exit 0
 }
+
+function SafeExit() {
+   ${SCRIPT_NAME} stop
+  	rm -f /tmp/tnc*
+	rm -f $CONFFILE
+	trap - INT TERM EXIT
+	exit
+}
+
+function ScriptInfo() { 
+	HEAD_FILTER="^#-"
+	[[ "$1" = "usage" ]] && HEAD_FILTER="^#+"
+	[[ "$1" = "full" ]] && HEAD_FILTER="^#[%+]"
+	[[ "$1" = "version" ]] && HEAD_FILTER="^#-"
+	head -${SCRIPT_HEADSIZE:-99} ${0} | grep -e "${HEAD_FILTER}" | \
+	sed -e "s/${HEAD_FILTER}//g" \
+	    -e "s/\${SCRIPT_NAME}/${SCRIPT_NAME}/g"
+}
+
+function Usage() { 
+	printf "Usage:\n"
+	ScriptInfo usage
+	exit 1
+}
+
+function Die () {
+	echo "${*}"
+	SafeExit
+}
+
+#---------------------------------------
 
 function checkApp () {
 	APP="$(command -v $1 2>/dev/null)"	
 	if [[ $APP == "" ]]
 	then
-   	echo >&2 "Error: $1 is required but not installed."
-		exit 1
+   	Die "Error: $1 is required but not installed."
 	fi
 	echo "$APP"
 }
@@ -130,15 +192,12 @@ function checkSoundCard () {
 		CAP_DEV="$AUDIO_DEV"	
 	elif [[ $AUDIO_DEV_SEARCH_STRING == "" ]]
 	then
-		echo >&2 "Error: You must set either the AUDIO_DEV or AUDIO_DEV_SEARCH_STRING variables in this script to select the sound card."
-		exit 1
+		Die "Error: You must set either the AUDIO_DEV or AUDIO_DEV_SEARCH_STRING variables in this script to select the sound card."
 	else
 		CAP_DEV="$($ARECORD -l | grep -i "$AUDIO_DEV_SEARCH_STRING" | grep "card [0-9]\|device [0-9]" | sed 's/:.*,/,/;s/:.*$//;s/, /,/;s/ /=/g;s/ice//' | tr -s [:lower:] [:upper:])"
 		if [[ $CAP_DEV == "" ]]
 		then
-			echo >&2 "Error: Unable to find audio interface using string $AUDIO_DEV_SEARCH_STRING."
-			sleep 5
-			exit 1
+			Die "Error: Unable to find audio interface using string $AUDIO_DEV_SEARCH_STRING."
 		fi
 		CAP_DEV="plughw:$CAP_DEV"
 	fi
@@ -266,8 +325,7 @@ EOF
 					esac
 					;;
 				*)	
-					echo >&2 "Error: Valid baud settings are 1200 or 9600."
-					exit 1
+					Die "Error: Valid baud settings are 1200 or 9600."
 					;;
 				esac
 			;;
@@ -290,8 +348,7 @@ function checkSerial () {
                 		grep "$DEVSTRING" | cut -d' ' -f3 | tr -d './')"
 		if [[ $SERIAL_PORT == "" ]] 
 		then # rigctl or ardop CAT control requested, but could not find serial port
-			echo >&2 "Error: Could not locate serial device with name containing \"$DEVSTRING\"."
-			exit 1
+			Die "Error: Could not locate serial device with name containing \"$DEVSTRING\"."
 		fi
 		DEVICE="/dev/$SERIAL_PORT"
 		if [[ $RIGCTL_RADIO != "" ]]
@@ -303,10 +360,16 @@ function checkSerial () {
 	fi 
 }
 
-# Initializations ##########################################################################
+#============================
+#  FILES AND VARIABLES
+#============================
 
-# trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
+  #== general variables ==#
+SCRIPT_NAME="$(basename ${0})" # scriptname without path
+SCRIPT_DIR="$( cd $(dirname "$0") && pwd )" # script directory
+SCRIPT_FULLPATH="${SCRIPT_DIR}/${SCRIPT_NAME}"
+SCRIPT_ID="$(ScriptInfo | grep script_id | tr -s ' ' | cut -d' ' -f3)"
+SCRIPT_HEADSIZE=$(grep -sn "^# END_OF_HEADER" ${0} | head -1 | cut -f1 -d:)
 
 TNC_CONFIG_FILE=""
 LOGFILE="/tmp/tnc.log"
@@ -319,50 +382,112 @@ logtstamp after 60
 log on
 logtstamp string "[ %n:%t ] ---- TIMESTAMP ---- %Y-%m-%d %c:%s ---- Press Ctrl-C to Quit\012"
 EOF
+VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)" 
 
-# Check if user supplied configuration file with '-c' option
-declare -a ARGS
-while [ $# -gt 0 ]
+#============================
+#  PARSE OPTIONS WITH GETOPTS
+#============================
+  
+#== set short options ==#
+SCRIPT_OPTS=':hc:v-:'
+
+#== set long options associated with short one ==#
+typeset -A ARRAY_OPTS
+ARRAY_OPTS=(
+	[help]=h
+	[version]=v
+	[man]=h
+	[script]=s
+	[timestamp]=t
+	[wait]=w
+)
+
+# Parse options
+while getopts ${SCRIPT_OPTS} OPTION
 do
-   unset OPTIND
-   unset OPTARG
-   #while getopts as:c:  OPTIONS
-   while getopts c:  OPTIONS
-   do
-      case $OPTIONS in
-         c)
-            TNC_CONFIG_FILE="$OPTARG"
-         	;;
-         *)
-         	;;
-      esac
-   done
-   shift $((OPTIND-1))
-   ARGS+=($1)
-   shift
+	# Translate long options to short
+	if [[ "x$OPTION" == "x-" ]]
+	then
+		LONG_OPTION=$OPTARG
+		LONG_OPTARG=$(echo $LONG_OPTION | grep "=" | cut -d'=' -f2)
+		LONG_OPTIND=-1
+		[[ "x$LONG_OPTARG" = "x" ]] && LONG_OPTIND=$OPTIND || LONG_OPTION=$(echo $OPTARG | cut -d'=' -f1)
+		[[ $LONG_OPTIND -ne -1 ]] && eval LONG_OPTARG="\$$LONG_OPTIND"
+		OPTION=${ARRAY_OPTS[$LONG_OPTION]}
+		[[ "x$OPTION" = "x" ]] &&  OPTION="?" OPTARG="-$LONG_OPTION"
+		
+		if [[ $( echo "${SCRIPT_OPTS}" | grep -c "${OPTION}:" ) -eq 1 ]]
+		then
+			if [[ "x${LONG_OPTARG}" = "x" ]] || [[ "${LONG_OPTARG}" = -* ]]
+			then 
+				OPTION=":" OPTARG="-$LONG_OPTION"
+			else
+				OPTARG="$LONG_OPTARG";
+				if [[ $LONG_OPTIND -ne -1 ]]
+				then
+					[[ $OPTIND -le $Optnum ]] && OPTIND=$(( $OPTIND+1 ))
+					shift $OPTIND
+					OPTIND=1
+				fi
+			fi
+		fi
+	fi
+
+	# Options followed by another option instead of argument
+	if [[ "x${OPTION}" != "x:" ]] && [[ "x${OPTION}" != "x?" ]] && [[ "${OPTARG}" = -* ]]
+	then 
+		OPTARG="$OPTION" OPTION=":"
+	fi
+
+	# Finally, manage options
+	case "$OPTION" in
+		h) 
+			ScriptInfo full
+			exit 0
+			;;
+		c) 
+			TNC_CONFIG_FILE="$OPTARG"
+			[[ -s "$TNC_CONFIG_FILE" ]] || Die "Configuration file $TNC_CONFIG_FILE is missing or empty."
+			;;
+		v) 
+			ScriptInfo version
+			exit 0
+			;;
+		:) 
+			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
+			;;
+		?) 
+			Die "${SCRIPT_NAME}: -$OPTARG: unknown option"
+			;;
+	esac
 done
+shift $((${OPTIND} - 1)) ## shift options
+
+#============================
+#  MAIN SCRIPT
+#============================
+
+# Trap bad exits with cleanup function
+trap SafeExit EXIT INT TERM
+
+# Exit on error. Append '||true' when you run the script if you expect an error.
+set -o errexit
+
+# Check Syntax if set
+$SYNTAX && set -n
+# Run in debug mode, if set
+$DEBUG && set -x 
 
 # No configuration file supplied, so use the default
 [[ $TNC_CONFIG_FILE == "" ]] && TNC_CONFIG_FILE="$HOME/tnc.conf"
 
-if [ -s "$TNC_CONFIG_FILE" ]
-then
-	MYCALL=""
-	source $TNC_CONFIG_FILE
-	if [[ $MYCALL =~ N0CALL || $MYCALL =~ N0ONE  || $MYCALL == "" ]]
-	then
-	   echo >&2 "Error: You must set the MYCALL variable in $TNC_CONFIG_FILE."
-   	exit 1
-	fi	
-else
-   echo >&2 "Error: Configuration file $TNC_CONFIG_FILE is missing or empty."
-   exit 1
-fi
+source $TNC_CONFIG_FILE
+[[ $MYCALL =~ N0CALL || $MYCALL =~ N0ONE  || $MYCALL == "" ]] && Die "You must set the MYCALL variable in $TNC_CONFIG_FILE."
 
-ACTION="${ARGS[0],,}" # start|stop
-DMODE="${ARGS[1],,}" # direwolf mode: digi,igate,digi+igate,ax25,ax25+pat
-SPEED="${ARGS[2],,}" # speed.  No value implies 1200. Otherwise, allowed values are 300 or 9600.
-AUDIO_CHANNELS="${ARGS[3]}"
+ACTION="${1,,}" # start|stop
+DMODE="${2,,}" # direwolf mode: digi,igate,digi+igate,ax25,ax25+pat
+SPEED="${3,,}" # speed.  No value implies 1200. Otherwise, allowed values are 300 or 9600.
+AUDIO_CHANNELS="${4}"
 
 [[ $SPEED == "" ]] && SPEED="1200"
 [[ $AUDIO_CHANNELS == "" ]] && AUDIO_CHANNELS="1"
@@ -371,13 +496,12 @@ declare -a ORDERS
 declare -A CMDS
 CMDS[direwolf]="$(command -v direwolf) -a $AUDIOSTATS -t $COLORS -r $ARATE"
 
-# Main #########################################################################################
-
 SCREEN="$(checkApp screen)"
 ARECORD="$(checkApp arecord)"
 WGET="$(checkApp wget)"
 case "$ACTION" in
 	start)
+	   [[ $DMODE == "" ]] && Usage
 		checkSoundCard
 		echo "" > $LOGFILE
 		echo
@@ -462,18 +586,18 @@ case "$ACTION" in
       		for i in ${!ORDERS[@]}
       		do
          		command -v ${ORDERS[$i]} >/dev/null
-         		[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || { echo >&2 "${ORDERS[$i]} required but not found.  Aborting."; exit 1; }
+         		[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || Die "${ORDERS[$i]} required but not found.  Aborting."
          		# Kill existing session if it exists
          		SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
          		[[ "$SCR" != "" ]] && { pkill piardop2; $SCREEN -S $SCR -X quit; }
       		done
       		## Kill existing session if it exists
-      		sudo killall kissattach 2>/dev/null 
+      		pgrep kissattach >/dev/null && kill $(pgrep kissattach)
 				## Are the apps installed?
       		for i in kissattach kissparms
       		do
          		command -v $i >/dev/null
-         		[ $? -eq 0 ] && echo "$i found." || { echo >&2 "Error: $i required but not found.  Aborting."; exit 1; }
+         		[ $? -eq 0 ] && echo "$i found." || Die "Error: $i required but not found.  Aborting."
       		done
 			   CONFFILE="$(makeConfig ax25)"	
 				CMDS[direwolf]+=" -p -d u -c $CONFFILE"
@@ -502,19 +626,16 @@ case "$ACTION" in
                		done
                		if [ $COUNTER -ge $MAXWAIT ]
 							then
-								echo >&2 "Direwolf failed to allocate a PTY! Aborting."
-								echo >&2 "Is ADEVICE set to your sound card?"
-								ctrl_c
-								exit 1
+								Die "Direwolf failed to allocate a PTY! Aborting. Is ADEVICE set to your sound card?"
 							fi
                		echo "Direwolf started."
                		sudo $(command -v kissattach) $(readlink -f /tmp/kisstnc) $AX25PORT
-               		[ $? -eq 0 ] || { echo "kissattach failed.  Aborting."; ctrl_c; exit 1; }
+               		[ $? -eq 0 ] || Die "kissattach failed.  Aborting."
 							KISSPARMS="-c 1 -p $AX25PORT -t $TXDelay -l $TXTail -s $Slottime -r $Persist -f n"
 							echo "Setting $(command -v kissparms) $KISSPARMS"
 							sleep 2
                		sudo $(command -v kissparms) $KISSPARMS
-               		[ $? -eq 0 ] || { echo "kissparms settings failed.  Aborting."; ctrl_c; exit 1; }
+               		[ $? -eq 0 ] || Die "kissparms settings failed.  Aborting."
                		;;
             		*)
                		$SCREEN -c $SCREENCONFIG -L -d -m -S ${ORDERS[$i]} ${CMDS[${ORDERS[$i]}]}
@@ -551,7 +672,7 @@ case "$ACTION" in
       		for i in ${!ORDERS[@]}
       		do
          		command -v ${ORDERS[$i]} >/dev/null
-         		[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || { echo >&2 "${ORDERS[$i]} required but not found.  Aborting."; exit 1; }
+         		[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || Die "${ORDERS[$i]} required but not found.  Aborting."
          		# Kill existing session if it exists
          		SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
          		[[ "$SCR" != "" ]] && { pkill piardop2; $SCREEN -S $SCR -X quit; }
@@ -594,7 +715,7 @@ case "$ACTION" in
 	     		for i in ${!ORDERS[@]}
    	  		do
 		     		command -v ${ORDERS[$i]} >/dev/null
-    				[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || { echo >&2 "${ORDERS[$i]} required but not found.  Aborting."; exit 1; }
+    				[ $? -eq 0 ] && echo "${ORDERS[$i]} found." || Die "${ORDERS[$i]} required but not found.  Aborting."
    				# Kill existing session if it exists
   					SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
  					[[ "$SCR" != "" ]] && $SCREEN -S $SCR -X quit
@@ -602,8 +723,7 @@ case "$ACTION" in
 				CMDS[piardop2]="$(command -v piardop2) $ARDOP_PORT $ARDOP_DEV"
 				if [[ $ARDOP_PTT == "" ]]
 				then
-					echo >&2 "Error: Please set PTT type (variable ARDOP_PTT) for ARDOP in this script."
-					exit 1
+					Die "Error: Please set PTT type (variable ARDOP_PTT) for ARDOP in this script."
 				else
 					CMDS[piardop2]+=" $ARDOP_PTT"
 				fi
@@ -618,39 +738,39 @@ case "$ACTION" in
       		tail -n 150 -F $LOGFILE
 				;;
 			*)
-				Usage
+				Die "Invalid mode requested.  Run ${SCRIPT_NAME} -h for instructions."
 				;;
 		esac
 		;;
    stop)
-		ORDERS=( rigctld piardop2 direwolf pat )
-		#ORDERS=( rigctld direwolf )
-		echo
-    	for i in ${!ORDERS[@]}
-     	do
-        	SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
-        	if [[ "$SCR" != "" ]]
-        	then 
-           	echo -n "Stopping $SCR..."
-           	$SCREEN -S $SCR -X quit
-				echo "done."
-        	else
-           	echo "Stopping ${ORDERS[$i]}: ${ORDERS[$i]} not running"
-        	fi
-     	done
-		pgrep piardop2 >/dev/null && kill -9 $(pgrep piardop2)
-		KISSATTACHPID="$(pgrep kissattach)"
-		if [[ $KISSATTACHPID != "" ]]
-		then
-     		echo -n "Stopping kissattach..."
-     		sudo killall kissattach
-     		rm -f /tmp/kisstnc
-     		echo "done."
-		fi
-		rm -f /tmp/tnc*
+			ORDERS=( rigctld piardop2 direwolf pat )
+			#ORDERS=( rigctld direwolf )
+			echo
+  			for i in ${!ORDERS[@]}
+  			do
+     			SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
+     			if [[ "$SCR" != "" ]]
+     			then 
+        			echo -n "Stopping $SCR..."
+        			$SCREEN -S $SCR -X quit
+      			echo "done."
+      		else
+        			echo "Stopping ${ORDERS[$i]}: ${ORDERS[$i]} not running"
+      		fi
+  			done
+   		pgrep piardop2 >/dev/null && kill -9 $(pgrep piardop2)
+			KISSATTACHPID="$(pgrep kissattach)"
+			if [[ $KISSATTACHPID != "" ]]
+			then
+   			echo -n "Stopping kissattach..."
+   			sudo killall kissattach
+   			rm -f /tmp/kisstnc
+   			echo "done."
+			fi
      	;;
    *)
 		Usage
      	;;
 esac
+SafeExit
 

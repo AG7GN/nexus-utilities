@@ -33,6 +33,9 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 
 [Edit Desktop Text script](#edit-desktop-text-script)
 
+[fsq_search.sh](#fsq-search-script)
+
+
 ## Installation
 
 ### Install
@@ -189,3 +192,13 @@ If your image is older than 20191214 and you want to install the customizable Ne
 	pcmanfm --reconfigure
 
 After you start the script (__Raspberry > Preferences > Edit Desktop Background Text__), enter the text you want to display and optionally check the box to show your Pi's host name, then click __OK__.  The script won't close until you Cancel, so click __Cancel__ when you're satisfied with your new desktop.
+
+## FSQ Search script
+
+This script monitors the `fsq_audit_log.text` file and optionally runs a user specified script upon locating a string provided by the user as search criteria.  It also prints (with an optional timestamp) messages matching the user's search string to stdout.  This script has no GUI and is designed to run in a terminal or as an autostart app in Fldigi.  Only one instance of the script runs at a time and it monitors messages for both the left and right radios simultaneously.  It will kill itself if no more instances of Fldigi are running.
+
+For usage information, run this command in the Terminal:
+
+	fsq_search.sh -h
+	
+
