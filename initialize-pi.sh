@@ -1,187 +1,22 @@
 #!/bin/bash
-#================================================================
-# HEADER
-#================================================================
-#% SYNOPSIS
-#+   ${SCRIPT_NAME} [-hv]
-#%
-#% DESCRIPTION
-#%   This script generates new VNC server and SSH server and client keys and restores 
-#%   certain ham radio application configurations to default values at boot time 
-#%   if a file named DO_NOT_DELETE_THIS_FILE file does not exist in the user's 
-#%   home directory.  
-#%
-#%   Run this script whenever the Pi boots by adding a crontab entry, like this:
-#%
-#%     1) Run crontab -e
-#%     2) Add the following line to the end:
-#%
-#%        @reboot sleep 5 && /usr/local/bin/initialize-pi.sh
-#%
-#%     3) Save and exit the crontab editor
-#%
-#% OPTIONS
-#%    -h, --help                  Print this help
-#%    -v, --version               Print script information
-#%
-#================================================================
-#- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.16.3
-#-    author          Steve Magnuson, AG7GN
-#-    license         CC-BY-SA Creative Commons License
-#-    script_id       0
-#-
-#================================================================
-#  HISTORY
-#     20181220 : Steve Magnuson : Script creation
-#     20200204 : Steve Magnuson : Added script template
-# 
-#================================================================
-#  DEBUG OPTION
-#    set -n  # Uncomment to check your syntax, without execution.
-#    set -x  # Uncomment to debug this shell script
+
+VERSION="1.15.2"
+
 #
-#================================================================
-# END_OF_HEADER
-#================================================================
-
-SYNTAX=false
-DEBUG=false
-
-#============================
-#  FUNCTIONS
-#============================
-
-function TrapCleanup() {
-  [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-  exit 0
-}
-
-function SafeExit() {
-  # Delete temp files, if any
-  [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-  trap - INT TERM EXIT
-  exit
-}
-
-function ScriptInfo() { 
-	HEAD_FILTER="^#-"
-	[[ "$1" = "usage" ]] && HEAD_FILTER="^#+"
-	[[ "$1" = "full" ]] && HEAD_FILTER="^#[%+]"
-	[[ "$1" = "version" ]] && HEAD_FILTER="^#-"
-	head -${SCRIPT_HEADSIZE:-99} ${0} | grep -e "${HEAD_FILTER}" | \
-	sed -e "s/${HEAD_FILTER}//g" \
-	    -e "s/\${SCRIPT_NAME}/${SCRIPT_NAME}/g" \
-	    -e "s/\${SPEED}/${SPEED}/g" \
-	    -e "s/\${DEFAULT_PORTSTRING}/${DEFAULT_PORTSTRING}/g"
-}
-
-function Usage() { 
-	printf "Usage: "
-	ScriptInfo usage
-	exit
-}
-
-function Die () {
-	echo "${*}"
-	SafeExit
-}
-
-#============================
-#  FILES AND VARIABLES
-#============================
-
-  #== general variables ==#
-SCRIPT_NAME="$(basename ${0})" # scriptname without path
-SCRIPT_DIR="$( cd $(dirname "$0") && pwd )" # script directory
-SCRIPT_FULLPATH="${SCRIPT_DIR}/${SCRIPT_NAME}"
-SCRIPT_ID="$(ScriptInfo | grep script_id | tr -s ' ' | cut -d' ' -f3)"
-SCRIPT_HEADSIZE=$(grep -sn "^# END_OF_HEADER" ${0} | head -1 | cut -f1 -d:)
-VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)" 
-
+# Script to generate new VNC server and SSH server keys at boot time if a certain 
+# file does not exist.  Run this script whenever the Pi boots by adding a crontab 
+# entry, like this:
+#
+# 1) Run crontab -e
+# 2) Add the following line to the end:
+#
+#    @reboot sleep 5 && /usr/local/bin/initialize-pi.sh
+#
+# 3) Save and exit the crontab editor
+#
 
 DIR="$HOME"
 INIT_DONE_FILE="$DIR/DO_NOT_DELETE_THIS_FILE"
-
-#============================
-#  PARSE OPTIONS WITH GETOPTS
-#============================
-  
-#== set short options ==#
-SCRIPT_OPTS=':hv-:'
-
-#== set long options associated with short one ==#
-typeset -A ARRAY_OPTS
-ARRAY_OPTS=(
-	[help]=h
-	[version]=v
-)
-
-# Parse options
-while getopts ${SCRIPT_OPTS} OPTION ; do
-	# Translate long options to short
-	if [[ "x$OPTION" == "x-" ]]; then
-		LONG_OPTION=$OPTARG
-		LONG_OPTARG=$(echo $LONG_OPTION | grep "=" | cut -d'=' -f2)
-		LONG_OPTIND=-1
-		[[ "x$LONG_OPTARG" = "x" ]] && LONG_OPTIND=$OPTIND || LONG_OPTION=$(echo $OPTARG | cut -d'=' -f1)
-		[[ $LONG_OPTIND -ne -1 ]] && eval LONG_OPTARG="\$$LONG_OPTIND"
-		OPTION=${ARRAY_OPTS[$LONG_OPTION]}
-		[[ "x$OPTION" = "x" ]] &&  OPTION="?" OPTARG="-$LONG_OPTION"
-		
-		if [[ $( echo "${SCRIPT_OPTS}" | grep -c "${OPTION}:" ) -eq 1 ]]; then
-			if [[ "x${LONG_OPTARG}" = "x" ]] || [[ "${LONG_OPTARG}" = -* ]]; then 
-				OPTION=":" OPTARG="-$LONG_OPTION"
-			else
-				OPTARG="$LONG_OPTARG";
-				if [[ $LONG_OPTIND -ne -1 ]]; then
-					[[ $OPTIND -le $Optnum ]] && OPTIND=$(( $OPTIND+1 ))
-					shift $OPTIND
-					OPTIND=1
-				fi
-			fi
-		fi
-	fi
-
-	# Options followed by another option instead of argument
-	if [[ "x${OPTION}" != "x:" ]] && [[ "x${OPTION}" != "x?" ]] && [[ "${OPTARG}" = -* ]]; then 
-		OPTARG="$OPTION" OPTION=":"
-	fi
-
-	# Finally, manage options
-	case "$OPTION" in
-		h) 
-			ScriptInfo full
-			exit 0
-			;;
-		v) 
-			ScriptInfo version
-			exit 0
-			;;
-		:) 
-			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
-			;;
-		?) 
-			Die "${SCRIPT_NAME}: -$OPTARG: unknown option"
-			;;
-	esac
-done
-shift $((${OPTIND} - 1)) ## shift options
-
-#============================
-#  MAIN SCRIPT
-#============================
-
-# Trap bad exits with cleanup function
-trap SafeExit EXIT INT TERM
-
-# Exit on error. Append '||true' when you run the script if you expect an error.
-set -o errexit
-
-# Check Syntax if set
-$SYNTAX && set -n
-# Run in debug mode, if set
-$DEBUG && set -x 
 
 # Does $INIT_DONE_FILE exist?  Is it a regular file? Is it not empty? If YES to all, then 
 # exit.
@@ -357,5 +192,3 @@ THRESHOLD=$((8 * 1024 * 1024))
 
 echo "Raspberry Pi initialization complete" >> "$INIT_DONE_FILE"
 sudo shutdown -r now
-
-
