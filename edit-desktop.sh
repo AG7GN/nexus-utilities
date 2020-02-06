@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.1.4
+#-    version         ${SCRIPT_NAME} 1.1.5
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -180,7 +180,7 @@ $DEBUG && set -x
 if ! command -v convert >/dev/null
 then
    yad --center --title="Desktop Text Editor - version $VERSION" --info --borders=30 \
-    --no-wrap --text="<b>The 'convert' application is not installed.  Run this command in the Terminal:\n\nsudo apt update && sudo apt install -y imagemagick, then run this script again.</b>" --buttons-layout=center \
+    --no-wrap --selectable-labels --text="<b>The 'convert' application is not installed.  Run this command in the Terminal:\n\nsudo apt update &amp;&amp; sudo apt install -y imagemagick\n\nthen run this script again.</b>" --buttons-layout=center \
 --button=Close:0
 	SafeExit
 	#sudo apt update || Die "Could not run 'sudo apt update'"
