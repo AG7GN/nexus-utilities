@@ -97,7 +97,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 3.3.2
+#-    version         ${SCRIPT_NAME} 3.3.6
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -123,22 +123,18 @@ DEBUG=false
 #  FUNCTIONS
 #============================
 
-function TrapCleanup() {
-   ${SCRIPT_NAME} stop
-  	rm -f /tmp/tnc*
-	rm -f $CONFFILE
+function TrapCleanup () {
+	${SCRIPT_NAME} stop
 	exit 0
 }
 
-function SafeExit() {
-   ${SCRIPT_NAME} stop
-  	rm -f /tmp/tnc*
+function SafeExit () {
+ 	rm -f /tmp/tnc*
 	rm -f $CONFFILE
-	trap - INT TERM EXIT
 	exit
 }
 
-function ScriptInfo() { 
+function ScriptInfo () { 
 	HEAD_FILTER="^#-"
 	[[ "$1" = "usage" ]] && HEAD_FILTER="^#+"
 	[[ "$1" = "full" ]] && HEAD_FILTER="^#[%+]"
@@ -148,15 +144,15 @@ function ScriptInfo() {
 	    -e "s/\${SCRIPT_NAME}/${SCRIPT_NAME}/g"
 }
 
-function Usage() { 
+function Usage () { 
 	printf "Usage:\n"
 	ScriptInfo usage
-	exit 1
+	exit 0
 }
 
 function Die () {
 	echo "${*}"
-	SafeExit
+	exit 1
 }
 
 #---------------------------------------
@@ -468,7 +464,8 @@ shift $((${OPTIND} - 1)) ## shift options
 #============================
 
 # Trap bad exits with cleanup function
-trap SafeExit EXIT INT TERM
+trap TrapCleanup INT
+trap SafeExit TERM EXIT
 
 # Exit on error. Append '||true' when you run the script if you expect an error.
 set -o errexit
@@ -592,7 +589,7 @@ case "$ACTION" in
          		[[ "$SCR" != "" ]] && { pkill piardop2; $SCREEN -S $SCR -X quit; }
       		done
       		## Kill existing session if it exists
-      		pgrep kissattach >/dev/null && kill $(pgrep kissattach)
+      		pgrep kissattach >/dev/null && sudo kill $(pgrep kissattach)
 				## Are the apps installed?
       		for i in kissattach kissparms
       		do
@@ -743,34 +740,33 @@ case "$ACTION" in
 		esac
 		;;
    stop)
-			ORDERS=( rigctld piardop2 direwolf pat )
-			#ORDERS=( rigctld direwolf )
-			echo
-  			for i in ${!ORDERS[@]}
-  			do
-     			SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
-     			if [[ "$SCR" != "" ]]
-     			then 
-        			echo -n "Stopping $SCR..."
-        			$SCREEN -S $SCR -X quit
-      			echo "done."
-      		else
-        			echo "Stopping ${ORDERS[$i]}: ${ORDERS[$i]} not running"
-      		fi
-  			done
-   		pgrep piardop2 >/dev/null && kill -9 $(pgrep piardop2)
-			KISSATTACHPID="$(pgrep kissattach)"
-			if [[ $KISSATTACHPID != "" ]]
-			then
-   			echo -n "Stopping kissattach..."
-   			sudo killall kissattach
-   			rm -f /tmp/kisstnc
+		ORDERS=( rigctld piardop2 direwolf pat )
+		#ORDERS=( rigctld direwolf )
+		echo
+		for i in ${!ORDERS[@]}
+		do
+  			SCR="$($SCREEN -list | grep ${ORDERS[$i]} | tr -d ' \t' | cut -d'(' -f1 | tr -d '\n')"
+  			if [[ "$SCR" != "" ]]
+  			then 
+   			echo -n "Stopping $SCR..."
+   			$SCREEN -S $SCR -X quit
    			echo "done."
-			fi
+    		else
+     			echo "Stopping ${ORDERS[$i]}: ${ORDERS[$i]} not running"
+     		fi
+		done
+  		pgrep piardop2 >/dev/null && kill -9 $(pgrep piardop2)
+		KISSATTACHPID="$(pgrep kissattach)"
+		if [[ $KISSATTACHPID != "" ]]
+		then
+  			echo -n "Stopping kissattach..."
+  			sudo killall kissattach
+  			rm -f /tmp/kisstnc
+  			echo "done."
+		fi
      	;;
    *)
 		Usage
      	;;
 esac
-SafeExit
 
