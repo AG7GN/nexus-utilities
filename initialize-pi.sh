@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.15.2"
+VERSION="1.15.3"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -50,6 +50,9 @@ rm -f $DIR/.ssh/id_*
 rm -f $DIR/.ssh/*~
 
 rm -f $DIR/*~
+
+# Clear Terminal history
+history -c
 
 echo "Remove Fldigi suite logs and messages and personalized data" >> "$INIT_DONE_FILE"
 DIRS=".nbems .nbems-left .nbems-right"
