@@ -3,7 +3,7 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+    ${SCRIPT_NAME} [-hv] [-s file] [-w seconds] [-t date_format] [search_string]
+#+    ${SCRIPT_NAME} [-hv] [-c command] [-w seconds] [-t date_format] [search_string]
 #%
 #% DESCRIPTION
 #%    Searches for text in messages logged in ${FSQ_AUDIT_FILE}.  
@@ -78,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.2
+#-    version         ${SCRIPT_NAME} 1.2.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
