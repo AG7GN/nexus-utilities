@@ -8,8 +8,9 @@
 #% DESCRIPTION
 #%    Searches for text in messages logged in ${FSQ_AUDIT_FILE}.  
 #%    The script will print matching lines, with optional timestamp, to stdout
-#%    and will optionally launch a script on a match.  search_string can be a
-#%    regular expression.  If no search_string is supplied, all messages will match.
+#%    and will optionally launch a command on a match.  The command is run in the 
+#%    background.  search_string can be a regular expression.  If no search_string is 
+#%    supplied, all messages will match.
 #%    
 #%    Only one instance of this script will run at a time and only if at least one 
 #%    instance of Fldigi is running.  The script will kill itself when no more 
@@ -24,7 +25,8 @@
 #%    w7ecg:81ag7gn this is my message.
 #%
 #% OPTIONS
-#%    -s file, --script=file      Launch the script/app in file if a match is found.  
+#%    -s command, --script=command      
+#%                                Launch the script/app in file if a match is found.  
 #%                                Wrap in double quotes if arguments to app are supplied.  
 #%                                See EXAMPLES below.
 #%    -t date_format, --timestamp=date_format
@@ -62,6 +64,13 @@
 #%
 #%       ${SCRIPT_NAME} -s "aplay -q alert.wav" ":..(ag7gn|wc7hq|n7bel)" >/dev/null
 #%
+#%    Match messages where the called station is ag7gn, followed by the string
+#%    'steve' anywhere in the remainder of the message.  
+#%    Play an OGG file with 'paplay' to pulseaudio device 'system-audio-playback'
+#%    on match.  Don't print matching messages to stdout:
+#%
+#%       ${SCRIPT_NAME} -s "paplay --device=system-audio-playback fsq_ag7gn.ogg" ":..ag7gn.*steve" >/dev/null
+#%
 #%    Match messages where the calling station is either wc7hq or n7bel.  Prepend
 #%    the messages printed to stdout with a specific timestamp format:
 #%
@@ -69,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.1.7
+#-    version         ${SCRIPT_NAME} 1.1.8
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
