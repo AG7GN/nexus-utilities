@@ -25,9 +25,9 @@
 #%    w7ecg:81ag7gn this is my message.
 #%
 #% OPTIONS
-#%    -s command, --script=command      
-#%                                Launch the script/app in file if a match is found.  
-#%                                Wrap in double quotes if arguments to app are supplied.  
+#%    -c command, --command=command      
+#%                                Launch command if a match is found.  Wrap in 
+#%                                double quotes if arguments to command are supplied.  
 #%                                See EXAMPLES below.
 #%    -t date_format, --timestamp=date_format
 #%                                Precede each message printed to stdout with a 
@@ -62,14 +62,14 @@
 #%    Match messages where the called station is any of ag7gn or wc7hq or n7bel.  
 #%    Play a WAV file on match.  Don't print matching messages to stdout:
 #%
-#%       ${SCRIPT_NAME} -s "aplay -q alert.wav" ":..(ag7gn|wc7hq|n7bel)" >/dev/null
+#%       ${SCRIPT_NAME} -c "aplay -q alert.wav" ":..(ag7gn|wc7hq|n7bel)" >/dev/null
 #%
 #%    Match messages where the called station is ag7gn, followed by the string
 #%    'steve' anywhere in the remainder of the message.  
 #%    Play an OGG file with 'paplay' to pulseaudio device 'system-audio-playback'
 #%    on match.  Don't print matching messages to stdout:
 #%
-#%       ${SCRIPT_NAME} -s "paplay --device=system-audio-playback fsq_ag7gn.ogg" ":..ag7gn.*steve" >/dev/null
+#%       ${SCRIPT_NAME} -c "paplay --device=system-audio-playback fsq_ag7gn.ogg" ":..ag7gn.*steve" >/dev/null
 #%
 #%    Match messages where the calling station is either wc7hq or n7bel.  Prepend
 #%    the messages printed to stdout with a specific timestamp format:
@@ -78,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.1.8
+#-    version         ${SCRIPT_NAME} 1.2.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -197,7 +197,7 @@ ARRAY_OPTS=(
 	[help]=h
 	[version]=v
 	[man]=h
-	[script]=s
+	[command]=c
 	[timestamp]=t
 	[wait]=w
 )
@@ -245,7 +245,7 @@ do
 			ScriptInfo full
 			exit 0
 			;;
-		s) 
+		c) 
 			SCRIPT="$OPTARG" 
 			#[[ -s "$SCRIPT" ]] || Die "${SCRIPT_NAME}: \""$SCRIPT"\" not found."
 			;;
