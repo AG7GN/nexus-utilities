@@ -78,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.1
+#-    version         ${SCRIPT_NAME} 1.2.2
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -189,7 +189,7 @@ declare -i MAX_WAIT=300
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':hs:w:t:v-:'
+SCRIPT_OPTS=':hc:w:t:v-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
