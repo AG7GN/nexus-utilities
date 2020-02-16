@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.15.3"
+VERSION="1.16.6"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -50,9 +50,6 @@ rm -f $DIR/.ssh/id_*
 rm -f $DIR/.ssh/*~
 
 rm -f $DIR/*~
-
-# Clear Terminal history
-history -c
 
 echo "Remove Fldigi suite logs and messages and personalized data" >> "$INIT_DONE_FILE"
 DIRS=".nbems .nbems-left .nbems-right"
@@ -186,6 +183,31 @@ for F in `ls $D/*-left.template 2>/dev/null` `ls $D/*-right.template 2>/dev/null
 do
    sudo sed -e "s/_LEFT_RADIO_/Left Radio/" -e "s/_RIGHT_RADIO_/Right Radio/g" $F > ${F%.*}.desktop
 done
+
+# Reset pat configuration
+if [ -f $HOME/.wl2k/config.json ]
+then
+	sed -i -e 's/"mycall": .*",$/"mycall": "",/' \
+		-e 's/"secure_login_password": .*",$/"secure_login_password": "",/' \
+		-e 's/"locator": .*",$/"locator": "",/' $HOME/.wl2k/config.json
+	rm -f $HOME/.wl2k/config.json~
+	echo "Delete pat configuration" >> "$INIT_DONE_FILE"
+fi
+
+# Reset Desktop image
+if [ -f $HOME/.config/pcmanfm/LXDE-pi/desktop-items-0.conf ]
+then
+	rm -f $HOME/desktop-text.conf
+	rm -f $HOME/Pictures/TEXT_*.jpg
+	if [ -f $HOME/Pictures/NexusDeskTop.jpg ]
+	then
+		sed -i -e "s|^wallpaper=.*|wallpaper=$HOME/Pictures/NexusDeskTop.jpg|" $HOME/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
+	fi
+fi
+
+# Clear Terminal history
+echo "" > $HOME/.bash_history && history -c
+echo "Delete shell history" >> "$INIT_DONE_FILE"
 
 # Expand the filesystem if it is < 8 GB 
 echo "Expand filesystem if needed" >> "$INIT_DONE_FILE"
