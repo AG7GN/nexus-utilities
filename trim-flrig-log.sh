@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.5"
+VERSION="1.5.1"
 
 # This script removes log files from the $HOME/.flrig* folder(s) and subfolders.
 # Files with "last modified" timestamps that are before the specified time 
@@ -43,7 +43,7 @@ fi
 
 for D in $DIRS
 do
-	for F in $(ls -R ${D}/*txt* 2>/dev/null)
+	for F in ${D}/*txt*
 	do
 		[ -e "$F" ] && [ -f "$F" ] || continue
 		STAMP="$(stat -c %Y $F)"

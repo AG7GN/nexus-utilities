@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.16.6"
+VERSION="1.16.7"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -95,7 +95,7 @@ done
 DIRS=".fldigi .fldigi-left .fldigi-right"
 for D in $DIRS
 do
-   for F in $(ls -R $DIR/$D/*log* 2>/dev/null)
+   for F in $DIR/$D/*log*
 	do
 		[ -e $F ] && [ -f $F ] && rm -f $F
 	done

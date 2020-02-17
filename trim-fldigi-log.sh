@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.5"
+VERSION="1.5.1"
 
 #
 # This script removes log files from the $HOME/.fldigi* folder(s) and subfolders.
@@ -44,7 +44,7 @@ fi
 
 for D in $DIRS
 do
-	for F in $(ls -R ${D}/*log* 2>/dev/null)
+	for F in ${D}/*log*
 	do
 		[ -e $F ] && [ -f "$F" ] && ! [[ $F =~ logbook ]] || continue
 		STAMP="$(stat -c %Y $F)"

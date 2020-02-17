@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.5"
+VERSION="1.5.1"
 
 #
 # This script removes log files from the $HOME/.flmsg* folder(s) and subfolders.
@@ -46,7 +46,7 @@ for D in $DIRS
 do
 	for S in $SDIRS
 	do
-		for F in $(ls -R ${D}${S} 2>/dev/null)
+		for F in ${D}${S}
 		do
 			[ -e "$F" ] && [ -f "$F" ] || continue
 			STAMP="$(stat -c %Y $F)"
