@@ -4,6 +4,7 @@
 #================================================================
 #% SYNOPSIS
 #+   ${SCRIPT_NAME} [-hv] TO SUBECT TRANSPORT
+#+   ${SCRIPT_NAME} [-l FILE] TO SUBECT TRANSPORT
 #%
 #% DESCRIPTION
 #%   This script allows sending Winlink messages via the command line or script.
@@ -13,9 +14,14 @@
 #% OPTIONS
 #%    -h, --help                  Print this help
 #%    -v, --version               Print script information
+#%    -l FILE, --log=FILE         Send pat diagnostic output to FILE.  FILE will be 
+#%                                overwritten if it exists.  
+#%                                To send output to stdout, use /dev/stdout.
+#%                                Default: /dev/null
 #% 
 #% COMMANDS (All 3 COMMANDS are required)
-#%    TO                          One or more recipient comma separated email addresses.
+#%    TO                          One or more recipient email addresses 
+#%                                (comma separated).
 #%                                Winlink email addresses (CALL@winlink.org)
 #%                                do not need to include '@winlink.org', just the 
 #%                                call sign.
@@ -24,9 +30,13 @@
 #%
 #%    TRANSPORT                   pat transport method.  For example:
 #%                                   telnet
-#%                                   ax25:///call-ssid
+#%                                   ax25://portname/call-ssid
+#%                                      where portname is as defined in /etc/ax25/axports
+#%                                      and the same as the ax25 port in
+#%                                      ~/.wl2k/config.json.  This is usually 'wl2k'.
+#%
 #%                                      where call-ssid is the RMS gateway.  Example:
-#%                                      ax25:///W7ECG-10
+#%                                      ax25://wl2k/W7ECG-10
 #%
 #%                                   Run 'pat connect help' to see more transport
 #%                                   types.
@@ -41,14 +51,19 @@
 #%    
 #%      cat myfile.txt | ${SCRIPT_NAME} me@example.com,W7ABC "My Important Message" telnet
 #%    
+#%    Send the contents of file 'myfile.txt' to W7ABC@winlink.org via telnet and log 
+#%    output to stdout:
+#%    
+#%      cat myfile.txt | ${SCRIPT_NAME} -l /dev/stdout me@example.com,W7ABC "My Important Message" telnet
+#%    
 #%    Send the contents of 'myfile.txt' to me@example.com and W7ABC@winlink.org using
-#%    packet radio via RMS gateway ax25:///W7ECG-10
+#%    packet radio via RMS gateway ax25://wl2k/W7ECG-10
 #%
-#%    ${SCRIPT_NAME} me@example.com,W7ABC "My Important Message" ax25:///W7ECG-10 < myfile.txt 
+#%    ${SCRIPT_NAME} me@example.com,W7ABC "My Important Message" ax25://wl2k/W7ECG-10 < myfile.txt 
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.1.2
+#-    version         ${SCRIPT_NAME} 2.2.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -57,6 +72,7 @@
 #  HISTORY
 #     20190920 : Steve Magnuson : Script creation
 #     20200204 : Steve Magnuson : Added script template
+#     20200227 : Steve Magnuson : Added option to send pat log text to a file or stdout
 # 
 #================================================================
 #  DEBUG OPTION
@@ -136,13 +152,14 @@ VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)"
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':hv-:'
+SCRIPT_OPTS=':l:hv-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
 	[version]=v
+	[log]=l
 )
 
 # Parse options
@@ -186,6 +203,9 @@ while getopts ${SCRIPT_OPTS} OPTION ; do
 			ScriptInfo version
 			exit 0
 			;;
+		l)
+			EVENT_LOG="$OPTARG"
+			;;
 		:) 
 			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
 			;;
@@ -222,6 +242,7 @@ PATDIR="$HOME/.wl2k"
 CALL="$(cat $PATDIR/config.json | grep "\"mycall\":" | tr -d ' ",' | cut -d: -f2)"
 [[ $CALL == "" ]] && Die "Could not obtain call sign from $PATDIR/config.json.  Is pat configured?"
 OUTDIR="$PATDIR/mailbox/$CALL/out"
+EVENT_LOG="${EVENT_LOG:-/dev/null}"
 
 TO="$1"
 SUBJECT="$2"
@@ -242,6 +263,7 @@ COUNT="$(wc -c $TFILE | cut -d' ' -f1)"
 cat $TFILE >> $MSG
 #rm $TFILE
 sed -i -e "s/^Body: .*/Body: $COUNT/" $MSG
-$PAT --send-only --event-log /dev/null connect $3 >/dev/null 2>&1
+echo > "$EVENT_LOG"
+$PAT --send-only --event-log "$EVENT_LOG" connect $3 >> "$EVENT_LOG"
 exit $?
 
