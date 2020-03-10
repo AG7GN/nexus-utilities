@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 20191218
+VERSION 20200310
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
@@ -34,6 +34,8 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 [Edit Desktop Text script](#edit-desktop-text-script)
 
 [fsq_search.sh](#fsq-search-script)
+
+[vnc-server-activity.sh](vnc-server-activity-script)
 
 
 ## Installation
@@ -201,4 +203,17 @@ For usage information, run this command in the Terminal:
 
 	fsq_search.sh -h
 	
+## VNC Server Activity script
+
+This script extracts Connection events for VNC server activity occuring in the past 24 hours and emails results via [patmail.sh](#patmail-script) and pat.
+
+- Prerequisites
+	- pat and [patmail.sh](#patmail-script) must be installed.  
+	- pat must be configured. 
+
+Before running the script, you must specify the recipient's email address(es) by editing the script.  The destination email addresses are assigned to the `MAILTO` variable.
+
+You can execute this script automatically via cron.  The following example will run it once per day and report on the previous 24-hour's VNC connections.  This example will run at 3 minutes after midnight every day:
+
+	3 0 * * *   /usr/local/bin/vnc-server-activity.sh 2>&1 >/dev/null
 
