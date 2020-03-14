@@ -78,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.6
+#-    version         ${SCRIPT_NAME} 1.2.7
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -197,7 +197,6 @@ typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
 	[version]=v
-	[man]=h
 	[command]=c
 	[timestamp]=t
 	[wait]=w
