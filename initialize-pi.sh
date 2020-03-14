@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.16.7"
+VERSION="1.16.8"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -137,7 +137,7 @@ do
 done
 
 echo "Restore defaults for tnc-*.conf files" >> "$INIT_DONE_FILE"
-sed -i 's/^MYCALL=.*/MYCALL=\"N0ONE-10\"/' $(ls $DIR/tnc-*.conf)
+sed -i 's/^MYCALL=.*/MYCALL=\"N0ONE-10\"/' $DIR/tnc-*.conf
 
 # Restore defaults for rmsgw
 
@@ -179,7 +179,7 @@ crontab -u $USER -l | grep -v "autohotspotN" | crontab -u $USER -
 # Set radio names to default
 rm -f $HOME/radionames.conf
 D="/usr/local/share/applications"
-for F in `ls $D/*-left.template 2>/dev/null` `ls $D/*-right.template 2>/dev/null`
+for F in $D/*-left.template $D/*-right.template
 do
    sudo sed -e "s/_LEFT_RADIO_/Left Radio/" -e "s/_RIGHT_RADIO_/Right Radio/g" $F > ${F%.*}.desktop
 done

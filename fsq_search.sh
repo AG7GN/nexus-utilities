@@ -78,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.3
+#-    version         ${SCRIPT_NAME} 1.2.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -98,6 +98,7 @@
 
 SYNTAX=false
 DEBUG=false
+Optnum=$#
 
 #============================
 #  FUNCTIONS
