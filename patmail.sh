@@ -63,7 +63,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.2.5
+#-    version         ${SCRIPT_NAME} 2.2.6
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -85,6 +85,7 @@
 
 SYNTAX=false
 DEBUG=false
+Optnum=$#
 
 #============================
 #  FUNCTIONS
@@ -162,12 +163,16 @@ ARRAY_OPTS=(
 	[log]=l
 )
 
+LONG_OPTS="^($(echo "${!ARRAY_OPTS[@]}" | tr ' ' '|'))="
+
 # Parse options
-while getopts ${SCRIPT_OPTS} OPTION ; do
+while getopts ${SCRIPT_OPTS} OPTION
+do
 	# Translate long options to short
-	if [[ "x$OPTION" == "x-" ]]; then
+	if [[ "x$OPTION" == "x-" ]]
+	then
 		LONG_OPTION=$OPTARG
-		LONG_OPTARG=$(echo $LONG_OPTION | grep "=" | cut -d'=' -f2)
+		LONG_OPTARG=$(echo $LONG_OPTION | egrep "$LONG_OPTS" | cut -d'=' -f2-)
 		LONG_OPTIND=-1
 		[[ "x$LONG_OPTARG" = "x" ]] && LONG_OPTIND=$OPTIND || LONG_OPTION=$(echo $OPTARG | cut -d'=' -f1)
 		[[ $LONG_OPTIND -ne -1 ]] && eval LONG_OPTARG="\$$LONG_OPTIND"
