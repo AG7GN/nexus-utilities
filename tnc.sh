@@ -97,7 +97,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 3.3.7
+#-    version         ${SCRIPT_NAME} 3.3.8
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -392,11 +392,8 @@ SCRIPT_OPTS=':hc:v-:'
 typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
+	[config]=c
 	[version]=v
-	[man]=h
-	[script]=s
-	[timestamp]=t
-	[wait]=w
 )
 
 LONG_OPTS="^($(echo "${!ARRAY_OPTS[@]}" | tr ' ' '|'))="
