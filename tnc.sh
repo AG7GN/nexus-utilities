@@ -97,7 +97,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 3.3.6
+#-    version         ${SCRIPT_NAME} 3.3.7
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -405,7 +405,7 @@ do
 	if [[ "x$OPTION" == "x-" ]]
 	then
 		LONG_OPTION=$OPTARG
-		LONG_OPTARG=$(echo $LONG_OPTION | grep "=" | cut -d'=' -f2)
+		LONG_OPTARG=$(echo $LONG_OPTION | grep "=" | cut -d'=' -f2-)
 		LONG_OPTIND=-1
 		[[ "x$LONG_OPTARG" = "x" ]] && LONG_OPTIND=$OPTIND || LONG_OPTION=$(echo $OPTARG | cut -d'=' -f1)
 		[[ $LONG_OPTIND -ne -1 ]] && eval LONG_OPTARG="\$$LONG_OPTIND"
