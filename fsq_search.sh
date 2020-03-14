@@ -25,16 +25,16 @@
 #%    w7ecg:81ag7gn this is my message.
 #%
 #% OPTIONS
-#%    -c command, --command=command      
+#%    -c COMMAND, --command=COMMAND      
 #%                                Launch command if a match is found.  Wrap in 
 #%                                double quotes if arguments to command are supplied.  
 #%                                See EXAMPLES below.
-#%    -t date_format, --timestamp=date_format
+#%    -t DATE_FORMAT|default, --timestamp=DATE_FORMAT|default
 #%                                Precede each message printed to stdout with a 
-#%                                timestamp in date_format.  Run 'man date' for 
-#%                                available formats.  -t "" will use the default date
-#%                                format.  Example: -t "+%Y%m%dT%H%M%S"
-#%    -w seconds, --wait=seconds
+#%                                timestamp in DATE_FORMAT.  Run 'man date' for 
+#%                                available formats.  -t default will use the default
+#%                                date format.  Example: -t "+%Y%m%dT%H%M%S"
+#%    -w SECONDS, --wait=SECONDS
 #%                                Minimum time in seconds between -s script executions. 
 #%                                Higher values reduce number of script executions.
 #%                                Range: ${MIN_WAIT}-${MAX_WAIT}  Default: ${WAIT}
@@ -57,7 +57,7 @@
 #%    message. Matching lines will be printed to stdout prepended with the default 
 #%    timestamp:
 #%    
-#%       ${SCRIPT_NAME} -t "" "ag7gn|wc7hq|n7bel"
+#%       ${SCRIPT_NAME} -t default "ag7gn|wc7hq|n7bel"
 #%
 #%    Match messages where the called station is any of ag7gn or wc7hq or n7bel.  
 #%    Play a WAV file on match.  Don't print matching messages to stdout:
@@ -78,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.4
+#-    version         ${SCRIPT_NAME} 1.2.5
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -137,7 +137,7 @@ function Usage() {
 }
 
 function Die () {
-	echo "${*} Exiting."
+	echo "${*}, Exiting."
 	SafeExit
 }
 
@@ -253,7 +253,7 @@ do
 		t) 
 			DATE_FORMAT="$OPTARG" 
 			DATE_CMD=""
-			if [[ $DATE_FORMAT != "" ]]
+			if [[ $DATE_FORMAT != "default" ]]
 			then
 				date "$DATE_FORMAT" >/dev/null 2>&1 || Die "${SCRIPT_NAME}: Invalid timestamp date format.  See 'man date'"
 				DATE_CMD="date "$DATE_FORMAT""
