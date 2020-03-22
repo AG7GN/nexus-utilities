@@ -78,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.7
+#-    version         ${SCRIPT_NAME} 1.2.8
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -305,7 +305,7 @@ SEARCH_STRING="${1:-.*}"  # Match anything if no search_string supplied.
 declare -i LAST=$(( $(date +%s) - WAIT ))
 PID="$(pgrep -n fldigi)"
 # Start Of Message Regular Expression
-SOM_RE="^[a-z]{1,2}[0-9].*:..[a-z]{1,2}[0-9]" 
+SOM_RE="^[a-z]{1,2}[0-9].*:..([a-z]{1,2}[0-9]|allcall)" 
 # End Of Message Regular Expression. FSQ end in '<BS>'. read cmd chops off trailing '>'
 EOM_RE="<BS$" 
 COMPLETE_MESSAGE_RE="${SOM_RE}.*${EOM_RE}"
