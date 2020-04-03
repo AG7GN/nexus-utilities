@@ -3,7 +3,7 @@
 # Extracts Connection events for VNC server activity occuring in the past 24 hours
 # and emails results via patmail.sh and pat
 
-VERSION="1.0.3"
+VERSION="1.1.0"
 
 # Pat and patmail.sh must be installed.  If they are not, exit.
 command -v pat >/dev/null 2>&1 || exit 1
@@ -14,7 +14,7 @@ FILES="/var/log/user.log*"
 # Mail VNC Server login activity for last 24 hours.
 # MAILTO can contain multiple destination email addresses.  Separate addresses with a
 # comma.
-MAILTO="w7ecg.wecg@gmail.com"
+MAILTO="${1:-w7ecg.wecg@gmail.com}"
 FILTERED="$(mktemp)"
 OUTFILE="$(mktemp)"
 grep -h Connections $FILES 2>/dev/null 1>$FILTERED
@@ -48,6 +48,6 @@ fi
 #   cat $OUTFILE
 #} | /usr/sbin/ssmtp $MAILTO
 
-cat $OUTFILE | sort | uniq | /usr/local/bin/patmail.sh $MAILTO "$HOSTNAME VNC Server activity for 24 hours preceding `date`" telnet
+cat $OUTFILE | sort | uniq | $(command -v patmail.sh) $MAILTO "$HOSTNAME VNC Server activity for 24 hours preceding `date`" telnet
 rm $OUTFILE
 rm $FILTERED
