@@ -2,8 +2,11 @@
 
 # Extracts Connection events for VNC server activity occuring in the past 24 hours
 # and emails results via patmail.sh and pat
+#
+# Usage: vnc-server-activity.sh [email-address[,email-address]...]
+#
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 
 # Pat and patmail.sh must be installed.  If they are not, exit.
 command -v pat >/dev/null 2>&1 || exit 1
