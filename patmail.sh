@@ -63,7 +63,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.2.6
+#-    version         ${SCRIPT_NAME} 2.2.7
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -236,7 +236,7 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-(( $# != 3 )) && Die "3 commands, TO, SUBJECT and TRANSPORT are required."
+(( $# != 3 )) && Die "3 parameters, TO, SUBJECT and TRANSPORT are required."
 
 PAT="$(command -v pat)" 
 [[ $? == 0 ]] || Die "pat winlink client is not installed."
