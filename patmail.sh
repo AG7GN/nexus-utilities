@@ -3,8 +3,9 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+   ${SCRIPT_NAME} [-hv] TO SUBECT TRANSPORT
-#+   ${SCRIPT_NAME} [-l FILE] TO SUBECT TRANSPORT
+#+   ${SCRIPT_NAME} [-hv] 
+#+   ${SCRIPT_NAME} TO SUBECT TRANSPORT
+#+   ${SCRIPT_NAME} [-l FILE] [-f FILE] TO SUBECT TRANSPORT
 #%
 #% DESCRIPTION
 #%   This script allows sending Winlink messages via the command line or script.
@@ -18,6 +19,9 @@
 #%                                overwritten if it exists.  
 #%                                To send output to stdout, use /dev/stdout.
 #%                                Default: /dev/null
+#%    -f FILE, --file=FILE        Attach file to message where file is full path to
+#%                                file.  To attach multiple files, use multiple -f FILE,
+#%                                one per attached file.
 #% 
 #% COMMANDS (All 3 COMMANDS are required)
 #%    TO                          One or more recipient email addresses 
@@ -63,7 +67,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.2.7
+#-    version         ${SCRIPT_NAME} 2.3.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -153,7 +157,7 @@ VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)"
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':l:hv-:'
+SCRIPT_OPTS=':f:l:hv-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
@@ -161,7 +165,10 @@ ARRAY_OPTS=(
 	[help]=h
 	[version]=v
 	[log]=l
+	[file]=f
 )
+
+declare -a ATTACHMENTS=()
 
 LONG_OPTS="^($(echo "${!ARRAY_OPTS[@]}" | tr ' ' '|'))="
 
@@ -194,7 +201,8 @@ do
 	fi
 
 	# Options followed by another option instead of argument
-	if [[ "x${OPTION}" != "x:" ]] && [[ "x${OPTION}" != "x?" ]] && [[ "${OPTARG}" = -* ]]; then 
+	if [[ "x${OPTION}" != "x:" ]] && [[ "x${OPTION}" != "x?" ]] && [[ "${OPTARG}" = -* ]]
+	then 
 		OPTARG="$OPTION" OPTION=":"
 	fi
 
@@ -210,6 +218,9 @@ do
 			;;
 		l)
 			EVENT_LOG="$OPTARG"
+			;;
+		f)
+			ATTACHMENTS+=("$OPTARG")
 			;;
 		:) 
 			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
@@ -256,18 +267,44 @@ SUBJECT="$2"
 
 export EDITOR=ed
 TFILE="${TMPDIR}/message"
-echo -e "$CALL\n$TO\n\n$SUBJECT" | $PAT compose 2>/dev/null 1> $TFILE
+HEADER="$CALL\n$TO\n\n$SUBJECT"
+echo -e "$HEADER" | $PAT compose 2>/dev/null 1> $TFILE
+
 MSG="$(grep "MID:" $TFILE | tr -d ' \t' | cut -d':' -f3)" 
 [[ $MSG == "" ]] && Die "Could not find the MID (Message ID)"
 MSG="$OUTDIR/$MSG.b2f"
 sed -i -e 's/<No message body>//' $MSG
+if (( ${#ATTACHMENTS[@]} ))
+then
+	for F in "${ATTACHMENTS[@]}"
+	do
+		if [ -s "$F" ]
+		then
+			SIZE=$(stat -L --printf="%s" "$F")
+			HEADER="File: $SIZE ${F##*/}"
+			sed -i "/^From: .*/i $HEADER" "$MSG"
+		else
+			rm "$MSG"
+			Die "Attachment \"$F\" empty or not found. Message not sent."
+		fi
+	done
+fi
 $UNIX2DOS -q $MSG
 cat - > $TFILE
+echo >> $TFILE
 $UNIX2DOS -q $TFILE
-COUNT="$(wc -c $TFILE | cut -d' ' -f1)" 
+COUNT="$(wc -c $TFILE | cut -d' ' -f1)"
 cat $TFILE >> $MSG
-#rm $TFILE
 sed -i -e "s/^Body: .*/Body: $COUNT/" $MSG
+if (( ${#ATTACHMENTS[@]} ))
+then
+	for F in "${ATTACHMENTS[@]}"
+	do
+		cat "$F" >> "$MSG"
+		echo -e -n "\r\n" >> "$MSG"
+	done
+fi
+#rm $TFILE
 echo > "$EVENT_LOG"
 $PAT --send-only --event-log "$EVENT_LOG" connect $3 >> "$EVENT_LOG"
 exit $?
