@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Exec=lxterminal --geometry=120x20 -t "DireWolf TNC (_LEFT_RADIO_)" -e "/usr/local/bin/dw-left.sh"
-Name=Dire Wolf TNC (_LEFT_RADIO_)
+Name=Direwolf TNC (_LEFT_RADIO_)
 Comment=APRS Soundcard TNC
 Icon=/usr/share/direwolf/pixmaps/dw-icon.png
 Path=/home/pi
