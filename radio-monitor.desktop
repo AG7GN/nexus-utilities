@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Radio Monitor
+Name=Radio PTT Monitor
 GenericName=Radio PTT Monitor
 Comment=Shows your radio(s) TX and RX state
 Exec=/usr/local/bin/radio-monitor.py
@@ -7,4 +7,4 @@ Icon=/usr/share/icons/Adwaita/32x32/devices/display-projector-symbolic.symbolic.
 Terminal=false
 Type=Application
 Categories=HamRadio;
-Comment[en_US]=Radio Monitor
+Comment[en_US]=Radio PTT Monitor
