@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Radio Monitor
-GenericName=Radio Monitor
+GenericName=Radio PTT Monitor
 Comment=Shows your radio(s) TX and RX state
 Exec=/usr/local/bin/radio-monitor.py
 Icon=/usr/share/icons/Adwaita/32x32/devices/display-projector-symbolic.symbolic.png
