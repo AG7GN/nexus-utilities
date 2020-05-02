@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.1.7
+#-    version         ${SCRIPT_NAME} 1.1.8
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -180,7 +180,7 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-[ -s $DEFAULT_BACKGROUND_IMAGE ] || errorReport "Default Nexus image not in $DEFAULT_BACKGROUND_IMAGE" 1
+[ -s $DEFAULT_BACKGROUND_IMAGE ] || Die "Default Nexus image not in $DEFAULT_BACKGROUND_IMAGE" 1
 
 if ! command -v convert >/dev/null
 then
@@ -222,7 +222,7 @@ $MESSAGE</b>\n" \
    	--focus-field 1 \
 	)"
 
-	[[ $? == 1 || $? == 252 ]] && errorReport  # User has cancelled.
+	[[ $? == 1 || $? == 252 ]] && Die  # User has cancelled.
 
 	[[ $ANS == "" ]] && Die "Unexpected input from dialog"
 

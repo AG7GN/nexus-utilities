@@ -35,7 +35,7 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 
 [fsq_search.sh](#fsq-search-script)
 
-[vnc-server-activity.sh](vnc-server-activity-script)
+[vnc-server-activity.sh](#vnc-server-activity-script)
 
 
 ## Installation

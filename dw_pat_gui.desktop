@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Direwolf TNC and pat GUI
+GenericName=Direwolf TNC and pat GUI
+Comment=Configure and monitor Direwolf TNC and pat
+Exec=sh -c /usr/local/bin/dw_pat_gui.sh
+Icon=/usr/share/direwolf/pixmaps/dw-icon.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Comment[en_US]=Direwolf TNC and pat GUI
