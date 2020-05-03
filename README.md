@@ -1,6 +1,8 @@
 # Hampi Utilities
 
-VERSION 20200310
+VERSION 2020502
+
+AUTHOR: Steve Magnuson, AG7GN
 
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
@@ -18,6 +20,8 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 [test-piano.sh](#test-piano-script)
 
 [tnc.sh](#tnc-script)
+
+[dw_pat_gui.sh](direwolf-and-pat-gui)
 
 [trim scripts](#trim-scripts)
 
@@ -89,6 +93,10 @@ If `DO_NOT_DELETE_THIS_FILE` is present in the home folder, the script exits wit
 ## Test Piano script
 
 `test-piano.sh` allows you to test the operation of your `pianoX.sh` script by simulating what the [check-piano.sh](#check-piano-script) does when the Pi starts.  Set the piano switches as desired, then open a Terminal and run `test-piano.sh`.  The script will tell you which script will run based on which switch levers are down.  It will not actually run the `pianoX.sh` script.
+
+## Direwolf and pat gui
+
+`dw_pat_gui.sh` provides a GUI to configure the Direwolf TNC and [pat](https://getpat.io/) to make a functional Winlink email client on Hampi.  It also provides a monitor window that shows messages from both Direwolf and pat.
 
 ## TNC Script
 
