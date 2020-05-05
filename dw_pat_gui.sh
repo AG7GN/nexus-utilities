@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.1.9
+#-    version         ${SCRIPT_NAME} 1.2.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -43,22 +43,20 @@ Optnum=$#
 
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-   [[ $DW_PID == "" ]] || kill $DW_PID
-   [[ $PAT_PID == "" ]] || kill $PAT_PID
+   pkill "^(pat|direwolf)"
+   for P in ${YAD_PIDs[@]}
+	do
+		kill $P >/dev/null 2>&1
+	done
    sudo pkill kissattach >/dev/null 2>&1
    rm -f /tmp/kisstnc
-   exit 0
+   rm -f $PIPE
 }
 
 function SafeExit() {
-   # Delete temp files, if any
-   [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-   [[ $DW_PID == "" ]] || kill $DW_PID
-   [[ $PAT_PID == "" ]] || kill $PAT_PID
-   sudo pkill kissattach >/dev/null 2>&1  
-   rm -f /tmp/kisstnc
+	TrapCleanup
    trap - INT TERM EXIT
-   exit
+   exit 0
 }
 
 function ScriptInfo() { 
@@ -211,10 +209,9 @@ PAT_CONFIG="$HOME/.wl2k/config.json"
 
 RETURN_CODE=0
 DIREWOLF="$(command -v direwolf) -p -t 0 -d u"
-DW_PID=""
 #PAT="$(command -v pat) --log /dev/stdout -l ax25,telnet http"
 PAT="$(command -v pat) -l ax25,telnet http"
-PAT_PID=""
+
 PIPE=$TMPDIR/pipe
 mkfifo $PIPE
 exec 3<> $PIPE
@@ -303,25 +300,15 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-# See if Direwolf or pat is already running and generate an alert if yes.
-for P in Direwolf pat
-do
-	if pgrep -lixf ".*$P .*" | grep -q ${P,,} >/dev/null
-	then
-		yad --info --text-align=center --center --title="$TITLE"\
-			--text="<b>$P is already running.\n \
-Running another instance might cause problems.  Continue?</b>" \
-   		--buttons-layout=center \
-			--borders=20
-		[[ $? == 1 || $? == 252 ]] && exit 1
-	fi
-done
-
 while [[ $RETURN_CODE == 0 ]]
 do
+	YAD_PIDs=()
 	# Kill any running processes and load latest settings
-	[[ $DW_PID == "" ]] || { ps x | egrep -q ^$DW_PID && kill $DW_PID; } 
-	[[ $PAT_PID == "" ]] || { ps x | egrep -q ^$PAT_PID && kill $PAT_PID; }
+	pgrep "^(pat|direwolf)" >/dev/null && pkill "^(pat|direwolf)"
+   for P in ${YAD_PIDs[@]}
+	do
+		ps x | egrep -q "^$P" && kill $P
+	done
    sudo pgrep kissattach >/dev/null && sudo pkill kissattach	
 	rm -f $TMPDIR/CONFIGURE_TNC.txt $TMPDIR/CONFIGURE_PAT.txt
    rm -f /tmp/kisstnc
@@ -334,18 +321,10 @@ do
 		--back=black --fore=yellow --selectable-labels \
 		--text-info --text-align=center --text="$TEXT" \
 		--editable --tail --center <&3 &
-
-	# Configure /etc/ax25/axports if necessary.  This is needed in order to allocate a PTY for pat.
-	if ! grep -q "^$AX25PORT[[:space:]]" $AX25PORTFILE 2>/dev/null
-	then
-		echo "File $AX25PORTFILE empty or does not contain $AX25PORT. Adding..." >&3
-		echo "$AX25PORT	$MYCALL	0	255	7	Winlink" | sudo tee --append $AX25PORTFILE >&3
-		echo "done." >&3
-	fi
+	YAD_PIDs+=( $! )
 
 	# Start Direwolf
-	$DIREWOLF -a ${F[_AUDIOSTATS_]} -c $DW_CONFIG >&3 2>&1 &
-	DW_PID=$!
+	$DIREWOLF -a ${F[_AUDIOSTATS_]} -c $DW_CONFIG >&3 2>&3 &
 
 	# Wait for Direwolf to allocate a PTY
    COUNTER=0
@@ -368,14 +347,18 @@ do
 	KISSPARMS="-c 1 -p $AX25PORT -t $TXDELAY -l $TXTAIL -s $SLOTTIME -r $PERSIST -f n"
 	echo "Setting $(command -v kissparms) $KISSPARMS" >&3
 	sleep 2
-   sudo $(command -v kissparms) $KISSPARMS >&3 2>&1
+   sudo $(command -v kissparms) $KISSPARMS >&3 2>&3
    [ $? -eq 0 ] || Die "kissparms settings failed.  Aborting."
 
 	# Start pat
-	if [[ $PAT_START_HTTP == TRUE ]]
+	[[ $PAT_START_HTTP == TRUE ]] && $PAT >&3 2>&3 &
+
+	# Configure /etc/ax25/axports if necessary.  This is needed in order to allocate a PTY for pat.
+	if ! grep -q "^$AX25PORT[[:space:]]" $AX25PORTFILE 2>/dev/null
 	then
-		$PAT >&3 2>&1 &
-		PAT_PID=$!
+		echo "File $AX25PORTFILE empty or does not contain $AX25PORT. Adding..." >&3
+		echo "$AX25PORT	$MYCALL	0	255	7	Winlink" | sudo tee --append $AX25PORTFILE >&3
+		echo "done." >&3
 	fi
 
 	# Set up second tab, for configuring Direwolf.
@@ -405,6 +388,7 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
      	--field="<b>AGW Port</b>":NUM "$AGWPORT!8001..8010!1!" \
      	--field="<b>KISS Port</b>":NUM "$KISSPORT!8011..8020!1!" \
   		--focus-field 1 > $TMPDIR/CONFIGURE_TNC.txt &
+	YAD_PIDs+=( $! )
 
 	# If pat is installed, set up a 3rd tab for it's configuration
 	PAT_TAB=""
@@ -432,6 +416,7 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
      		--field="Persist":NUM "$PERSIST!0..255!1!" \
 			--field="Slot Time (ms)":NUM "$SLOTTIME!0..255!10!" \
   			--focus-field 1 > $TMPDIR/CONFIGURE_PAT.txt &
+		YAD_PIDs+=( $! )
 		STOP_BUTTON_TEXT="TNC"
 	   RESTART_BUTTON_TEXT="Restart Direwolf TNC"
 		[[ $PAT_START_HTTP == TRUE ]] && AND_PAT=" and pat" || AND_PAT=""
@@ -440,7 +425,9 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
 			--info --text-align=center \
 			--text="<b>pat is not installed.\nRun 'Update Pi and Ham Apps' from the Hamradio menu to install it.</b>" 
 			--borders=20 &
+		YAD_PIDs+=( $! )
 	fi
+
 	# Set up a notebook with the 3 tabs.		
 	yad --title="Direwolf TNC and pat $VERSION" --text="<b><big>Direwolf TNC$AND_PAT Configuration and Operation</big></b>" \
   		--text-align="center" --notebook --key="$ID" \
