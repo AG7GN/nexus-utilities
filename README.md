@@ -98,9 +98,27 @@ If `DO_NOT_DELETE_THIS_FILE` is present in the home folder, the script exits wit
 
 `dw_pat_gui.sh` provides a GUI to configure the Direwolf TNC and [pat](https://getpat.io/) to make a functional Winlink email client on Hampi.  It also provides a monitor window that shows messages from both Direwolf and pat.
 
-In the __Configure pat__ tab, there's a button that brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog.
+### Monitor tab
+
+Shows the output of the Direwolf TNC and [pat](https://github.com/la5nta/pat/wiki) applications.  Near the top of the Monitor tab window, you’ll see a row that looks something like this:
+
+`AGW Port: 8001    KISS Port: 8011   pat Telnet Port: 8770   pat Web Server: http://hampi-ag7gn.local:8040`
+
+The first 3 items are port numbers that your Pi is listening on for various connections from other clients.  Use the KISS port, for example, if you have Windows PCs running Winlink Express on the same network as your Pi.
+
+The pat Web Server URL is what you’d use to access pat’s web server from your Pi (using the Chromium browser) or from another browser on another computer on your home network.  
+
+### Configure TNC
+
+Configures Direwolf for AX25, ready to be used with remote Windows PCs via KISS or with pat on Linux via pat’s command line interface or it’s web interface.
+
+### Configure pat
+
+Configures the pat Winlink email client.  Clicking the __Edit pat Connection Aliases__ button brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog to make it easy to select RMS gateway stations to connect to.
 
 pat has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib]((http://hamlib.sourceforge.net/manuals/hamlib.html)), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
+
+If you make any changes in either of the Configure tabs, click __Restart Direwolf and pat__ to activate the changes.
 
 ## TNC Script
 
