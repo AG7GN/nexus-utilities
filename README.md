@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 2020502
+VERSION 2020508
 
 AUTHOR: Steve Magnuson, AG7GN
 
@@ -97,6 +97,10 @@ If `DO_NOT_DELETE_THIS_FILE` is present in the home folder, the script exits wit
 ## Direwolf and pat gui
 
 `dw_pat_gui.sh` provides a GUI to configure the Direwolf TNC and [pat](https://getpat.io/) to make a functional Winlink email client on Hampi.  It also provides a monitor window that shows messages from both Direwolf and pat.
+
+In the __Configure pat__ tab, there's a button that brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog.
+
+pat has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib]((http://hamlib.sourceforge.net/manuals/hamlib.html)), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
 
 ## TNC Script
 

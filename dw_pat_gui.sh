@@ -7,7 +7,7 @@
 #%
 #% DESCRIPTION
 #%   This script provides a GUI to configure and start/stop
-#%   Direwolf.  It is designed to work on the Hampi image.
+#%   Direwolf and pat.  It is designed to work on the Hampi image.
 #%
 #% OPTIONS
 #%    -h, --help                  Print this help
@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.0
+#-    version         ${SCRIPT_NAME} 1.3.7
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -23,6 +23,7 @@
 #================================================================
 #  HISTORY
 #     20200428 : Steve Magnuson : Script creation.
+#     20200507 : Steve Magnuson : Bug fixes
 # 
 #================================================================
 #  DEBUG OPTION
@@ -48,6 +49,7 @@ function TrapCleanup() {
 	do
 		kill $P >/dev/null 2>&1
 	done
+	kill $RIG_PID >/dev/null 2>&1
    sudo pkill kissattach >/dev/null 2>&1
    rm -f /tmp/kisstnc
    rm -f $PIPE
@@ -152,7 +154,7 @@ function loadSettings () {
 	KISSPORT="${F[_KISSPORT_]}"
 
 	# Create a Direwolf config file with these settings
-	cat >> $DW_CONFIG <<EOF
+	cat > $DW_CONFIG <<EOF
 ADEVICE ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]}
 ACHANNELS 1
 CHANNEL 0
@@ -285,6 +287,15 @@ do
 done
 shift $((${OPTIND} - 1)) ## shift options
 
+# Check for required apps.
+for A in yad pat jq sponge rigctld
+do 
+	command -v $A >/dev/null 2>&1 || Die "$A is required but not installed."
+done
+
+# Ensure only one instance of this script is running.
+pidof -o %PPID -x $(basename "$0") >/dev/null && exit 1
+
 #============================
 #  MAIN SCRIPT
 #============================
@@ -299,6 +310,24 @@ set -o errexit
 $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
+
+# Configure /etc/ax25/axports if necessary.  This is needed in order to allocate a PTY for pat.
+if ! grep -q "^$AX25PORT[[:space:]]" $AX25PORTFILE 2>/dev/null
+then
+	echo "$AX25PORT	$MYCALL	0	255	7	Winlink" | sudo tee --append $AX25PORTFILE >/dev/null
+fi
+
+# Set up a dummy rig for rigctl in pat
+RIG="$(jq -r .hamlib_rigs $PAT_CONFIG)"
+if [[ $RIG == "{}" ]]
+then # No rigs configured.  Make a dummy rig
+   cat $PAT_CONFIG | jq \
+         '.hamlib_rigs += {"dummy": {"address": "localhost:4532", "network": "tcp"}}' | sponge $PAT_CONFIG
+   # Add the dummy rig to the ax25 section
+   cat $PAT_CONFIG | jq \
+      --arg R "dummy" \
+      '.ax25.rig = $R' | sponge $PAT_CONFIG
+fi
 
 while [[ $RETURN_CODE == 0 ]]
 do
@@ -323,8 +352,18 @@ do
 		--editable --tail --center <&3 &
 	YAD_PIDs+=( $! )
 
+	# Start rigctld.  Assume should use the dummy rig.
+	if ! pgrep rigctld >/dev/null
+	then
+		echo "Starting rigctld using dummy rig..." >&3
+		$(command -v rigctld) -m 1 >&3 2>&3 &
+		RIG_PID=$!
+		echo "Done." >&3
+	fi
+
 	# Start Direwolf
-	$DIREWOLF -a ${F[_AUDIOSTATS_]} -c $DW_CONFIG >&3 2>&3 &
+	[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
+	$DIREWOLF -c $DW_CONFIG >&3 2>&3 &
 
 	# Wait for Direwolf to allocate a PTY
    COUNTER=0
@@ -352,14 +391,6 @@ do
 
 	# Start pat
 	[[ $PAT_START_HTTP == TRUE ]] && $PAT >&3 2>&3 &
-
-	# Configure /etc/ax25/axports if necessary.  This is needed in order to allocate a PTY for pat.
-	if ! grep -q "^$AX25PORT[[:space:]]" $AX25PORTFILE 2>/dev/null
-	then
-		echo "File $AX25PORTFILE empty or does not contain $AX25PORT. Adding..." >&3
-		echo "$AX25PORT	$MYCALL	0	255	7	Winlink" | sudo tee --append $AX25PORTFILE >&3
-		echo "done." >&3
-	fi
 
 	# Set up second tab, for configuring Direwolf.
 	yad --plug="$ID" --tabnum=2 \
@@ -415,6 +446,7 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
   			--field="TX Tail (ms)":NUM "$TXTAIL!0..200!10!" \
      		--field="Persist":NUM "$PERSIST!0..255!1!" \
 			--field="Slot Time (ms)":NUM "$SLOTTIME!0..255!10!" \
+			--field="<b>Edit pat Connection Aliases</b>":FBTN "bash -c edit_pat_aliases.sh &" \
   			--focus-field 1 > $TMPDIR/CONFIGURE_PAT.txt &
 		YAD_PIDs+=( $! )
 		STOP_BUTTON_TEXT="TNC"
@@ -438,7 +470,7 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
   		--tab="Configure pat" \
 		--width="800" --height="600" \
   		--button="<b>Stop Direwolf$AND_PAT and Exit</b>":1 \
-  		--button="<b>Restart Direwolf TNC$AND_PAT</b>":0
+  		--button="<b>Restart Direwolf$AND_PAT</b>":0
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
