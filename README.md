@@ -21,7 +21,7 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 
 [tnc.sh](#tnc-script)
 
-[dw_pat_gui.sh](direwolf-and-pat-gui)
+[dw_pat_gui.sh](#direwolf-and-pat-gui)
 
 [trim scripts](#trim-scripts)
 
