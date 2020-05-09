@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.3.7
+#-    version         ${SCRIPT_NAME} 1.3.9
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -96,7 +96,7 @@ function loadSettings () {
    	echo "$CONFIG_FILE found." >&3
   		source "$CONFIG_FILE"
 	else # Set some default values in a new config file
-   	echo "Config file $CONFIG_FILE not found.  Creating a new one with default values." >&3
+   	echo -e "Config file $CONFIG_FILE not found.\nCreating a new one with default values." >&3
    	echo "declare -gA F" > "$CONFIG_FILE"
    	echo "F[_CALL_]='N0CALL'" >> "$CONFIG_FILE"
    	echo "F[_MODEM_]='1200'" >> "$CONFIG_FILE"
@@ -166,15 +166,12 @@ AGWPORT ${F[_AGWPORT_]}
 KISSPORT ${F[_KISSPORT_]}
 EOF
 
-	if command -v pat >/dev/null 2>&1 && [ -s $PAT_CONFIG ]
-	then
-		PAT_START_HTTP="${F[_PAT_HTTP_]}"
-		PAT_CALL="$(jq -r ".mycall" $PAT_CONFIG)"
-		PAT_PASSWORD="$(jq -r ".secure_login_password" $PAT_CONFIG)"
-		PAT_HTTP_PORT="$(jq -r ".http_addr" $PAT_CONFIG | cut -d: -f2)"
-		PAT_TELNET_PORT="$(jq -r ".telnet.listen_addr" $PAT_CONFIG | cut -d: -f2)"
-		PAT_LOCATOR="$(jq -r ".locator" $PAT_CONFIG)"
-	fi		
+	PAT_START_HTTP="${F[_PAT_HTTP_]}"
+	PAT_CALL="$(jq -r ".mycall" $PAT_CONFIG)"
+	PAT_PASSWORD="$(jq -r ".secure_login_password" $PAT_CONFIG)"
+	PAT_HTTP_PORT="$(jq -r ".http_addr" $PAT_CONFIG | cut -d: -f2)"
+	PAT_TELNET_PORT="$(jq -r ".telnet.listen_addr" $PAT_CONFIG | cut -d: -f2)"
+	PAT_LOCATOR="$(jq -r ".locator" $PAT_CONFIG)"
 }
 
 #============================
@@ -287,14 +284,36 @@ do
 done
 shift $((${OPTIND} - 1)) ## shift options
 
+# Ensure only one instance of this script is running.
+pidof -o %PPID -x $(basename "$0") >/dev/null && exit 1
+
 # Check for required apps.
 for A in yad pat jq sponge rigctld
 do 
 	command -v $A >/dev/null 2>&1 || Die "$A is required but not installed."
 done
 
-# Ensure only one instance of this script is running.
-pidof -o %PPID -x $(basename "$0") >/dev/null && exit 1
+# If this is the first time running this script, don't attempt to start Direwolf
+# or pat until user configures both.
+if [[ -s $PAT_CONFIG && -s $CONFIG_FILE ]]
+then # Direwolf and pat configuration files exist
+	if [[ $(jq -r ".mycall" $PAT_CONFIG) == "" ||  ${F[_ADEVICE_CAPTURE_]} == "null" ]]
+	then # Config files present, but not configured
+		FIRST_RUN=true
+	else # Config files present and configured
+		FIRST_RUN=false
+	fi
+else # No configuration files exist
+	FIRST_RUN=true
+fi
+
+# Check for pat's config.json.  Create it if necessary
+if ! [[ -s $PAT_CONFIG ]]
+then
+	cd $HOME
+	export EDITOR=ed
+	echo -n "" | pat configure >/dev/null 2>&1
+fi
 
 #============================
 #  MAIN SCRIPT
@@ -361,38 +380,43 @@ do
 		echo "Done." >&3
 	fi
 
-	# Start Direwolf
-	[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
-	$DIREWOLF -c $DW_CONFIG >&3 2>&3 &
-
-	# Wait for Direwolf to allocate a PTY
-   COUNTER=0
-   MAXWAIT=8
-   while [ $COUNTER -lt $MAXWAIT ]
-   do # Allocate a PTY to ax25
-      [ -L /tmp/kisstnc ] && break
-      sleep 1
-      let COUNTER=COUNTER+1
-   done
-   if [ $COUNTER -ge $MAXWAIT ]
+	if [[ $FIRST_RUN == true ]]
 	then
-		Die "Direwolf failed to allocate a PTY! Aborting. Is ADEVICE set to your sound card?"
-	fi
-   echo "Direwolf started." >&3
+		echo -e "Configure Direwolf TNC and pat in the \"Configure TNC\" and \"Configure pat\" tabs,\nthen click \"Restart...\" button below." >&3
+	else # Not a first run.  pat and Direwolf configured so start 'em
+		# Start Direwolf
+		[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
+		$DIREWOLF -c $DW_CONFIG >&3 2>&3 &
 
-	# Start kissattach on new PTY
-   sudo $(command -v kissattach) $(readlink -f /tmp/kisstnc) $AX25PORT >&3 2>&1
-   [ $? -eq 0 ] || Die "kissattach failed.  Aborting."
-	KISSPARMS="-c 1 -p $AX25PORT -t $TXDELAY -l $TXTAIL -s $SLOTTIME -r $PERSIST -f n"
-	echo "Setting $(command -v kissparms) $KISSPARMS" >&3
-	sleep 2
-   sudo $(command -v kissparms) $KISSPARMS >&3 2>&3
-   [ $? -eq 0 ] || Die "kissparms settings failed.  Aborting."
+		# Wait for Direwolf to allocate a PTY
+   	COUNTER=0
+   	MAXWAIT=8
+   	while [ $COUNTER -lt $MAXWAIT ]
+   	do # Allocate a PTY to ax25
+      	[ -L /tmp/kisstnc ] && break
+      	sleep 1
+      	let COUNTER=COUNTER+1
+   	done
+   	if [ $COUNTER -ge $MAXWAIT ]
+		then
+			Die "Direwolf failed to allocate a PTY! Aborting. Is ADEVICE set to your sound card?"
+		fi
+   	echo "Direwolf started." >&3
 
-	# Start pat
-	[[ $PAT_START_HTTP == TRUE ]] && $PAT >&3 2>&3 &
+		# Start kissattach on new PTY
+   	sudo $(command -v kissattach) $(readlink -f /tmp/kisstnc) $AX25PORT >&3 2>&1
+   	[ $? -eq 0 ] || Die "kissattach failed.  Aborting."
+		KISSPARMS="-c 1 -p $AX25PORT -t $TXDELAY -l $TXTAIL -s $SLOTTIME -r $PERSIST -f n"
+		echo "Setting $(command -v kissparms) $KISSPARMS" >&3
+		sleep 2
+   	sudo $(command -v kissparms) $KISSPARMS >&3 2>&3
+   	[ $? -eq 0 ] || Die "kissparms settings failed.  Aborting."
 
-	# Set up second tab, for configuring Direwolf.
+		# Start pat
+		[[ $PAT_START_HTTP == TRUE ]] && $PAT >&3 2>&3 &
+	fi 
+	
+	# Set up tab for configuring Direwolf.
 	yad --plug="$ID" --tabnum=2 \
   		--text="<b><big><big>Direwolf TNC Configuration</big></big></b>\n\n \
 <b><u><big>Typical Direwolf Sound Card and PTT Settings</big></u></b>\n \
@@ -409,56 +433,46 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
   		--borders=20 \
   		--form \
 		--columns=2 \
-      --field="<b>Call Sign</b>" "$MYCALL" \
-  	   --field="<b>Direwolf Capture ADEVICE</b>":CB "$ADEVICE_CAPTUREs" \
-      --field="<b>Direwolf Playback ADEVICE</b>":CB "$ADEVICE_PLAYBACKs" \
-  	   --field="<b>Direwolf ARATE</b>":CB "$ARATEs" \
-     	--field="<b>Direwolf MODEM</b>":CB "$MODEMs" \
-     	--field="<b>Direwolf PTT</b>":CBE "$PTTs" \
+     	--field="<b>Call Sign</b>" "$MYCALL" \
+  	  	--field="<b>Direwolf Capture ADEVICE</b>":CB "$ADEVICE_CAPTUREs" \
+     	--field="<b>Direwolf Playback ADEVICE</b>":CB "$ADEVICE_PLAYBACKs" \
+  	  	--field="<b>Direwolf ARATE</b>":CB "$ARATEs" \
+   	--field="<b>Direwolf MODEM</b>":CB "$MODEMs" \
+   	--field="<b>Direwolf PTT</b>":CBE "$PTTs" \
 		--field="<b>Audio Stats interval (s)</b>":CB "$AUDIOSTATs" \
-     	--field="<b>AGW Port</b>":NUM "$AGWPORT!8001..8010!1!" \
-     	--field="<b>KISS Port</b>":NUM "$KISSPORT!8011..8020!1!" \
+   	--field="<b>AGW Port</b>":NUM "$AGWPORT!8001..8010!1!" \
+   	--field="<b>KISS Port</b>":NUM "$KISSPORT!8011..8020!1!" \
   		--focus-field 1 > $TMPDIR/CONFIGURE_TNC.txt &
 	YAD_PIDs+=( $! )
 
-	# If pat is installed, set up a 3rd tab for it's configuration
-	PAT_TAB=""
-	if command -v pat >/dev/null && [ -s $PAT_CONFIG ]
-	then # pat is installed, so add a configuration dialog for it.
-		yad --plug="$ID" --tabnum=3 \
-  			--text="<b><big><big>pat Configuration</big></big></b>\n\n \
+	# Set up tab for pat configuration
+	yad --plug="$ID" --tabnum=3 \
+		--text="<b><big><big>pat Configuration</big></big></b>\n\n \
 Click the <b>Restart...</b> button below after you make your changes.\n\n" \
-  			--item-separator="!" \
-			--separator="|" \
-			--align=right \
-  			--text-align=center \
-  			--align=right \
-  			--borders=20 \
-  			--form \
-			--columns=2 \
-      	--field="Call Sign" "$PAT_CALL" \
-			--field="Winlink Password":H "$PAT_PASSWORD" \
-			--field="Locator Code" "$PAT_LOCATOR" \
-     		--field="Web Service Port":NUM "$PAT_HTTP_PORT!8040..8049!1!" \
-     		--field="Telnet Service Port":NUM "$PAT_TELNET_PORT!8770..8779!1!" \
-     		--field="Start pat web service when Direwolf TNC starts":CHK "$PAT_START_HTTP" \
-     		--field="TX Delay (ms)":NUM "$TXDELAY!0..500!1!" \
-  			--field="TX Tail (ms)":NUM "$TXTAIL!0..200!10!" \
-     		--field="Persist":NUM "$PERSIST!0..255!1!" \
-			--field="Slot Time (ms)":NUM "$SLOTTIME!0..255!10!" \
-			--field="<b>Edit pat Connection Aliases</b>":FBTN "bash -c edit_pat_aliases.sh &" \
-  			--focus-field 1 > $TMPDIR/CONFIGURE_PAT.txt &
-		YAD_PIDs+=( $! )
-		STOP_BUTTON_TEXT="TNC"
-	   RESTART_BUTTON_TEXT="Restart Direwolf TNC"
-		[[ $PAT_START_HTTP == TRUE ]] && AND_PAT=" and pat" || AND_PAT=""
-	else # pat is not installed.  Print a message to that effect.
-		yad --plug="$ID" --tabnum=3 \
-			--info --text-align=center \
-			--text="<b>pat is not installed.\nRun 'Update Pi and Ham Apps' from the Hamradio menu to install it.</b>" 
-			--borders=20 &
-		YAD_PIDs+=( $! )
-	fi
+		--item-separator="!" \
+		--separator="|" \
+		--align=right \
+  		--text-align=center \
+  		--align=right \
+  		--borders=20 \
+  		--form \
+		--columns=2 \
+     	--field="Call Sign" "$PAT_CALL" \
+		--field="Winlink Password":H "$PAT_PASSWORD" \
+		--field="Locator Code" "$PAT_LOCATOR" \
+   	--field="Web Service Port":NUM "$PAT_HTTP_PORT!8040..8049!1!" \
+   	--field="Telnet Service Port":NUM "$PAT_TELNET_PORT!8770..8779!1!" \
+   	--field="Start pat web service when Direwolf TNC starts":CHK "$PAT_START_HTTP" \
+   	--field="TX Delay (ms)":NUM "$TXDELAY!0..500!1!" \
+  		--field="TX Tail (ms)":NUM "$TXTAIL!0..200!10!" \
+   	--field="Persist":NUM "$PERSIST!0..255!1!" \
+		--field="Slot Time (ms)":NUM "$SLOTTIME!0..255!10!" \
+		--field="<b>Edit pat Connection Aliases</b>":FBTN "bash -c edit_pat_aliases.sh &" \
+  		--focus-field 1 > $TMPDIR/CONFIGURE_PAT.txt &
+	YAD_PIDs+=( $! )
+	STOP_BUTTON_TEXT="TNC"
+	  RESTART_BUTTON_TEXT="Restart Direwolf TNC"
+	[[ $PAT_START_HTTP == TRUE ]] && AND_PAT=" and pat" || AND_PAT=""
 
 	# Set up a notebook with the 3 tabs.		
 	yad --title="Direwolf TNC and pat $VERSION" --text="<b><big>Direwolf TNC$AND_PAT Configuration and Operation</big></b>" \
@@ -477,7 +491,7 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
 		1|252) # User click Exit button or closed window. 
 			break
 			;;
-		0) # Read and handle the Configure Direwolf TNC tab yad output
+		0) # Read and handle the Configure TNC tab yad output
 			[[ -s $TMPDIR/CONFIGURE_TNC.txt ]] || Die "Unexpected input from dialog"
 			IFS='|' read -r -a TF < "$TMPDIR/CONFIGURE_TNC.txt"
 			F[_CALL_]="${TF[0]^^}"
@@ -489,35 +503,42 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
 			F[_AUDIOSTATS_]="${TF[6]}"
 			F[_AGWPORT_]="${TF[7]}"
 			F[_KISSPORT_]="${TF[8]}"
-			if command -v pat >/dev/null && [ -s $PAT_CONFIG ]
-			then # Read and handle the Configure pat tab yad output
-				[[ -s $TMPDIR/CONFIGURE_PAT.txt ]] || Die "Unexpected input from dialog"
-				IFS='|' read -r -a TF < "$TMPDIR/CONFIGURE_PAT.txt"
-				PAT_CALL="${TF[0]^^}"
-				PAT_PASSWORD="${TF[1]}"
-				PAT_LOCATOR="${TF[2]}"
-				PAT_HTTP_PORT="${TF[3]}"
-				PAT_TELNET_PORT="${TF[4]}"
-				F[_PAT_HTTP_]="${TF[5]}"
-				F[_TXDELAY_]="${TF[6]}"
-				F[_TXTAIL_]="${TF[7]}"
-				F[_PERSIST_]="${TF[8]}"
-				F[_SLOTTIME_]="${TF[9]}"
-				# Update the pat config.json file with the new data.
-				cat $PAT_CONFIG | jq \
-					--arg C "$PAT_CALL" \
-					--arg P "$PAT_PASSWORD" \
-					--arg H "0.0.0.0:$PAT_HTTP_PORT" \
-					--arg T "0.0.0.0:$PAT_TELNET_PORT" \
-					--arg L "$PAT_LOCATOR" \
+
+			# Read and handle the Configure pat tab yad output
+			[[ -s $TMPDIR/CONFIGURE_PAT.txt ]] || Die "Unexpected input from dialog"
+			IFS='|' read -r -a TF < "$TMPDIR/CONFIGURE_PAT.txt"
+			PAT_CALL="${TF[0]^^}"
+			PAT_PASSWORD="${TF[1]}"
+			PAT_LOCATOR="${TF[2]}"
+			PAT_HTTP_PORT="${TF[3]}"
+			PAT_TELNET_PORT="${TF[4]}"
+			F[_PAT_HTTP_]="${TF[5]}"
+			F[_TXDELAY_]="${TF[6]}"
+			F[_TXTAIL_]="${TF[7]}"
+			F[_PERSIST_]="${TF[8]}"
+			F[_SLOTTIME_]="${TF[9]}"
+
+			# Update the pat config.json file with the new data.
+			cat $PAT_CONFIG | jq \
+				--arg C "$PAT_CALL" \
+				--arg P "$PAT_PASSWORD" \
+				--arg H "0.0.0.0:$PAT_HTTP_PORT" \
+				--arg T "0.0.0.0:$PAT_TELNET_PORT" \
+				--arg L "$PAT_LOCATOR" \
 					'.mycall = $C | .secure_login_password = $P | .http_addr = $H | .telnet.listen_addr = $T | .locator = $L' | sponge $PAT_CONFIG
-			fi
+
 			# Update the yad configuration file.
 			echo "declare -gA F" > "$CONFIG_FILE"
 			for J in "${!F[@]}"
 			do
    			echo "F[$J]='${F[$J]}'" >> "$CONFIG_FILE"
 			done
+			if [[ $(jq -r ".mycall" $PAT_CONFIG) == "" ||  ${F[_ADEVICE_CAPTURE_]} == "null" ]]
+			then
+				FIRST_RUN=true
+			else
+				FIRST_RUN=false
+			fi
 			;;
 	esac
 done
