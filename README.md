@@ -7,39 +7,39 @@ AUTHOR: Steve Magnuson, AG7GN
 This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
 
-[check-piano.sh](#check-piano-script)
+[Check Piano script](#check-piano-script)
 
-[initialize-pi.sh](#initialize-pi-script)
+[Initialize Pi script](#initialize-pi-script)
 
-[name-radios.sh](#name-radios-script)
+[Name Radios script](#name-radios-script)
 
-[patmail.sh](#patmail-script)
+[Patmail script](#patmail-script)
 
 [tnc-left.conf tnc-right.conf](#tnc-left-tnc-right-configuration-files)
 
-[test-piano.sh](#test-piano-script)
+[Test Piano script](#test-piano-script)
 
-[tnc.sh](#tnc-script)
+[TNC script](#tnc-script)
 
-[dw_pat_gui.sh](#direwolf-and-pat-gui)
+[Direwolf + pat GUI](#direwolf-and-pat-gui)
 
-[trim scripts](#trim-scripts)
+[Fldigi + Flmsg trim log scripts](#trim-scripts)
 
-[watchdog-tnc.sh](#watchdog-tnc-script)
+[TNC Watchdog script](#watchdog-tnc-script)
 
-[shutdown_button.py](#shutdown-button-script)
+[Shutdown Button and LED script](#shutdown-button-script)
 
-[radio-monitor.py](#radio-monitor-script)
+[Radio PTT Monitor script](#radio-monitor-script)
 
-[pianoX.sh.example](#piano-script-example)
+[Piano Switch Example script](#piano-script-example)
 
 [Desktop Template files](#desktop-template-files)
 
 [Edit Desktop Text script](#edit-desktop-text-script)
 
-[fsq_search.sh](#fsq-search-script)
+[FSQ Text Search script](#fsq-search-script)
 
-[vnc-server-activity.sh](#vnc-server-activity-script)
+[VNC Server Activity Reporting script](#vnc-server-activity-script)
 
 
 ## Installation
