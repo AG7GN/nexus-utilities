@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 2020515
+VERSION 2020515-1
 
 AUTHOR: Steve Magnuson, AG7GN
 
