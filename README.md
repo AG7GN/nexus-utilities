@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 2020508
+VERSION 2020515
 
 AUTHOR: Steve Magnuson, AG7GN
 
@@ -71,6 +71,19 @@ Example 2:  When no levers on the piano switch are down, the script named `$HOME
 See [pianoX.sh.example](#piano-script-example) for an example piano script.
  
 If a pianoX.sh script is not present in the home folder, no action is taken and the pi boots normally.
+
+### Disabling the piano switch function
+
+- Move all of the switches to the off (up) position.
+- As `sudo`, open the `/etc/xdg/lxsession/LXDE-pi` file.  One way to do this is to open __Terminal__, then run this command: `sudo leafpad /etc/xdg/lxsession/LXDE-pi`.  __Leafpad__ is like __Notepad__ in Windows.
+- Locate the line: `@bash /usr/local/bin/check-piano.sh`
+- Insert `#` at the beginning of that line, so that the file looks like this:
+
+		@lxpanel --profile LXDE-pi
+		@pcmanfm --desktop --profile LXDE-pi
+		#@bash /usr/local/bin/check-piano.sh
+		@xscreensaver -no-splash
+- Save the file and reboot the Pi
  
 ## Initialize Pi script
 
@@ -201,6 +214,10 @@ Your Hampi image already has the systemd service file for the shutdown script in
 
 		sudo systemctl enable shutdown_button.service
 		sudo systemctl start shutdown_button.service
+		
+- Run this command to disable the service
+
+		sudo systemctl disable shutdown_button.service
 
 ## Radio Monitor script
 
