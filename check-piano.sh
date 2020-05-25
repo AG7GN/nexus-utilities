@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.1.2
+#-    version         ${SCRIPT_NAME} 1.2.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -25,6 +25,9 @@
 #  HISTORY
 #     20190620 : Steve Magnuson : Script creation
 #     20200204 : Steve Magnuson : Added script template
+#     20200525 : Steve Magnuson : Now using raspi-gpio instead of
+#                                 gpio to be compatible with all
+#                                 versions of Pis
 # 
 #================================================================
 #  DEBUG OPTION
@@ -90,7 +93,7 @@ SCRIPT_ID="$(ScriptInfo | grep script_id | tr -s ' ' | cut -d' ' -f3)"
 SCRIPT_HEADSIZE=$(grep -sn "^# END_OF_HEADER" ${0} | head -1 | cut -f1 -d:)
 VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)" 
 
-GPIO="$(command -v gpio) -g"
+GPIO="$(command -v raspi-gpio)"
 
 # Array P: Array index is the ID of each individual switch in the piano switch.
 #          Array element value is the GPIO BCM number.
@@ -187,7 +190,7 @@ $DEBUG && set -x
 PIANO=""
 for I in 1 2 3 4
 do
-	J=$($GPIO read ${P[$I]}) # State of a switch in the piano (0 or 1)
+	J=$($GPIO get ${P[$I]} | cut -d' ' -f3 | cut -d'=' -f2) # State of a switch in the piano (0 or 1)
 	(( $J == 0 )) && PIANO="$PIANO$I"
 done
 

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-VERSION="1.0.1"
+VERSION="1.1.0"
 
 # This script checks the status of 4 GPIO pins and runs a script corresponding
 # to those settings as described below.  This script is called by initialize-pi.sh,
 # which is run a bootup via cron @reboot.
 
-GPIO="$(command -v gpio) -g"
+GPIO="$(command -v raspi-gpio)"
 
 # Array P: Array index is the ID of each individual switch in the piano switch.
 #          Array element value is the GPIO BCM number.
@@ -19,7 +19,7 @@ P[4]=5
 PIANO=""
 for I in 1 2 3 4
 do
-	J=$($GPIO read ${P[$I]}) # State of a switch in the piano (0 or 1)
+	J=$($GPIO get ${P[$I]} | cut -d' ' -f3 | cut -d'=' -f2) # State of a switch in the piano (0 or 1)
 	(( $J == 0 )) && PIANO="$PIANO$I"
 done
 

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>APRS Parameters Help</title>
+<body>
+
+<h1>APRS Configuration Help</h1>
+
+<a href="#call">Call sign and SSID</a><br />
+<a href="#tactical">Tactical Call Sign</a><br />
+<a href="#status">Comment/Status</a><br />
+<a href="#location">Location</a><br />
+<a href="#grid">Grid Square</a><br />
+<a href="#lat">LAT</a><br />
+<a href="#log">LONG</a><br />
+<a href="#power">Power</a><br />
+<a href="#haat">Antenna HAAT</a><br />
+<a href="#gain">Antenna Gain</a><br />
+<a href="#adevice">Direwolf Capture/Playback ADEVICEs</a><br />
+<a href="#arate">Direwolf ARATE</a><br />
+<a href="#ptt">Direwolf PTT</a><br />
+<a href="#stats">Direwolf Audio Stats</a><br />
+<a href="#auto">Autostart APRS</a><br />
+<a href="#mode">APRS Mode</a><br />
+<a href="#igtxlimit">iGate TX Limit IGTXLIMIT</a><br />
+<a href="#server">iGate Server</a><br />
+<a href="#filter">Client Side FILTER</a><br />
+<a href="#igfilter">Server Side IGFILTER</a><br />
+<a href="#hops">Hops IGTXVIA</a><br />
+<a href="#beacon">iGate and Digipeater delay and interval settings</a><br />
+
+<h2 id="call">Call and SSID</h2>
+<p>Station call sign.  Default SSID is 0.  See <a href="http://www.aprs.org/aprs11/SSIDs.txt">APRS SSID Recommendations</a> for more information.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="tactical">Tactical Call</h2>
+<p>If this field is empty, the CALL-SSID will be used in the station beacon.  If this field is not empty, it will be used instead of CALL-SSID in the beacon.  If you use a tactical call, make sure you include your call sign in the Comment/Status field to conform to FCC rules for ID.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="status">Comment/Status</h2>
+<p>Short comment or status message that is sent in beacon</p>
+<a href="#top">Top</a>
+
+<h2 id="location">Location</h2>
+<p>City/town/state/province, etc.</p>
+<a href="#top">Top</a>
+
+<h2 id="grid">Grid Square</h2>
+<p>Eight character maidenhead grid square.  See <a href="https://www.levinecentral.com/ham/grid_square.php">Amateur Radio Ham Radio Maidenhead Grid Square Locator Map</a></p>
+<a href="#top">Top</a>
+
+<h2 id="lat">LAT</h2>
+<p>Latitude in decimal degrees to no more than 6 decimal places.</p>
+<a href="#top">Top</a>
+
+<h2 id="long">LONG</h2>
+<p>Longitude in decimal degrees to no more than 6 decimal places.</p>
+<a href="#top">Top</a>
+
+<h2 id="power">Power</h2>
+<p>Radiated power in watts.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="haat">Antenna Height</h2>
+<p>Antenna height above average terrain (HAAT) in feet.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="gain">Antenna Gain</h2>
+<p>Antenna gain in dB.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="adevice">Direwolf Capture/Playback ADEVICEs</h2>
+<p>
+Sound card interface for capture and playback.
+</p>
+<table rules="all" style="border-color:DarkGray;border-width:1px;border-style:solid;">
+		<tr align="center">
+			<th>ADEVICE
+            </th><th>Left Radio
+            </th><th>Right Radio
+            </th>
+		</tr>
+		<tr>
+			<td>
+				<p>Capture</p>
+         </td>
+			<td>
+				<p><b>fepi-capture-left</b></p>
+         </td>
+			<td>
+				<p><b>fepi-capture-right</b></p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p>Playback</p>
+         </td>
+			<td>
+				<p><b>fepi-playback-left</b></p>
+         </td>
+			<td>
+				<p><b>fepi-playback-right</b></p>
+         </td>
+		</tr>
+</table><br />
+<a href="#top">Top</a>
+
+<h2 id="arate">Direwolf ARATE</h2>
+<p>
+Number of audio samples per second.  Depends on the capabilities of the sound card.  The Fe-Pi supports up to 96000.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="ptt">Direwolf PTT</h2>
+<p>
+The GPIO (BCM numbering) pin to use for Push To Talk.  Nexus DR-X is wired to use pin 12 for the left radio and pin 23 for the right radio.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="stats">Direwolf Audio Stats</h2>
+<p>
+Print Direwolf's audio statistics every x seconds.  Set to 0 to disable printing of statistics.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="auto">Autostart APRS</h2>
+<p>
+<a href="#top">Top</a>
+Default is disabled.  If disabled, Direwolf APRS will not autostart when the Pi boots up.  Otherwise, select which levers in the piano switch you want to be in the ON position.  A corresponding piano script will be created and, if the switches are in the selected postion, will autostart APRS at bootup.
+ See <a href="https://github.com/AG7GN/hampi-utilities/blob/master/README.md#check-piano-script">Check Piano Script</a> for details.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="mode">APRS Mode</h2>
+<p>
+Choices are: iGate (RX Only), iGate (TX+RX), Digipeater (for installations without internet access) or Digitpeater + iGate.  All iGate selections require the Pi to be connected to the Internet.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="igtxlimit">iGate TX Limit /min and iGate TX Limit /5min (IGTXLIMIT)</h2>
+
+<p>We don’t want to flood the radio channel. If something goes wrong, this rate limiting will limit the damage. The transmit IGate will limit the number of packets transmitted during 1 minute and 5 minute intervals. If a limit would be exceeded, the packet is dropped and warning is displayed red. The default is 6 packets in a 1 minute interval and 10 packets during a 5 minute interval.</p>
+<a href="#top">Top</a>
+
+
+<h2 id="filter">iGate Client Filter (FILTER IG 0)</h2>
+
+<a href="https://github.com/wb2osz/direwolf/blob/master/doc/User-Guide.pdf">Source: Direwolf User Guide by WB2OSZ</a>  
+
+<p>Parameters you specify in this field are processed locally by Direwolf. After setting an appropriate “server-side” filter with “IGFILTER,” the server might send more than you want, creating excessive clutter on the radio channel. It is possible to apply another stage of filtering inside of Dire Wolf, the “client-side.”  This filters what you receive from the server before you transmit.</p>
+
+<p>The filter expression is loosely based on the server side filters in the table above with the addition of logical operators to combine the filter results. For example, you could decide to digipeat only telemetry originating from WB2OSZ or object reports not within a certain distance of a given location.</p>
+
+<pre>FILTER 0 0 ( t/t & b/WB2OSZ ) | ( t/o & ! r/42.6/-71.3/50 )</pre>
+
+<p>It’s not necessary to put quotes around the filter expression even though it contains spaces.
+</p> 
+<a href="#top">Top</a>
+<h3>Logical Operators</h3>
+The individual filter specifications return a true or false value depending whether the current packet satisfies the condition. These results can be combined into larger expressions to permit very flexible configuration. The operators are:
+<pre>|    Logical OR. Result is true if either argument is true. </pre> 
+<pre>&    Logical AND. Result is true if both arguments are true.</pre>
+<pre>!    Logical NOT. This inverts the value of the following part.</pre>
+<pre>( )  Parentheses are used for grouping.</pre>
+
+<p>& has higher precedence than the | operator so the two following forms are equivalent:
+</p>
+<pre>w&x|y&z</pre>
+<pre>( w & x) | ( y & z )</pre>
+
+<p>This is the same as the rule for multiplying and adding. When evaluating the arithmetic expression, a * b + c *d, you would first multiply a * b, then multiply c *d, and finally add the two products together.
+</p>
+<p>When in doubt, use parentheses to make the order more explicit.
+</p>
+<a href="#top">Top</a>
+<h3>Filter Specifications</h3>
+<p>The filter specifications are composed of a lower case letter, the special character to be used as a field separator, and parameters. These two are equivalent:
+</p>
+	<pre>b/W2UB/N2GH</pre>
+	<pre>b#W2UB#N2GH</pre>
+
+<p>Other implementations allow only the “/” separator character. This extra flexibility comes in handy when you want to use the “/” character in a parameter value.
+</p>
+<p>Everything is case sensitive. This means that UPPER and lower case are not equivalent.
+Example: b/w2ub and b/W2UB are NOT equivalent.
+</p>
+<p>All Filter Specifications must be followed by a space. This is so we can distinguish between special characters that are part of the filter or a logical operator.
+</p>
+<a href="#top">Top</a>
+<h3>Wildcarding</h3>
+  
+<p>Most of the filters allow the “*” character at the end of a string to mean match anything here. This operates on character strings without any knowledge of the callsign-SSID syntax. If you wanted to match “W2UB” regardless of any SSID, your first reaction might be to use
+</p>
+<pre>b/W2UB*</pre>
+<p>
+This would not be correct because it would also match W2UBA, W2UBZ, and many others. The correct form would be:
+</p>
+<pre>b/W2UB/W2UB-*</pre>
+<p>
+This will match only that callsign (implied SSID of zero) or that callsign followed by any SSID.
+</p>
+<a href="#top">Top</a>
+<h3>Range Filter</h3>
+
+<pre>r/lat/lon/dist</pre>
+
+<p>This allows position and object reports with a location within the specified distance of given location.
+Latitude and longitude are in decimal degrees. (negative for south or west.) Distance is in kilometers.
+Note that this applies only to packets containing a location. It will return a false result for other types such as messages and telemetry. If you wanted to digipeat stations only within 50 km you might use something like this:
+</p>
+<pre>FILTER 0 0 r/42.6/-71.3/50</pre>
+
+<p>This would reject other types of packets such as messages and telemetry. To allow them, use the “or” operator to also allow all types other than position and object:
+</p>
+<pre>r/42.6/-71.3/50 | ( ! t/po )</pre>
+<a href="#top">Top</a>
+
+<h3>Budlist Filter</h3>
+
+<pre>b/call1/call2...</pre>
+
+<p>Allow all packets from the specified calls. These must be exact matches including the SSID. Wildcarding is allowed.
+When combined with the “!” (not) operator, it can be used to reject packets from specified calls.
+</p>
+<a href="#top">Top</a>
+<h3>Object Filter</h3>
+<pre>o/obj1/obj2...</pre>
+
+<p>Allow objects and items whose name matches one of them listed. Wildcarding is allowed.
+</p>
+<a href="#top">Top</a>
+  
+<h3>Type Filter</h3>
+
+<pre>t/poimqcstuhnw</pre>
+
+<p>Use one or more of the following letters for types of packets to be allowed.
+</p>
+<pre>
+p - Position 			!/=@‘`
+o - Object 			;
+i - Item			)
+m - Message			:
+q - Query			?
+c - station Capabilities	<
+s - Status			>
+t - Telemetry			T
+u - User-defined		{
+h - third party Header		} 
+n - NWS format			:) 
+w - Weather			* _ $ULTW ! / =@ ; if symbol _
+</pre>
+<p>The list of data type indicators (first character of information part) is included for convenience but it is often an over simplification. There are many special cases and subtleties here. 
+</p>
+<p>Some, but not all, of the interesting cases:
+</p>
+<ul>
+	<li>A “message” starting with PARM, UNIT, EQNS, or BITS is considered to be Telemetry rather than a Message.</li>
+	<li>A position (not MIC-E), or Object, with symbol code “_” is also weather.</li>
+	<li>$ is normally raw GPS but is weather if it starts with $ULTW.</li>
+	<li>NWS format is a message where addressee starts with NWS, SKY, or BOM or an Item where the
+first 3 characters of the source match the first 3 characters of the addressee.</li>
+</ul>
+<a href="#top">Top</a>
+<h3>Symbol Filter</h3>
+<pre>s/pri/alt/over
+</pre>
+<p>“pri” is zero or more symbols from the primary symbol set.
+</p>
+<p>“alt” is one or more symbols from the alternate symbol set.
+</p>
+<p>“over” is overlay characters. Overlays apply only to the alternate symbol set.
+</p>
+<p>Examples:
+</p>
+<pre>s/->		Allow house and car from primary symbol table.
+s//#		Allow alternate table digipeater, with or without overlay.
+s//#/\		Allow alternate table digipeater, only if no overlay.
+s//#/SL1	Allow alternate table digipeater, with overlay S, L, or 1
+</pre>
+<h3>Digipeater Filter</h3>
+<pre>d/digi1/digi2...</pre>
+<p>Allow packets that have been repeated by any of the listed digipeaters. Wildcarding is allowed.
+</p>
+<a href="#top">Top</a>
+<h3>Via digipeater unused Filter</h3>
+<pre>v/digi1/digi2...</pre>
+
+<p>Allow packets that have any listed digipeaters that don’t have the “has-been-used” flag set. Wildcarding
+is allowed.
+</p>
+<p>As discussed in the section called, Typical stuff sent by the Server, we saw examples of Internet connected stations which talk directly to the APRS-IS servers without a ham radio link along the way. When the server sends the packet to the IGate, there is “qAC” in the path. e.g.
+</p>
+<pre>N1LMA>APU25N,TCPIP*,qAC,T2NUENGLD:@250058z4123.63N/07148.85W_094/001g15 9t042r002p003P003h98b10253CRSnet {UIV32N}
+</pre>
+<p>If we wanted to wanted to pass nearby Internet only connected stations along to RF, we might use a filter like this:
+</p>
+<pre>i/30 | ( v/qAC & r/42.6/-71.3/50 )
+</pre>
+<p>We use the v filter, rather than the d filter, because the "qAC" address is not marked as being used (i.e. "*" does not appear after it).
+</p>
+<a href="#top">Top</a>
+<h3>Group Message Filter</h3>
+<pre>g/call1/call2...</pre>
+<p>Allow “message” packets with any of the listed addressees. Wildcarding is allowed.
+</p>
+<p>As the name suggests, this is really intended for “group” bulletins rather than “messages” addressed to a specific station. The APRS protocol spec lists some special prefixes for sending to a group rather than an individual.
+</p>
+<ul>
+		  <li>BLN – General Bulletins and Announcements.</li>
+		  <li>NWS – National Weather Service Bulletins.</li>
+</ul>
+<p>Example:
+</p>
+<pre>g/BLN*</pre>
+<p>I’m not happy with this. I think it should filter on the “group name” rather than the entire addressee field. I have bigger fish to fry right now and will get back to this little detail later. (The exact behavior here is subject to change.)
+</p>
+<p>The “i” filter is the preferred method for messages addressed to a specific station
+</p>
+<a href="#top">Top</a>
+<h3>Unproto Filter</h3>
+<pre>u/unproto1/unproto2...</pre>
+
+<p>Allow packets with any of the specified strings in the AX.25 destination field. APRS uses this field in a variety of ways. Most often it is the system type from the tocalls.txt file. For example, to select packets from the Kantronics KPC-3+, version 9.1, use:
+</p>
+<pre>u/APN391</pre>
+<p>This does not apply to the MIC-E packet types because they use the destination field for part of the position.
+</p>
+<p>Wildcarding is allowed so you could use “u/APDW*” to mean any version of Dire Wolf. 
+<a href="#top">Top</a>
+<h3>Individual Message Filter</h3>
+</p>
+<pre>i/time
+i/time/hops 
+i/time/hops/lat/lon/km
+</pre>
+<p>Allow “messages” for a station heard over the radio in the last ‘time’ minutes within the specified distance. Distance can be digipeater hops and/or geographical distance.
+</p>
+<p>Typical time limits might be 30 or 60 minutes. If we haven’t heard from a station for that long, it’s probably no longer hearing us.
+</p>
+<p>‘hops’ is the number of digipeater hops necessary to hear the message addressee.
+</p>
+<p>If hops is not specified, the maximum transmit digipeater hop count, from the IGTXVIA configuration will be used. Suppose that we heard three local stations over the radio:
+</p>
+<pre>W1ABC>APRS,DIGI1,DIGI2:whatever 
+W2DEF>APRS,DIGI1*,DIGI2:whatever 
+W3GHI>APRS,DIGI1,DIGI2*:whatever
+</pre>
+<p>The first station was heard directly. You can tell because there is no “*” in the path. The second station was heard after one digipeater hop.  The third station was heard after two digipeater hops.
+</p>
+<ul>  
+		  <li>If we had the filter “i/30/0” we would transmit only messages for the first station because it was heard directly.</li>
+		  <li>If we had the filter “i/30/1” we would also transmit messages for the second station.</li>
+		  <li>We would need “i/30/2” or larger to forward messages the third which is 2 digipeater hops
+					 away.</li>
+</ul>
+<p>This is not entirely reliable because some digipeaters don’t maintain the via path to indicate the actual path taken. I have little rant about this, called “APRS Digipeater – Compared to other implementations,” in the User Guide. Currently section 9.5.5 but subject to change as new material is added.
+</p>
+<p>You can also specify a physical distance, in kilometers, from a given latitude and longitude. If you only want to use physical distance, and not limit by number of digipeater hops, use a large number for hops as in:
+</p>
+<pre>i/30/8/42.6/-71.3/50</pre>
+<p>The “i” filter only makes sense when filtering packets from the Server going to RF.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="server">iGate Server</h2>
+<p>
+<a href="http://www.aprs2.net">Internet servers</a> that collect and redistribute APRS traffic over the internet.  
+</p>
+<ul>
+	<li>North America:  <b>noam.aprs2.net</b></li>
+	<li>South America:  <b>soam.aprs2.net</b></li>
+	<li>Europe & Africa:  <b>euro.aprs2.net</b></li>
+	<li>Asia:  <b>asia.aprs2.net</b></li>
+	<li>Oceania: <b>aunz.aprs2.net</b></li>
+</ul>
+<a href="#top">Top</a>
+
+<h2 id="igfilter">iGate Server Filter (IGFILTER)</h2>
+
+<p>Parameters you specify in this field are sent to the server on the Internet for processing. They are not processed locally by Direwolf. This restricts the APRS messages arriving at your iGate from the Internet server to just the ones that match your criteria.</p>
+
+<a href="http://www.aprs-is.net/javAPRSFilter.aspx">Source: APRS-IS</a><br />  
+<a href="#top">Top</a>
+
+    <p>
+        Multiple filter definitions can be setup separated by spaces. If any of the filters find a match the packet is passed. </p>
+    <p>
+        You can prevent the filter from passing certain packets by prefixing the filter parameter with a hyphen (-). This tells the filter to approve any packets that match the include filters <b>except</b> those that match the exclude filters. Standard port functionality such as messaging for IGates is not affected. Include filters subscribe you to see additional data and exclude filters block the specified packets from those subscriptions. Standard port operation such as APRS messaging support is unaffected. Filters only affect data going to the client; packets from the client or gated by the client are not filtered.</p>
+    <p>
+        For instance, to get all stations within 200 km of me except stations with the prefix of CW, I would use:
+    </p>
+    <pre>m/200 -p/CW</pre>
+    <p>
+        The server-side filter uses decimal degrees for latitude and longitude. The command &quot;filter default&quot; resets the filter to the predefined filter for that port.
+    </p>
+    <p>
+        The filter command may be set as part of the login line, as an APRS message to SERVER, or as a separate comment line (#filter r/33/-97/200). The preferred method is to set the command as part of the login which is supported by most current APRS software.
+    </p>
+    <p>
+        Below are the available filters (4.0 updates are highlighted):
+    </p>
+    <table id="ContentPlaceHolder1_AutoNumber1" rules="all" style="border-color:DarkGray;border-width:1px;border-style:solid;">
+		<tr align="center">
+			<th>Parameter
+            </th><th>Filter Type
+            </th><th>Description
+            </th>
+		</tr><tr>
+			<td>r/lat/lon/dist
+            </td><td>Range filter
+            </td><td>Pass posits and objects within dist km from lat/lon.<br />
+                lat and lon are signed decimal degrees, i.e. negative for West/South and positive
+                            for East/North. Up to 9 range filters can be defined at the same time to allow better
+                            coverage. Messages addressed to stations within the range are also passed.
+            </td>
+		</tr><tr>
+			<td>p/aa/bb/cc...
+            </td><td>Prefix filter
+            </td><td>Pass traffic with fromCall that start with<br />
+                aa or bb or cc...
+            </td>
+		</tr><tr>
+			<td>b/call1/call2...
+            </td><td>Budlist filter
+            </td><td>Pass all traffic from exact call: call1, call2, ... (* wild card allowed)
+            </td>
+		</tr><tr>
+			<td>o/obj1/obj2...
+            </td><td>Object filter
+            </td><td>Pass all objects with the exact name of obj1, obj2, ... (* wild card allowed)<br />
+                (spaces not allowed) <span style="background-color:yellow">(| =&gt; / and ~ =&gt; *)</span>
+            </td>
+		</tr><tr>
+			<td style="background-color:Yellow;">os/obj1/obj2...
+            </td><td style="background-color:Yellow;">Strict Object filter
+            </td><td style="background-color:Yellow;">Pass all objects with the exact name of obj1, obj2, ... (* wild card allowed) (|
+                            =&gt; / and ~ =&gt; *)<br />
+                Objects are always 9 characters and Items are 3 to 9 characters. There can only
+                            be one os filter and that filter must be at the end of the line.
+            </td>
+		</tr><tr>
+			<td>t/poimqstunw
+                            <p>
+                                t/poimqstu<span style="background-color:yellow">w</span>/call/km
+                            </p>
+            </td><td>Type filter
+            </td><td>Pass all traffic based on packet type.<br />
+                One or more types can be defined at the same time, t/otq is a valid definition.
+                            <p>
+                                p = Position packets<br />
+                                o = Objects<br />
+                                i = Items<br />
+                                m = Message<br />
+                                q = Query<br />
+                                s = Status<br />
+                                t = Telemetry<br />
+                                u = User-defined<br />
+                                n = NWS format messages and objects<br />
+                                w = Weather
+                            </p>
+                <p>
+                    Note: The weather type filter also passes positions packets for positionless weather
+                                packets.
+                </p>
+                <p>
+                    The second format allows putting a radius limit around &quot;call&quot; (station
+                                callsign-SSID or object name) for the requested station types.
+                </p>
+            </td>
+		</tr><tr>
+			<td>s/pri/alt/over
+            </td><td>Symbol filter
+            </td><td>pri = symbols in primary table <span style="background-color:yellow">(| =&gt; /)</span><br />
+                alt = symbols in alternate table <span style="background-color:yellow">(| =&gt; /)</span><br />
+                over = overlay character (case sensitive)<br />
+                                For example:
+<pre>
+s/-&gt;     This will pass all House and Car symbols (primary table)
+s//#     This will pass all Digi with or without overlay
+s//#/T   This will pass all Digi with overlay of capital &quot;T&quot;
+</pre>
+            </td>
+		</tr><tr>
+			<td>d/digi1/digi2...
+            </td><td>Digipeater filter
+            </td><td>The digipeater filter will pass all packets that have been digipeated by a<br />
+                particular station(s) (the station&#39;s call is in the path). This filter allows
+                            the * wildcard.
+            </td>
+		</tr><tr>
+			<td>a/latN/lonW/latS/lonE
+            </td><td>Area filter
+            </td><td>The area filter works the same as rang filter but the filter is defined as a box
+                            of coordinates. The coordinates can also been seen as upper left coordinate and
+                            lower right. Lat/lon are decimal degrees. South and west are negative. Up to 9 area
+                            filters can be defined at the same time.
+            </td>
+		</tr><tr>
+			<td>e/call1/call1/...
+            </td><td>Entry station filter
+            </td><td>This filter passes all packets with the specified callsign-SSID(s) immediately following
+                            the q construct. This allows filtering based on receiving IGate, etc. Supports *
+                            wildcard.
+            </td>
+		</tr><tr>
+			<td style="background-color:Yellow;">g/call1/call1/...
+            </td><td style="background-color:Yellow;">Group Message filter
+            </td><td style="background-color:Yellow;">This filter passes all message packets with the specified callsign-SSID(s) as the
+                            addressee of the message. Supports * wildcard.
+            </td>
+		</tr><tr>
+			<td>u/unproto1/unproto2/...
+            </td><td>Unproto filter
+            </td><td>This filter passes all packets with the specified destination callsign-SSID(s) (also
+                            known as the To call or unproto call). Supports * wildcard.
+            </td>
+		</tr><tr>
+			<td>q/con/I
+            </td><td>q Contruct filter
+            </td><td>q = q Construct command<br />
+                con = list of q Construct to pass (case sensitive)<br />
+                I = Pass positions from IGATES identified by qAr, qAo, or qAR.<br />
+                For example:<br />
+                <pre>
+q/C    Pass all traffic with qAC
+q/rR   Pass all traffic with qAr or qAR
+q//I   Pass all position packets from IGATES identified in other packets by qAr or qAR
+                </pre>
+            </td>
+		</tr><tr>
+			<td>m/dist
+            </td><td>My Range filter
+            </td><td>This is the same as the range filter except that the center is defined as the last
+                            known position of the logged in client.
+            </td>
+		</tr><tr>
+			<td>f/call/dist
+            </td><td>Friend Range filter
+            </td><td>This is the same as the range filter except that the center is defined as the last
+                            known position of call. Up to 9 friend filters can be defined at the same time.
+            </td>
+		</tr>
+	</table>
+<a href="#top">Top</a>
+<h2 id="hops">Hops (IGTXVIA 0)</h2>
+
+<p>If you want to transmit information from the servers, you need to specify two additional pieces of information: the radio channel and the via path for the packet header. Examples:
+</p>
+<pre>
+WIDE1-1,WIDE2-1 
+WZ9ZZZ
+</pre>
+<p>In the first case packets will be transmitted on the first radio channel with a path of WIDE1-1,WIDE2-1. In the second case, packets are transmitted and directed to a known nearby digipeater with wide coverage.
+</p>
+<p>The maximum digipeater path length also influences the local station count (LOC_CNT) in the IGATE status beacon. In the first case, LOC_CNT would include stations heard with a maximum of two used digipeater hops. In the second case, LOC_CNT would include only those heard directly or via one digipeater. In the third case, LOC_CNT will be the same as DIR_CNT, only stations heard directly.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="beacon">iGate Beacon Delay (mm:ss)</h2>
+<p>Time, in minutes:seconds, to delay before sending beacon for the first time.</p>
+<h2>iGate Beacon Interval (mm:ss)</h2>
+<p>Time, in minutes:seconds, between beacon transmissions.</p>
+<h2>Digipeat Beacon Delay (mm:ss)</h2>
+<p>Time, in minutes:seconds, to delay before sending beacon for the first time.</p>
+<h2>Digipeat Beacon Interval (mm:ss)</h2>
+<p>Time, in minutes:seconds, between beacon transmissions.</p>
+
+<a href="#top">Top</a>
+</body>
+</html>
+
