@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 0.1.2
+#-    version         ${SCRIPT_NAME} 0.1.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -218,8 +218,8 @@ function loadSettings () {
 			;;
 	esac
 
-	BOOTSTARTs="disabled~1~12~13~14~123~124~134~1234~2~23~234~24~3~34~4"
-	[[ $BOOTSTARTs =~ ${F[_BOOTSTART_]} && ${F[_BOOTSTART_]} =~ ^[1-4]{1,4}$ ]] && BOOTSTARTs="$(echo "$BOOTSTARTs" | sed "s/~${F[_BOOTSTART_]}/~\^${F[_BOOTSTART_]}/1")" || BOOTSTARTs="^$BOOTSTARTs" 
+	BOOTSTARTs="disabled~none~1~12~13~14~123~124~134~1234~2~23~234~24~3~34~4"
+	[[ $BOOTSTARTs =~ ${F[_BOOTSTART_]} && ${F[_BOOTSTART_]} =~ ^(none|[1-4]{1,4})$ ]] && BOOTSTARTs="$(echo "$BOOTSTARTs" | sed "s/~${F[_BOOTSTART_]}/~\^${F[_BOOTSTART_]}/1")" || BOOTSTARTs="^$BOOTSTARTs" 
 	
 	case ${F[_APRSMODE_]} in
 		Digi*) # Digipeater or Digipeater + iGate
@@ -615,13 +615,16 @@ do
 			# Make or update an autostart piano switch script if necessary
 			if [[ ${F[_BOOTSTART_]} == "disabled" ]]
 			then # Disable autostart
-				rm -f $HOME/piano$PREVIOUS_AUTOSTART.sh
+				[[ $PREVIOUS_AUTOSTART =~ none ]] && SWITCHES="" || SWITCHES="$PREVIOUS_AUTOSTART" 
+				rm -f $HOME/piano${SWITCHES}.sh
 	 		else # Enable autostart
 				if [[ ${F[_BOOTSTART_]} != $PREVIOUS_AUTOSTART ]]
 				then # Previous autostart was not the same as the requested autostart
-					rm -f $HOME/piano$PREVIOUS_AUTOSTART.sh 
-					echo -e "#!/bin/bash\n$(command -v $(basename $0)) >/dev/null 2>&1" > $HOME/piano${F[_BOOTSTART_]}.sh
-					chmod +x $HOME/piano${F[_BOOTSTART_]}.sh
+					[[ $PREVIOUS_AUTOSTART =~ none ]] && SWITCHES="" || SWITCHES="$PREVIOUS_AUTOSTART" 
+					rm -f $HOME/piano${SWITCHES}.sh
+					[[ ${F[_BOOTSTART_]} =~ none ]] && SWITCHES="" || SWITCHES="${F[_BOOTSTART_]}" 
+					echo -e "#!/bin/bash\n$(command -v $(basename $0)) >/dev/null 2>&1" > $HOME/piano${SWITCHES}.sh
+					chmod +x $HOME/piano$SWITCHES.sh
 				fi
 			fi		
 			;;
