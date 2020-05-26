@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 0.1.8
+#-    version         ${SCRIPT_NAME} 0.1.9
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -236,6 +236,7 @@ function loadSettings () {
 				IGLOGIN="IGLOGIN ${F[_CALL_]}-${F[_SSID_]} $(aprsPasscode ${F[_CALL_]})"
 				FILTER="FILTER IG 0 $(echo "${F[_FILTER_]}" | sed -e "s/\$LAT/${F[_LAT_]}/" -e "s/\$LONG/${F[_LONG_]}/")"
 				IGFILTER="IGFILTER ${F[_IGFILTER_]}"
+				IGSERVER="IGSERVER ${F[_SERVER_]}"
 			fi
 			DIGIPEAT="DIGIPEAT 0 0 ^WIDE[3-7]-[1-7]$|^TEST$ ^WIDE[12]-[12]$ TRACE"
 			;;
@@ -245,6 +246,9 @@ function loadSettings () {
 			COMMENT="${F[_COMMENT_]} iGate | ${F[_LOC_]}"
 			PBEACON="PBEACON sendto=IG delay=${F[_IGDELAY_]} every=${F[_IGEVERY_]} symbol=\"igate\" overlay=R lat=${F[_LAT_]} long=${F[_LONG_]} COMMENT=\"$COMMENT\""
 			IGLOGIN="IGLOGIN ${F[_CALL_]}-${F[_SSID_]} $(aprsPasscode ${F[_CALL_]})"
+			IGSERVER="IGSERVER ${F[_SERVER_]}"
+			FILTER="FILTER IG 0 $(echo "${F[_FILTER_]}" | sed -e "s/\$LAT/${F[_LAT_]}/" -e "s/\$LONG/${F[_LONG_]}/")"
+			IGFILTER="IGFILTER ${F[_IGFILTER_]}"
 			;;
 		"iGate (TX+RX)") # iGate TX+RX
 			DIGIPEAT=""
@@ -252,6 +256,7 @@ function loadSettings () {
 			COMMENT="${F[_COMMENT_]} iGate | ${F[_LOC_]}"
 			PBEACON="PBEACON sendto=IG delay=${F[_IGDELAY_]} every=${F[_IGEVERY_]} symbol=\"igate\" overlay=T lat=${F[_LAT_]} long=${F[_LONG_]} COMMENT=\"$COMMENT\""
 			IGLOGIN="IGLOGIN ${F[_CALL_]}-${F[_SSID_]} $(aprsPasscode ${F[_CALL_]})"
+			IGSERVER="IGSERVER ${F[_SERVER_]}"
 			FILTER="FILTER IG 0 $(echo "${F[_FILTER_]}" | sed -e "s/\$LAT/${F[_LAT_]}/" -e "s/\$LONG/${F[_LONG_]}/")"
 			IGFILTER="IGFILTER ${F[_IGFILTER_]}"
 			;;
@@ -272,16 +277,16 @@ ARATE ${F[_ARATE_]}
 PTT ${F[_PTT_]}
 MYCALL $MYCALL
 MODEM 1200
-$IGLOGIN
-$PBEACON
-$DIGIPEAT
-$IGFILTER
-$IGSERVER
-$FILTER
-$IGTXVIA
-$IGTXLIMIT
 AGWPORT 0
 KISSPORT 0
+$PBEACON
+$IGLOGIN
+$FILTER
+$IGSERVER
+$IGFILTER
+$DIGIPEAT
+$IGTXVIA
+$IGTXLIMIT
 EOF
 
 }
