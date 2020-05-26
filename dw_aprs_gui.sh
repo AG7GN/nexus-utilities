@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 0.1.3
+#-    version         ${SCRIPT_NAME} 0.1.8
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -280,8 +280,20 @@ $IGSERVER
 $FILTER
 $IGTXVIA
 $IGTXLIMIT
+AGWPORT 0
+KISSPORT 0
 EOF
 
+}
+
+function killDirewolf () {
+	if pgrep "^direwolf" >/dev/null
+	then
+		pkill "^direwolf"
+		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+	else
+		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+	fi
 }
 
 #============================
@@ -311,7 +323,7 @@ CONFIG_FILE="$HOME/direwolf_aprs.conf"
 
 CONFIG_TAB_TEXT="<b><big><big>Direwolf APRS Configuration</big></big></b>\n \
 <span color='red'><b>DO NOT USE</b></span> the '<b>~</b>' character in any field below. \
-     Click the <b>Restart...</b> button after you make your changes.\n"
+     Click the <b>Restart...</b> button to save your changes and restart APRS.\n"
 
 ID="${RANDOM}"
 
@@ -419,9 +431,10 @@ else # No configuration files exist
 	FIRST_RUN=true
 fi
 
-export -f setDefaults loadAPRSDefaults
+export -f setDefaults loadAPRSDefaults killDirewolf
 export load_aprs_defaults_cmd='@bash -c "setDefaults; loadAPRSDefaults"'
 export click_aprs_help_cmd='bash -c "xdg-open /usr/local/share/hampi/aprs_help.html"'
+export PIPEDATA=$PIPE
 
 #============================
 #  MAIN SCRIPT
@@ -438,7 +451,7 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-while [[ $RETURN_CODE == 0 ]]
+while true
 do
 	YAD_PIDs=()
 	# Kill any running processes and load latest settings
@@ -450,8 +463,8 @@ do
 	rm -f $TMPDIR/CONFIGURE_APRS.txt
 	loadSettings $CONFIG_FILE
 	# Start the tail window tab
-	[[ $FIRST_RUN == true ]] && MODE="" || MODE="${F[_APRSMODE_]}"
-	TEXT="<big><b>Direwolf $MODE APRS Monitor</b></big>"
+	[[ $FIRST_RUN == true ]] && MODE_MESSAGE="" || MODE_MESSAGE="${F[_APRSMODE_]}"
+	TEXT="<big><b>Direwolf $MODE_MESSAGE APRS Monitor</b></big>"
 	yad --plug="$ID" --tabnum=1 \
 		--back=black --fore=yellow \
 		--text-info --text-align=center \
@@ -459,7 +472,7 @@ do
 	YAD_PIDs+=( $! )
 	if [[ $FIRST_RUN == true ]]
 	then
-		echo "Configure Direwolf APRS in the \"Configure APRS\" tab, then click \"Restart...\" button below." >&6 
+		echo -e "\n\nDirewolf was not started because APRS is not configured.\nConfigure it in the \"Configure APRS\" tab, then click the \"Restart...\" button below." >&6
 	else # Not a first run.  Direwolf appears to be configured so start it
 		echo >&6
 		echo "Using Direwolf configuration in $DW_CONFIG:" >&6
@@ -467,6 +480,7 @@ do
 		echo >&6
 		[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
 		$DIREWOLF -c $DW_CONFIG >&6 2>&6 &
+		echo -e "\n\nDirewolf APRS is running." >&6
 	fi
 	# Set up tab for configuring Direwolf.
 	CMD=(
@@ -559,14 +573,12 @@ do
   		--buttons-layout=center \
   		--tab="Monitor APRS" \
   		--tab="Configure APRS" \
-  		--button="<b>Stop Direwolf APRS and Exit</b>":1 \
+  		--button="<b>Exit</b>":1 \
+  		--button="<b>Stop Direwolf APRS</b>":'bash -c "killDirewolf"' \
   		--button="<b>Restart Direwolf APRS</b>":0
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
-		1|252) # User click Exit button or closed window. 
-			break
-			;;
 		0) # Read and handle the Configure APRS tab yad output
 			[[ -s $TMPDIR/CONFIGURE_APRS.txt ]] || Die "Unexpected input from dialog"
 			IFS='~' read -r -a TF < "$TMPDIR/CONFIGURE_APRS.txt"
@@ -611,7 +623,6 @@ do
 			else
 				FIRST_RUN=false
 			fi
-
 			# Make or update an autostart piano switch script if necessary
 			if [[ ${F[_BOOTSTART_]} == "disabled" ]]
 			then # Disable autostart
@@ -623,10 +634,13 @@ do
 					[[ $PREVIOUS_AUTOSTART =~ none ]] && SWITCHES="" || SWITCHES="$PREVIOUS_AUTOSTART" 
 					rm -f $HOME/piano${SWITCHES}.sh
 					[[ ${F[_BOOTSTART_]} =~ none ]] && SWITCHES="" || SWITCHES="${F[_BOOTSTART_]}" 
-					echo -e "#!/bin/bash\n$(command -v $(basename $0)) >/dev/null 2>&1" > $HOME/piano${SWITCHES}.sh
+					echo -e "#!/bin/bash\nsleep 5\n$(command -v $(basename $0)) >/dev/null 2>&1" > $HOME/piano${SWITCHES}.sh
 					chmod +x $HOME/piano$SWITCHES.sh
 				fi
 			fi		
+			;;
+		*) # 1, 252, or anything else.  User click Exit button or closed window. 
+			break
 			;;
 	esac
 done
