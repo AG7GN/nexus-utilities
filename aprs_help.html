@@ -5,6 +5,9 @@
 <body>
 
 <h1>APRS Configuration Help</h1>
+<p>
+See Direwolf author WB2OSZ's <a href="https://github.com/wb2osz/direwolf/blob/master/doc/Successful-APRS-IGate-Operation.pdf">Successful APRS IGate Operation</a> for some good tips on using APRS.
+</p>
 
 <a href="#call">Call sign and SSID</a><br />
 <a href="#tactical">Tactical Call Sign</a><br />
@@ -32,6 +35,27 @@
 <h2 id="call">Call and SSID</h2>
 <p>Station call sign.  Default SSID is 0.  See <a href="http://www.aprs.org/aprs11/SSIDs.txt">APRS SSID Recommendations</a> for more information.
 </p>
+<p>
+SSID RECOMMENDATIONS:  It is very convenient to other mobile operators or others looking at callsigns flashing by, to be able to recognize some common applications at a glance.  Here are the recommendations for the 16 possible SSID's (the limit of 16 comes from the 4 bits available in the AX.25 protocol.  Note, The SSID of zero is dropped by most display applications.  So a callsign with no SSID has an SSID of 0.
+</p>
+<pre>
+-0 Your primary station usually fixed and message capable
+-1 generic additional station, digi, mobile, wx, etc
+-2 generic additional station, digi, mobile, wx, etc
+-3 generic additional station, digi, mobile, wx, etc
+-4 generic additional station, digi, mobile, wx, etc
+-5 Other networks (Dstar, Iphones, Androids, Blackberry's etc)
+-6 Special activity, Satellite ops, camping or 6 meters, etc
+-7 walkie talkies, HT's or other human portable
+-8 boats, sailboats, RV's or second main mobile
+-9 Primary Mobile (usually message capable)
+-10 internet, Igates, echolink, winlink, AVRS, APRN, etc
+-11 balloons, aircraft, spacecraft, etc
+-12 APRStt, DTMF, RFID, devices, one-way trackers*, etc
+-13 Weather stations
+-14 Truckers or generally full time drivers
+-15 generic additional station, digi, mobile, wx, etc
+</pre>
 <a href="#top">Top</a>
 
 <h2 id="tactical">Tactical Call</h2>
@@ -132,7 +156,7 @@ Print Direwolf's audio statistics every x seconds.  Set to 0 to disable printing
 <p>
 Default is disabled.  If disabled, Direwolf APRS will not autostart when the Pi boots up.  Otherwise, select which levers in the piano switch you want to be in the ON (down) position.  A corresponding piano script will be created and, if the switches are in the selected postion, will autostart APRS at bootup.  If 'none' is selected, meaning all switches are in the OFF (UP) position, script piano.sh will be created and will autostart APRS provided all levers are in the UP position.  
 <br /><br />
-<b>IMPORTANT</b>:  Scripts with the same name will be overwritten without warning!
+<b>IMPORTANT</b>:  If a piano script with the same name already exists, the old one will be renamed with a <pre>.YYYYMMDD</pre> extension appended to the file name.
 <br /><br />
 See <a href="https://github.com/AG7GN/hampi-utilities/blob/master/README.md#check-piano-script">Check Piano Script</a> for details.
 </p>
@@ -358,8 +382,7 @@ W3GHI>APRS,DIGI1,DIGI2*:whatever
 <ul>  
 		  <li>If we had the filter “i/30/0” we would transmit only messages for the first station because it was heard directly.</li>
 		  <li>If we had the filter “i/30/1” we would also transmit messages for the second station.</li>
-		  <li>We would need “i/30/2” or larger to forward messages the third which is 2 digipeater hops
-					 away.</li>
+		  <li>We would need “i/30/2” or larger to forward messages the third which is 2 digipeater hops away.</li>
 </ul>
 <p>This is not entirely reliable because some digipeaters don’t maintain the via path to indicate the actual path taken. I have little rant about this, called “APRS Digipeater – Compared to other implementations,” in the User Guide. Currently section 9.5.5 but subject to change as new material is added.
 </p>
@@ -369,6 +392,27 @@ W3GHI>APRS,DIGI1,DIGI2*:whatever
 <p>The “i” filter only makes sense when filtering packets from the Server going to RF.
 </p>
 <a href="#top">Top</a>
+
+<h2>Typical Configurations for Messaging</h2>
+
+<p>
+Source: <a href="https://github.com/wb2osz/direwolf/blob/master/doc/Successful-APRS-IGate-Operation.pdf">Successful APRS IGate Operation</a>.
+Comments in this section are from Direwolf's author, WB2OSZ.
+</p>
+<p>
+The servers have a tendency of sending us too much unexpected stuff. In earlier versions, lack of an explicit client side filter often resulted in too much undesired radio traffic. Starting with version 1.4, there is now a reasonable default filter when going from the IS to RF. It is equivalent to:
+<pre>FILTER IG 0 i/30</pre>
+Client-Side filters are explored in more depth in a later second.
+Suppose you wanted to forward messages to stations within 50 km, regardless of digipeater hops required:
+<pre>FILTER IG 0 i/30/8/42.6/-71.3/50</pre>
+Personally, I think the physical distance restriction for messages is a bad idea. Others may disagree. We might not know the location of the nearby stations that send packet types other than Position Report. We could relax the restriction a bit by allowing anyone heard directly, in the past hour, even if we don’t know the location:
+<pre>FILTER IG 0 i/30/8/42.6/-71.3/50 | i/60/0</pre>
+Suppose we are in the USA, not too far from the Canadian border. We might want to avoid sending messages across the border due to third party traffic legal concerns. In this case, we could add another filter requiring the addressee to begin with W, K, A, or N.
+<pre>FILTER IG 0 ( i/30/8/42.6/-71.3/50 | i/60/0 ) & g/W*/K*/A*/N*</pre>
+If you want to allow additional types of packets, just append the ‘or’ operator and something creative. Here we will also transmit any telemetry data from WB2OSZ.
+<pre>FILTER IG 0 i/30 | ( t/t & b/WB2OSZ )</pre>
+Of course you would also need to ask for additional types of packets, from the server, with a server side filter.
+</p>
 
 <h2 id="server">iGate Server</h2>
 <p>

@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 0.1.9
+#-    version         ${SCRIPT_NAME} 0.1.10
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -45,17 +45,19 @@ Optnum=$#
 
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-   pkill "^direwolf"
+   #pkill "^direwolf"
+   kill $timeStamp_PID >/dev/null 2>&1
+   kill $direwolf_PID >/dev/null 2>&1
    for P in ${YAD_PIDs[@]}
 	do
 		kill $P >/dev/null 2>&1
 	done
-   rm -f $PIPE
+	rm -f $PIPE
 }
 
 function SafeExit() {
+   trap - INT TERM EXIT SIGINT
 	TrapCleanup
-   trap - INT TERM EXIT
    exit 0
 }
 
@@ -291,10 +293,18 @@ EOF
 
 }
 
+function timeStamp () {
+	while sleep 60
+	do
+		echo -e "\nTIMESTAMP: $(date)" 
+	done >$PIPEDATA
+}
+
 function killDirewolf () {
-	if pgrep "^direwolf" >/dev/null
+	# $1 is the direwolf PID
+   if pgrep ^direwolf | grep -q $1 2>/dev/null
 	then
-		pkill "^direwolf"
+		kill $1 >/dev/null 2>&1
 		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
 	else
 		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
@@ -412,7 +422,7 @@ done
 shift $((${OPTIND} - 1)) ## shift options
 
 # Ensure only one instance of this script is running.
-pidof -o %PPID -x $(basename "$0") >/dev/null && exit 1
+pidof -o %PPID -x $(basename "$0") >/dev/null && Die "$(basename $0) already running."
 
 # Check for required apps.
 for A in yad direwolf
@@ -446,7 +456,7 @@ export PIPEDATA=$PIPE
 #============================
 
 # Trap bad exits with cleanup function
-trap SafeExit EXIT INT TERM
+trap SafeExit EXIT INT TERM SIGINT
 
 # Exit on error. Append '||true' when you run the script if you expect an error.
 set -o errexit
@@ -456,25 +466,33 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
+timeStamp &
+timeStamp_PID=$!
+
+direwolf_PID=""
+YAD_PIDs=()
+
 while true
 do
-	YAD_PIDs=()
 	# Kill any running processes and load latest settings
-	pgrep "^direwolf" >/dev/null && pkill "^direwolf"
+	killDirewolf $direwolf_PID
    for P in ${YAD_PIDs[@]}
 	do
 		ps x | egrep -q "^$P" && kill $P
 	done
 	rm -f $TMPDIR/CONFIGURE_APRS.txt
 	loadSettings $CONFIG_FILE
-	# Start the tail window tab
+	YAD_PIDs=()
+
+	# Start the monitor tab
 	[[ $FIRST_RUN == true ]] && MODE_MESSAGE="" || MODE_MESSAGE="${F[_APRSMODE_]}"
 	TEXT="<big><b>Direwolf $MODE_MESSAGE APRS Monitor</b></big>"
-	yad --plug="$ID" --tabnum=1 \
+	yad --plug="$ID" --tabnum=1 --text="$TEXT" --editable --show-uri --show-cursor \
 		--back=black --fore=yellow \
 		--text-info --text-align=center \
 		--editable --tail --center <&6 &
 	YAD_PIDs+=( $! )
+
 	if [[ $FIRST_RUN == true ]]
 	then
 		echo -e "\n\nDirewolf was not started because APRS is not configured.\nConfigure it in the \"Configure APRS\" tab, then click the \"Restart...\" button below." >&6
@@ -485,9 +503,10 @@ do
 		echo >&6
 		[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
 		$DIREWOLF -c $DW_CONFIG >&6 2>&6 &
-		echo -e "\n\nDirewolf APRS is running." >&6
+		direwolf_PID=$!
+		echo -e "\n\nDirewolf APRS has started. PID=$direwolf_PID" >&6
 	fi
-	# Set up tab for configuring Direwolf.
+	# Start the Configure APRS.
 	CMD=(
 		yad --plug="$ID" --tabnum=2 --show-uri 
   		--item-separator="~" 
@@ -533,16 +552,16 @@ do
    	--field="<b>Configuration Help</b>":FBTN
    	-- 
    	"${F[_CALL_]}" 
-   	"${F[_SSID_]}!1..15!1!" 
+   	"${F[_SSID_]}~0..15~1~" 
 	   "${F[_TACTICAL_CALL_]}"	
    	"${F[_COMMENT_]}" 
    	"${F[_LOC_]}" 
    	"${F[_GRID_]}" 
    	"${F[_LAT_]}" 
    	"${F[_LONG_]}" 
-   	"${F[_POWER_]}!1..100!1!" 
-   	"${F[_HEIGHT_]}!0..200!1!" 
-   	"${F[_GAIN_]}!0..20!1!" 
+   	"${F[_POWER_]}~1..100~1~" 
+   	"${F[_HEIGHT_]}~0..200~1~" 
+   	"${F[_GAIN_]}~0..20~1~" 
    	"$ADEVICE_CAPTUREs" 
    	"$ADEVICE_PLAYBACKs" 
    	"$ARATEs"  
@@ -578,8 +597,8 @@ do
   		--buttons-layout=center \
   		--tab="Monitor APRS" \
   		--tab="Configure APRS" \
-  		--button="<b>Exit</b>":1 \
-  		--button="<b>Stop Direwolf APRS</b>":'bash -c "killDirewolf"' \
+  		--button="<b>Stop Direwolf APRS &#x26; Exit</b>":1 \
+  		--button="<b>Stop Direwolf APRS</b>":"bash -c 'killDirewolf $direwolf_PID'" \
   		--button="<b>Restart Direwolf APRS</b>":0
 	RETURN_CODE=$?
 
@@ -628,19 +647,21 @@ do
 			else
 				FIRST_RUN=false
 			fi
-			# Make or update an autostart piano switch script if necessary
+			# Make autostart piano switch script if necessary
 			if [[ ${F[_BOOTSTART_]} == "disabled" ]]
 			then # Disable autostart
 				[[ $PREVIOUS_AUTOSTART =~ none ]] && SWITCHES="" || SWITCHES="$PREVIOUS_AUTOSTART" 
-				rm -f $HOME/piano${SWITCHES}.sh
+				# Save previous piano script if it exists
+				[[ -s $HOME/piano${SWITCHES}.sh ]] && mv -f $HOME/piano${SWITCHES}.sh $HOME/piano${SWITCHES}.sh.$(date '+%Y%m%d') 
 	 		else # Enable autostart
 				if [[ ${F[_BOOTSTART_]} != $PREVIOUS_AUTOSTART ]]
 				then # Previous autostart was not the same as the requested autostart
 					[[ $PREVIOUS_AUTOSTART =~ none ]] && SWITCHES="" || SWITCHES="$PREVIOUS_AUTOSTART" 
-					rm -f $HOME/piano${SWITCHES}.sh
+					# Save previous piano script if it exists
+					[[ -s $HOME/piano${SWITCHES}.sh ]] && mv -f $HOME/piano${SWITCHES}.sh $HOME/piano${SWITCHES}.sh.$(date '+%Y%m%d') 
 					[[ ${F[_BOOTSTART_]} =~ none ]] && SWITCHES="" || SWITCHES="${F[_BOOTSTART_]}" 
 					echo -e "#!/bin/bash\nsleep 5\n$(command -v $(basename $0)) >/dev/null 2>&1" > $HOME/piano${SWITCHES}.sh
-					chmod +x $HOME/piano$SWITCHES.sh
+					chmod +x $HOME/piano${SWITCHES}.sh
 				fi
 			fi		
 			;;

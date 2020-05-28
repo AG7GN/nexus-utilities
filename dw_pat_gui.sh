@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.3.9
+#-    version         ${SCRIPT_NAME} 1.4.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -44,20 +44,22 @@ Optnum=$#
 
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-   pkill "^(pat|direwolf)"
+   kill $timeStamp_PID >/dev/null 2>&1
+   kill $direwolf_PID >/dev/null 2>&1
+   kill $pat_PID >/dev/null 2>&1
+	kill $RIG_PID >/dev/null 2>&1
    for P in ${YAD_PIDs[@]}
 	do
 		kill $P >/dev/null 2>&1
 	done
-	kill $RIG_PID >/dev/null 2>&1
    sudo pkill kissattach >/dev/null 2>&1
    rm -f /tmp/kisstnc
    rm -f $PIPE
 }
 
 function SafeExit() {
+   trap - INT TERM EXIT SIGINT
 	TrapCleanup
-   trap - INT TERM EXIT
    exit 0
 }
 
@@ -172,6 +174,24 @@ EOF
 	PAT_HTTP_PORT="$(jq -r ".http_addr" $PAT_CONFIG | cut -d: -f2)"
 	PAT_TELNET_PORT="$(jq -r ".telnet.listen_addr" $PAT_CONFIG | cut -d: -f2)"
 	PAT_LOCATOR="$(jq -r ".locator" $PAT_CONFIG)"
+}
+
+function timeStamp () {
+	while sleep 60
+	do
+		echo -e "\nTIMESTAMP: $(date)" 
+	done >$PIPEDATA
+}
+
+function killDirewolf () {
+	# $1 is the direwolf PID
+   if pgrep ^direwolf | grep -q $1 2>/dev/null
+	then
+		kill $1 >/dev/null 2>&1
+		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+	else
+		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+	fi
 }
 
 #============================
@@ -315,6 +335,8 @@ then
 	echo -n "" | pat configure >/dev/null 2>&1
 fi
 
+export PIPEDATA=$PIPE
+
 #============================
 #  MAIN SCRIPT
 #============================
@@ -348,11 +370,18 @@ then # No rigs configured.  Make a dummy rig
       '.ax25.rig = $R' | sponge $PAT_CONFIG
 fi
 
-while [[ $RETURN_CODE == 0 ]]
+timeStamp &
+timeStamp_PID=$!
+
+direwolf_PID=""
+pat_PID=""
+YAD_PIDs=()
+
+while true
 do
-	YAD_PIDs=()
 	# Kill any running processes and load latest settings
-	pgrep "^(pat|direwolf)" >/dev/null && pkill "^(pat|direwolf)"
+	killDirewolf $direwolf_PID
+	[[ $pat_PID == "" ]] || kill $pat_PID >/dev/null 2>&1
    for P in ${YAD_PIDs[@]}
 	do
 		ps x | egrep -q "^$P" && kill $P
@@ -361,6 +390,7 @@ do
 	rm -f $TMPDIR/CONFIGURE_TNC.txt $TMPDIR/CONFIGURE_PAT.txt
    rm -f /tmp/kisstnc
 	loadSettings
+	YAD_PIDs=()
 	
 	# Start the tail window tab
 	TEXT="AGW Port: <span color='blue'><b>$AGWPORT</b></span>    KISS Port: <span color='blue'><b>$KISSPORT</b></span>"
@@ -372,8 +402,10 @@ do
 	YAD_PIDs+=( $! )
 
 	# Start rigctld.  Assume should use the dummy rig.
-	if ! pgrep rigctld >/dev/null
+	if pgrep rigctld >/dev/null
 	then
+		echo "rigctld already running." >&3
+	else
 		echo "Starting rigctld using dummy rig..." >&3
 		$(command -v rigctld) -m 1 >&3 2>&3 &
 		RIG_PID=$!
@@ -387,6 +419,8 @@ do
 		# Start Direwolf
 		[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
 		$DIREWOLF -c $DW_CONFIG >&3 2>&3 &
+		direwolf_PID=$!
+		echo -e "\n\nDirewolf TNC has started.  PID=$direwolf_PID" >&3
 
 		# Wait for Direwolf to allocate a PTY
    	COUNTER=0
@@ -413,7 +447,13 @@ do
    	[ $? -eq 0 ] || Die "kissparms settings failed.  Aborting."
 
 		# Start pat
-		[[ $PAT_START_HTTP == TRUE ]] && $PAT >&3 2>&3 &
+		if [[ $PAT_START_HTTP == TRUE ]]
+		then
+			$PAT >&3 2>&3 &
+			pat_PID=$!
+		else
+			pat_PID=""
+		fi
 	fi 
 	
 	# Set up tab for configuring Direwolf.
@@ -483,14 +523,11 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
   		--tab="Configure TNC" \
   		--tab="Configure pat" \
 		--width="800" --height="600" \
-  		--button="<b>Stop Direwolf$AND_PAT and Exit</b>":1 \
+  		--button="<b>Stop Direwolf$AND_PAT &#x26; Exit</b>":1 \
   		--button="<b>Restart Direwolf$AND_PAT</b>":0
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
-		1|252) # User click Exit button or closed window. 
-			break
-			;;
 		0) # Read and handle the Configure TNC tab yad output
 			[[ -s $TMPDIR/CONFIGURE_TNC.txt ]] || Die "Unexpected input from dialog"
 			IFS='|' read -r -a TF < "$TMPDIR/CONFIGURE_TNC.txt"
@@ -539,6 +576,9 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
 			else
 				FIRST_RUN=false
 			fi
+			;;
+		*) # User click Exit button or closed window. 
+			break
 			;;
 	esac
 done
