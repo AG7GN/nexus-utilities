@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.16.8"
+VERSION="1.16.9"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -191,6 +191,9 @@ then
 		-e 's/"secure_login_password": .*",$/"secure_login_password": "",/' \
 		-e 's/"locator": .*",$/"locator": "",/' $HOME/.wl2k/config.json
 	rm -f $HOME/.wl2k/config.json~
+	rm -rf $HOME/.wl2k/mailbox/*
+	> $HOME/.wl2k/eventlog.json
+	> $HOME/.wl2k/pat.log
 	echo "Delete pat configuration" >> "$INIT_DONE_FILE"
 fi
 
