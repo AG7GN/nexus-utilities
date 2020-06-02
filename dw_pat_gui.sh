@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.4.0
+#-    version         ${SCRIPT_NAME} 1.5.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -86,6 +86,31 @@ function Die () {
 	SafeExit
 }
 
+function loadpatDefaults () {
+   for I in $(seq 7 10)
+   do # I is the field number.  D[$I] is the default value
+           echo "${I}:${D[$I]}"
+   done
+}
+
+function setTNCpatDefaults () {
+   declare -gA D
+   D[1]="N0CALL"  # Call sign
+   D[2]="1200" # Modem
+   D[3]="null" # Audio capture interface (ADEVICE)
+   D[4]="null" # Audio playback interface (ADEVICE)
+   D[5]="96000" # Audio playback rate (ARATE)
+   D[6]="GPIO 23" # GPIO PTT (BCM pin)
+   D[7]="200" # TX Delay
+	D[8]="50" # TX Tail
+   D[9]="64"  # Persist
+   D[10]="20" # Slot Time
+   D[11]="60" # Audio Stats
+   D[12]="8001" # AGW Port
+   D[13]="8010"  # KISS Port
+   D[14]="FALSE" # Enable pat HTTP server
+}
+
 function loadSettings () {
 	 
 	MODEMs="1200!9600"
@@ -99,21 +124,22 @@ function loadSettings () {
   		source "$CONFIG_FILE"
 	else # Set some default values in a new config file
    	echo -e "Config file $CONFIG_FILE not found.\nCreating a new one with default values." >&3
+		setTNCpatDefaults
    	echo "declare -gA F" > "$CONFIG_FILE"
-   	echo "F[_CALL_]='N0CALL'" >> "$CONFIG_FILE"
-   	echo "F[_MODEM_]='1200'" >> "$CONFIG_FILE"
-   	echo "F[_ADEVICE_CAPTURE_]='null'" >> "$CONFIG_FILE"
-   	echo "F[_ADEVICE_PLAY_]='null'" >> "$CONFIG_FILE"
-   	echo "F[_ARATE_]='96000'" >> "$CONFIG_FILE"
-   	echo "F[_PTT_]='GPIO 23'" >> "$CONFIG_FILE"
-   	echo "F[_TXDELAY_]='200'" >> "$CONFIG_FILE"
-   	echo "F[_TXTAIL_]='50'" >> "$CONFIG_FILE"
-   	echo "F[_PERSIST_]='64'" >> "$CONFIG_FILE"
-   	echo "F[_SLOTTIME_]='20'" >> "$CONFIG_FILE"
-   	echo "F[_AUDIOSTATS_]='60'" >> "$CONFIG_FILE"
-   	echo "F[_AGWPORT_]='8001'" >> "$CONFIG_FILE"
-   	echo "F[_KISSPORT_]='8010'" >> "$CONFIG_FILE"
-   	echo "F[_PAT_HTTP_]='FALSE'" >> "$CONFIG_FILE"
+   	echo "F[_CALL_]='${D[1]}'" >> "$CONFIG_FILE"
+   	echo "F[_MODEM_]='${D[2]}'" >> "$CONFIG_FILE"
+   	echo "F[_ADEVICE_CAPTURE_]='${D[3]}'" >> "$CONFIG_FILE"
+   	echo "F[_ADEVICE_PLAY_]='${D[4]}'" >> "$CONFIG_FILE"
+   	echo "F[_ARATE_]='${D[5]}'" >> "$CONFIG_FILE"
+   	echo "F[_PTT_]='${D[6]}'" >> "$CONFIG_FILE"
+   	echo "F[_TXDELAY_]='${D[7]}'" >> "$CONFIG_FILE"
+   	echo "F[_TXTAIL_]='${D[8]}'" >> "$CONFIG_FILE"
+   	echo "F[_PERSIST_]='${D[9]}'" >> "$CONFIG_FILE"
+   	echo "F[_SLOTTIME_]='${D[10]}'" >> "$CONFIG_FILE"
+   	echo "F[_AUDIOSTATS_]='${D[11]}'" >> "$CONFIG_FILE"
+   	echo "F[_AGWPORT_]='${D[12]}'" >> "$CONFIG_FILE"
+   	echo "F[_KISSPORT_]='${D[13]}'" >> "$CONFIG_FILE"
+   	echo "F[_PAT_HTTP_]='${D[14]}'" >> "$CONFIG_FILE"
    	source "$CONFIG_FILE"
 	fi
 
@@ -188,9 +214,9 @@ function killDirewolf () {
    if pgrep ^direwolf | grep -q $1 2>/dev/null
 	then
 		kill $1 >/dev/null 2>&1
-		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+		echo -e "\n\nDirewolf stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
 	else
-		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+		echo -e "\n\nDirewolf was already stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
 	fi
 }
 
@@ -335,6 +361,8 @@ then
 	echo -n "" | pat configure >/dev/null 2>&1
 fi
 
+export -f setTNCpatDefaults loadpatDefaults
+export load_pat_defaults_cmd='@bash -c "setTNCpatDefaults; loadpatDefaults"'
 export PIPEDATA=$PIPE
 
 #============================
@@ -352,11 +380,6 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-# Configure /etc/ax25/axports if necessary.  This is needed in order to allocate a PTY for pat.
-if ! grep -q "^$AX25PORT[[:space:]]" $AX25PORTFILE 2>/dev/null
-then
-	echo "$AX25PORT	$MYCALL	0	255	7	Winlink" | sudo tee --append $AX25PORTFILE >/dev/null
-fi
 
 # Set up a dummy rig for rigctl in pat
 RIG="$(jq -r .hamlib_rigs $PAT_CONFIG)"
@@ -414,8 +437,16 @@ do
 
 	if [[ $FIRST_RUN == true ]]
 	then
-		echo -e "Configure Direwolf TNC and pat in the \"Configure TNC\" and \"Configure pat\" tabs,\nthen click \"Restart...\" button below." >&3
+		echo -e "Configure Direwolf TNC and pat in the \"Configure TNC\" and \"Configure pat\" tabs,\nthen click \"Save Settings...\" button below." >&3
 	else # Not a first run.  pat and Direwolf configured so start 'em
+		# Configure /etc/ax25/axports if necessary.  This is needed in order to allocate a PTY for pat.
+		if ! grep -q "^$AX25PORT[[:space:]]*$MYCALL" $AX25PORTFILE 2>/dev/null
+		then #$AX25PORT $MYCALL entry not found
+			# Remove existing lines with $AX25PORT and any empty lines if present
+			sudo sed -i -e "s/^$AX25PORT[[:space:]].*$//g" -e '/^[[:space:]]*$/d' $AX25PORTFILE
+			# Add the entry for $MYCALL
+			echo "$AX25PORT	$MYCALL	0	255	7	Winlink" | sudo tee --append $AX25PORTFILE >/dev/null
+		fi
 		# Start Direwolf
 		[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
 		$DIREWOLF -c $DW_CONFIG >&3 2>&3 &
@@ -464,7 +495,7 @@ do
 <b>fepi-capture-left</b> and <b>fepi-playback-left</b> and PTT <b>GPIO 12</b>.\n \
 <span color='blue'><b>RIGHT Radio:</b></span> Use ADEVICEs \
 <b>fepi-capture-right</b> and <b>fepi-playback-right</b> and PTT <b>GPIO 23</b>.\n\n \
-Click the <b>Restart...</b> button below after you make your changes.\n\n" \
+Click the <b>Save Settings...</b> button below after you make your changes.\n\n" \
   		--item-separator="!" \
 		--separator="|" \
 		--align=right \
@@ -488,7 +519,7 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
 	# Set up tab for pat configuration
 	yad --plug="$ID" --tabnum=3 \
 		--text="<b><big><big>pat Configuration</big></big></b>\n\n \
-Click the <b>Restart...</b> button below after you make your changes.\n\n" \
+Click the <b>Save Settings...</b> button below after you make your changes.\n\n" \
 		--item-separator="!" \
 		--separator="|" \
 		--align=right \
@@ -507,12 +538,11 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
   		--field="TX Tail (ms)":NUM "$TXTAIL!0..200!10!" \
    	--field="Persist":NUM "$PERSIST!0..255!1!" \
 		--field="Slot Time (ms)":NUM "$SLOTTIME!0..255!10!" \
+   	--field="<b>Load Default AX25 Timers</b>":FBTN "$load_pat_defaults_cmd" \
 		--field="<b>Edit pat Connection Aliases</b>":FBTN "bash -c edit_pat_aliases.sh &" \
   		--focus-field 1 > $TMPDIR/CONFIGURE_PAT.txt &
 	YAD_PIDs+=( $! )
-	STOP_BUTTON_TEXT="TNC"
-	  RESTART_BUTTON_TEXT="Restart Direwolf TNC"
-	[[ $PAT_START_HTTP == TRUE ]] && AND_PAT=" and pat" || AND_PAT=""
+	[[ $PAT_START_HTTP == TRUE ]] && AND_PAT=" + pat" || AND_PAT=""
 
 	# Set up a notebook with the 3 tabs.		
 	yad --title="Direwolf TNC and pat $VERSION" --text="<b><big>Direwolf TNC$AND_PAT Configuration and Operation</big></b>" \
@@ -524,7 +554,7 @@ Click the <b>Restart...</b> button below after you make your changes.\n\n" \
   		--tab="Configure pat" \
 		--width="800" --height="600" \
   		--button="<b>Stop Direwolf$AND_PAT &#x26; Exit</b>":1 \
-  		--button="<b>Restart Direwolf$AND_PAT</b>":0
+  		--button="<b>Save Settings &#x26; Restart Direwolf$AND_PAT</b>":0
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
