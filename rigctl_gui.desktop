@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Hamlib Rig Control GUI
+GenericName=Hamlib Rig Control GUI
+Comment=Configure Hamlib rigctld
+Exec=sh -c /usr/local/bin/rigctl_gui.sh
+Icon=/usr/share/icons/Adwaita/32x32/devices/display-projector-symbolic.symbolic.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Comment[en_US]=Hamlib Rig Control GUI
