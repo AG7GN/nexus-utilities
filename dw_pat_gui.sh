@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.5.3
+#-    version         ${SCRIPT_NAME} 1.6.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -89,7 +89,7 @@ function Die () {
 function loadpatDefaults () {
    for I in $(seq 7 10)
    do # I is the field number.  D[$I] is the default value
-           echo "${I}:${D[$I]}"
+      echo "${I}:${D[$I]}"
    done
 }
 
@@ -115,7 +115,7 @@ function loadSettings () {
 	 
 	MODEMs="1200!9600"
    ARATEs="48000!96000"
-   PTTs="GPIO 12!GPIO 23"
+   PTTs="GPIO 12!GPIO 23!RIG 2 localhost:4532"
 	DW_CONFIG="$TMPDIR/direwolf.conf"
 
 	if [ -s "$CONFIG_FILE" ]
@@ -384,12 +384,12 @@ $DEBUG && set -x
 # Set up a dummy rig for rigctl in pat
 RIG="$(jq -r .hamlib_rigs $PAT_CONFIG)"
 if [[ $RIG == "{}" ]]
-then # No rigs configured.  Make a dummy rig
+then # No rigs configured.  Make a network Hamlib rig
    cat $PAT_CONFIG | jq \
-         '.hamlib_rigs += {"dummy": {"address": "localhost:4532", "network": "tcp"}}' | sponge $PAT_CONFIG
-   # Add the dummy rig to the ax25 section
+         '.hamlib_rigs += {"network": {"address": "localhost:4532", "network": "tcp"}}' | sponge $PAT_CONFIG
+   # Add the network Hamlib rig to the ax25 section
    cat $PAT_CONFIG | jq \
-      --arg R "dummy" \
+      --arg R "network" \
       '.ax25.rig = $R' | sponge $PAT_CONFIG
 fi
 
@@ -409,6 +409,9 @@ do
 	do
 		ps x | egrep -q "^$P" && kill $P
 	done
+	# If an unrelated pat is running, kill it too
+	#pgrep pat >/dev/null && pkill pat
+	# Kill kissattach
    sudo pgrep kissattach >/dev/null && sudo pkill kissattach	
 	rm -f $TMPDIR/CONFIGURE_TNC.txt $TMPDIR/CONFIGURE_PAT.txt
    rm -f /tmp/kisstnc
@@ -424,11 +427,11 @@ do
 		--editable --tail --center <&3 &
 	YAD_PIDs+=( $! )
 
-	# Start rigctld.  Assume should use the dummy rig.
+	# Start rigctld.  
 	if pgrep rigctld >/dev/null
 	then
 		echo "rigctld already running." >&3
-	else
+	else # Start rigctl as a dummy rig because we have no idea what rig is used.
 		echo "Starting rigctld using dummy rig..." >&3
 		$(command -v rigctld) -m 1 >&3 2>&3 &
 		RIG_PID=$!
@@ -466,7 +469,7 @@ do
 		then
 			Die "Direwolf failed to allocate a PTY! Aborting. Is ADEVICE set to your sound card?"
 		fi
-   	echo "Direwolf started." >&3
+   	echo "Direwolf has allocated a PTY." >&3
 
 		# Start kissattach on new PTY
    	sudo $(command -v kissattach) $(readlink -f /tmp/kisstnc) $AX25PORT >&3 2>&1
@@ -490,7 +493,7 @@ do
 	# Set up tab for configuring Direwolf.
 	yad --plug="$ID" --tabnum=2 \
   		--text="<b><big><big>Direwolf TNC Configuration</big></big></b>\n\n \
-<b><u><big>Typical Direwolf Sound Card and PTT Settings</big></u></b>\n \
+<b><u><big>Typical Direwolf Sound Card and PTT Settings for Nexus DR-X</big></u></b>\n \
 <span color='blue'><b>LEFT Radio:</b></span> Use ADEVICEs \
 <b>fepi-capture-left</b> and <b>fepi-playback-left</b> and PTT <b>GPIO 12</b>.\n \
 <span color='blue'><b>RIGHT Radio:</b></span> Use ADEVICEs \
@@ -498,7 +501,6 @@ do
 Click the <b>Save Settings...</b> button below after you make your changes.\n\n" \
   		--item-separator="!" \
 		--separator="|" \
-		--align=right \
   		--text-align=center \
   		--align=right \
   		--borders=20 \
@@ -522,7 +524,6 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
 Click the <b>Save Settings...</b> button below after you make your changes.\n\n" \
 		--item-separator="!" \
 		--separator="|" \
-		--align=right \
   		--text-align=center \
   		--align=right \
   		--borders=20 \
@@ -544,7 +545,43 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
 	YAD_PIDs+=( $! )
 	[[ $PAT_START_HTTP == TRUE ]] && AND_PAT=" + pat" || AND_PAT=""
 
-	# Set up a notebook with the 3 tabs.		
+	# Set up tab with form button to launch pat web interface
+	#yad --plug="$ID" --tabnum=4 --text-align="center" \
+	#	--text="<big><b>Open pat Web Interface</b></big>" --form \
+	#	--field="<b>Open pat Web Interface</b>":FBTN "bash -c xdg-open >/dev/null &" >/dev/null &
+	#YAD_PIDs+=( $! )
+
+	# Set up tab to present button to launch rigctld manager
+	RIGCTL_INFO=" \
+The rig control daemon (rigctld) is part of Hamlib. It provides a way to control \
+various rigs using CAT commands, usually over a serial port.\n\nIn order to set up \
+aliases (shortcuts) in the pat web interface for RMS Gateway stations ALONG WITH \
+their frequency, pat requires the use of rigctld. When started, the GUI you're \
+currently using will check to see if rigctld is already running. If it's not, it'll \
+start rigctld using a 'dummy' rig, which fools pat into thinking it's controlling a \
+radio when it's not (meaning you have to set your radio's frequency manually).\n\nIf \
+your rig is supported by Hamlib (or to check to see if it is supported), click the \
+'Manage Hamlib rigctld' button below to have the TNC and pat REALLY talk to your \
+radio (if supported) and have pat automatically QSY as needed."
+	yad --plug="$ID" --tabnum=4 --text-align=center --borders=20 --form --wrap \
+		--text="<big><b>Hamlib Rig Control (rigctld)</b></big>" \
+		--field="":TXT "$RIGCTL_INFO" \
+		--field="<b>Manage Hamlib rigctld</b>":FBTN "bash -c rigctl_gui.sh >/dev/null &" >/dev/null &
+	YAD_PIDs+=( $! )
+
+	if [[ $pat_PID == "" ]]
+	then
+		cat > $TMPDIR/pat_web.sh <<EOF
+yad --center --title="Error" --borders=20 --text "<b>pat is not running.\nNo web interface to open.</b>" --button="Close":0 --buttons-layout=center
+EOF
+	else
+		cat > $TMPDIR/pat_web.sh <<EOF
+xdg-open http://$HOSTNAME.local:$PAT_HTTP_PORT >/dev/null 2>&1
+EOF
+	fi
+	chmod +x $TMPDIR/pat_web.sh
+	
+	# Set up a notebook with the tabs.		
 	yad --title="Direwolf TNC and pat $VERSION" --text="<b><big>Direwolf TNC$AND_PAT Configuration and Operation</big></b>" \
   		--text-align="center" --notebook --key="$ID" \
 		--posx=10 --posy=50 \
@@ -552,9 +589,11 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
   		--tab="Monitor" \
   		--tab="Configure TNC" \
   		--tab="Configure pat" \
+  		--tab="Rig Control" \
 		--width="800" --height="600" \
   		--button="<b>Stop Direwolf$AND_PAT &#x26; Exit</b>":1 \
-  		--button="<b>Save Settings &#x26; Restart Direwolf$AND_PAT</b>":0
+  		--button="<b>Save Settings &#x26; Restart Direwolf$AND_PAT</b>":0 \
+  		--button="<b>Open pat Web interface</b>":"bash -c $TMPDIR/pat_web.sh"
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
