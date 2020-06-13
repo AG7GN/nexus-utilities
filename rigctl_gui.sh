@@ -14,7 +14,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.1
+#-    version         ${SCRIPT_NAME} 1.0.2
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -338,16 +338,8 @@ do
 	then # Restart requested 
 		RIG="${F[_RIG_]}"
 		[[ $RIG =~ ^[0-9] ]] || Die "Invalid Rig: ${F[_RIG_]}"
-		case ${RIG%%|*} in
-			1,2,4) # Hamlib and FLRig "rigs" don't use a serial port
-				PORT=""
-				SPEED=""
-				;;
-	 		*) # All(?) of the others require a serial port
-				[[ ${F[_PORT_]} =~ Not ]] && PORT="" || PORT="-r /dev/serial/by-id/${F[_PORT_]}"
-				[[ ${F[_SPEED_]} =~ Not ]] && SPEED="" || SPEED="-s ${F[_SPEED_]}"
-				;;
-		esac
+		[[ ${F[_PORT_]} =~ ^Not ]] && PORT="" || PORT="-r /dev/serial/by-id/${F[_PORT_]}"
+		[[ ${F[_SPEED_]} =~ ^Not ]] && SPEED="" || SPEED="-s ${F[_SPEED_]}"
 		COM="$(command -v rigctld) -m ${RIG%%|*} $PORT $SPEED"
 		$(command -v rigctld) -m ${RIG%%|*} $PORT $SPEED 2>$TMPDIR/rigctld_error.txt &
    	rigctld_PID=$!
@@ -416,6 +408,16 @@ Hamlib and FLRig models don't use the Serial Port or Speed settings.  Set them t
 				IFS='|' read -r -a PARAMS < "$TMPDIR/RIG_SELECTION.txt"
 				F[_RIG_]="${PARAMS[1]}|${PARAMS[2]}|${PARAMS[3]}"
 			fi
+			RIG="${F[_RIG_]}"
+			case ${RIG%%|*} in
+				1|2|4) # Hamlib and FLRig "rigs" don't use a serial port
+					F[_PORT_]="Not Applicable"
+					F[_SPEED_]="Not Applicable"
+					;;
+		 		*) # All(?) of the others require a serial port
+					;;
+			esac
+
 			# Update the yad configuration file.
 			echo "declare -gA F" > "$CONFIG_FILE"
 			for J in "${!F[@]}"
