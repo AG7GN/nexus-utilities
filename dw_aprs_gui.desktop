@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Direwolf APRS GUI
+GenericName=Direwolf APRS GUI
+Comment=Configure and monitor Direwolf APRS
+Exec=sh -c /usr/local/bin/dw_aprs_gui.sh
+Icon=/usr/share/direwolf/pixmaps/dw-icon.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Comment[en_US]=Direwolf APRS GUI
