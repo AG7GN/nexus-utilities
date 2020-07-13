@@ -63,7 +63,7 @@
 #%    Send the contents of 'myfile.txt' to me@example.com and W7ABC@winlink.org using
 #%    packet radio via RMS gateway ax25://wl2k/W7ECG-10
 #%
-#%    ${SCRIPT_NAME} me@example.com,W7ABC "My Important Message" ax25://wl2k/W7ECG-10 < myfile.txt 
+#%      ${SCRIPT_NAME} me@example.com,W7ABC "My Important Message" ax25://wl2k/W7ECG-10 < myfile.txt 
 #%
 #================================================================
 #- IMPLEMENTATION

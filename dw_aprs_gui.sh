@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.0
+#-    version         ${SCRIPT_NAME} 1.0.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -222,7 +222,17 @@ function loadSettings () {
 
 	BOOTSTARTs="disabled~none~1~12~13~14~123~124~134~1234~2~23~234~24~3~34~4"
 	[[ $BOOTSTARTs =~ ${F[_BOOTSTART_]} && ${F[_BOOTSTART_]} =~ ^(none|[1-4]{1,4})$ ]] && BOOTSTARTs="$(echo "$BOOTSTARTs" | sed "s/~${F[_BOOTSTART_]}/~\^${F[_BOOTSTART_]}/1")" || BOOTSTARTs="^$BOOTSTARTs" 
-	
+
+	# Use Tactical call if set instead of regular call-ssid.
+	if [[ ${F[_TACTICAL_CALL_]} == "" ]]
+	then
+		MYCALL="${F[_CALL_]}-${F[_SSID_]}"
+	else
+		MYCALL="${F[_TACTICAL_CALL_]}"
+		# Prepend CALL if not already present in COMMENT.
+		[[ ${F[_COMMENT_]} =~ ${F[_CALL_]} ]] || F[_COMMENT_]="${F[_CALL_]} ${F[_COMMENT_]}"
+	fi
+
 	case ${F[_APRSMODE_]} in
 		Digi*) # Digipeater or Digipeater + iGate
 			if [[ ${F[_APRSMODE_]} == "Digipeater" ]]
@@ -267,9 +277,6 @@ function loadSettings () {
 			;;
 	esac
 	
-	# Use Tactical call if set instead of regular call-ssid.
-	[[ ${F[_TACTICAL_CALL_]} == "" ]] && MYCALL="${F[_CALL_]}-${F[_SSID_]}" || MYCALL="${F[_TACTICAL_CALL_]}"
-
 	# Create a Direwolf config file with these settings
 	cat > $DW_CONFIG <<EOF
 ADEVICE ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]}
