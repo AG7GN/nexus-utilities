@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.1
+#-    version         ${SCRIPT_NAME} 1.0.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -350,10 +350,6 @@ CONFIG_TAB_TEXT="<b><big><big>Direwolf APRS Configuration</big></big></b>\n \
 ID="${RANDOM}"
 
 RETURN_CODE=0
-# Have direwolf allocate a pty
-#DIREWOLF="$(command -v direwolf) -p -t 0 -d u"
-# No pty
-DIREWOLF="$(command -v direwolf) -t 0 -d u"
 
 PIPE=$TMPDIR/pipe
 mkfifo $PIPE
@@ -473,23 +469,33 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-timeStamp &
-timeStamp_PID=$!
-
+timeStamp_PID=""
 direwolf_PID=""
 YAD_PIDs=()
 
 while true
 do
+
+	# Have direwolf allocate a pty
+	#DIREWOLF="$(command -v direwolf) -p -t 0 -d u"
+	# No pty
+	DIREWOLF="$(command -v direwolf) -t 0 -d u"
+
 	# Kill any running processes and load latest settings
 	killDirewolf $direwolf_PID
-   for P in ${YAD_PIDs[@]}
+   for P in ${YAD_PIDs[@]} $timeStamp_PID
 	do
 		ps x | egrep -q "^$P" && kill $P
 	done
 	rm -f $TMPDIR/CONFIGURE_APRS.txt
+	
+	# Retrieve saved settings or defaults if there are no saved settings
 	loadSettings $CONFIG_FILE
 	YAD_PIDs=()
+	
+   # Start the Time Stamper function
+	timeStamp &
+   timeStamp_PID=$!
 
 	# Start the monitor tab
 	[[ $FIRST_RUN == true ]] && MODE_MESSAGE="" || MODE_MESSAGE="${F[_APRSMODE_]}"
