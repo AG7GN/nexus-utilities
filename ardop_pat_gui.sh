@@ -7,7 +7,8 @@
 #%
 #% DESCRIPTION
 #%   This script provides a GUI to configure and start/stop
-#%   Direwolf and pat.  It is designed to work on the Hampi image.
+#%   ARDOP (piardopc) and pat.  It is designed to work on the 
+#%   Nexus DR-X image.
 #%
 #% OPTIONS
 #%    -h, --help                  Print this help
@@ -15,17 +16,14 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.6.1
+#-    version         ${SCRIPT_NAME} 1.0.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
 #-
 #================================================================
 #  HISTORY
-#     20200428 : Steve Magnuson : Script creation.
-#     20200507 : Steve Magnuson : Bug fixes
-#     20200719 : Steve Magnuson : Improved handling of pat rigctl
-#                                 settings
+#     20200718 : Steve Magnuson : Script creation.
 # 
 #================================================================
 #  DEBUG OPTION
@@ -47,7 +45,7 @@ Optnum=$#
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
    kill $timeStamp_PID >/dev/null 2>&1
-   kill $direwolf_PID >/dev/null 2>&1
+   kill $ardop_PID >/dev/null 2>&1
    kill $pat_PID >/dev/null 2>&1
 	kill $RIG_PID >/dev/null 2>&1
    for P in ${YAD_PIDs[@]}
@@ -95,59 +93,39 @@ function loadpatDefaults () {
    done
 }
 
-function setTNCpatDefaults () {
+function setARDOPpatDefaults () {
    declare -gA D
-   D[1]="N0CALL"  # Call sign
-   D[2]="1200" # Modem
-   D[3]="null" # Audio capture interface (ADEVICE)
-   D[4]="null" # Audio playback interface (ADEVICE)
-   D[5]="96000" # Audio playback rate (ARATE)
-   D[6]="GPIO 23" # GPIO PTT (BCM pin)
-   D[7]="200" # TX Delay
-	D[8]="50" # TX Tail
-   D[9]="64"  # Persist
-   D[10]="20" # Slot Time
-   D[11]="60" # Audio Stats
-   D[12]="8001" # AGW Port
-   D[13]="8010"  # KISS Port
-   D[14]="FALSE" # Enable pat HTTP server
+   D[1]="null" # Audio capture interface (ADEVICE)
+   D[2]="null" # Audio playback interface (ADEVICE)
+   D[3]="GPIO 23" # GPIO PTT (BCM pin)
+   D[4]="8515" # ARDOP Port
+#   D[5]="FALSE" # Forced ARQ bandwidth
+#   D[6]="500" # Max ARQ bandwidth
+#   D[7]="0" # Beacon Interval
+#   D[8]="TRUE" # CW ID Enabled
+#   D[9]="FALSE" # Enable pat HTTP server
 }
 
 function loadSettings () {
 	 
-	MODEMs="1200!9600"
-   ARATEs="48000!96000"
    PTTs="GPIO 12!GPIO 23!RIG 2 localhost:4532"
-	DW_CONFIG="$TMPDIR/direwolf.conf"
+	ARDOP_CONFIG="$TMPDIR/ardop.conf"
 
 	if [ -s "$CONFIG_FILE" ]
 	then # There is a config file
-   	echo "$CONFIG_FILE found." >&3
+   	echo "$CONFIG_FILE found." >&8
   		source "$CONFIG_FILE"
 	else # Set some default values in a new config file
-   	echo -e "Config file $CONFIG_FILE not found.\nCreating a new one with default values." >&3
-		setTNCpatDefaults
+   	echo -e "Config file $CONFIG_FILE not found.\nCreating a new one with default values." >&8
+		setARDOPpatDefaults
    	echo "declare -gA F" > "$CONFIG_FILE"
-   	echo "F[_CALL_]='${D[1]}'" >> "$CONFIG_FILE"
-   	echo "F[_MODEM_]='${D[2]}'" >> "$CONFIG_FILE"
-   	echo "F[_ADEVICE_CAPTURE_]='${D[3]}'" >> "$CONFIG_FILE"
-   	echo "F[_ADEVICE_PLAY_]='${D[4]}'" >> "$CONFIG_FILE"
-   	echo "F[_ARATE_]='${D[5]}'" >> "$CONFIG_FILE"
-   	echo "F[_PTT_]='${D[6]}'" >> "$CONFIG_FILE"
-   	echo "F[_TXDELAY_]='${D[7]}'" >> "$CONFIG_FILE"
-   	echo "F[_TXTAIL_]='${D[8]}'" >> "$CONFIG_FILE"
-   	echo "F[_PERSIST_]='${D[9]}'" >> "$CONFIG_FILE"
-   	echo "F[_SLOTTIME_]='${D[10]}'" >> "$CONFIG_FILE"
-   	echo "F[_AUDIOSTATS_]='${D[11]}'" >> "$CONFIG_FILE"
-   	echo "F[_AGWPORT_]='${D[12]}'" >> "$CONFIG_FILE"
-   	echo "F[_KISSPORT_]='${D[13]}'" >> "$CONFIG_FILE"
-   	echo "F[_PAT_HTTP_]='${D[14]}'" >> "$CONFIG_FILE"
+   	echo "F[_ADEVICE_CAPTURE_]='${D[1]}'" >> "$CONFIG_FILE"
+   	echo "F[_ADEVICE_PLAY_]='${D[2]}'" >> "$CONFIG_FILE"
+   	echo "F[_PTT_]='${D[3]}'" >> "$CONFIG_FILE"
+   	echo "F[_ARDOPPORT_]='${D[4]}'" >> "$CONFIG_FILE"
+   	echo "F[_PAT_HTTP_]='${D[5]}'" >> "$CONFIG_FILE"
    	source "$CONFIG_FILE"
 	fi
-
-	MYCALL="${F[_CALL_]}"
-   [[ $MODEMs =~ ${F[_MODEM_]} ]] && MODEMs="$(echo "$MODEMs" | sed "s/${F[_MODEM_]}/\^${F[_MODEM_]}/")"
-
 	if pgrep pulseaudio >/dev/null 2>&1
    then # There may be pulseaudio ALSA devices.  Look for them.
       CAPTURE_IGNORE="$(pacmd list-sinks 2>/dev/null | grep name: | tr -d '\t' | cut -d' ' -f2 | sed 's/^<//;s/>$//' | tr '\n' '\|' | sed 's/|/\\|/g')"
@@ -163,8 +141,6 @@ function loadSettings () {
    [[ $ADEVICE_PLAYBACKs =~ ${F[_ADEVICE_PLAY_]} ]] && ADEVICE_PLAYBACKs="$(echo "$ADEVICE_PLAYBACKs" | sed "s/${F[_ADEVICE_PLAY_]}/\^${F[_ADEVICE_PLAY_]}/")"
    [[ $ADEVICE_PLAYBACKs == "" ]] && ADEVICE_PLAYBACKs="null"
 
-   [[ $ARATEs =~ ${F[_ARATE_]} ]] && ARATEs="$(echo "$ARATEs" | sed "s/${F[_ARATE_]}/\^${F[_ARATE_]}/")"
-
 	if [[ $PTTs =~ ${F[_PTT_]} ]]
    then
       PTTs="$(echo "$PTTs" | sed "s/${F[_PTT_]}/\^${F[_PTT_]}/")"
@@ -172,29 +148,7 @@ function loadSettings () {
       PTTs+="!^${F[_PTT_]}"
    fi
 	
-	TXDELAY="${F[_TXDELAY_]}"
-	TXTAIL="${F[_TXTAIL_]}"
-	PERSIST="${F[_PERSIST_]}"
-	SLOTTIME="${F[_SLOTTIME_]}"
-	
-	AUDIOSTATs="0!15!30!45!60!90!120"
-   [[ $AUDIOSTATs =~ ${F[_AUDIOSTATS_]} ]] && AUDIOSTATs="$(echo "$AUDIOSTATs" | sed "s/${F[_AUDIOSTATS_]}/\^${F[_AUDIOSTATS_]}/")"
-
-	AGWPORT="${F[_AGWPORT_]}"
-	KISSPORT="${F[_KISSPORT_]}"
-
-	# Create a Direwolf config file with these settings
-	cat > $DW_CONFIG <<EOF
-ADEVICE ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]}
-ACHANNELS 1
-CHANNEL 0
-ARATE ${F[_ARATE_]}
-PTT ${F[_PTT_]}
-MYCALL ${F[_CALL_]}
-MODEM ${F[_MODEM_]}
-AGWPORT ${F[_AGWPORT_]}
-KISSPORT ${F[_KISSPORT_]}
-EOF
+	ARDOPPORT="${F[_ARDOPPORT_]}"
 
 	PAT_START_HTTP="${F[_PAT_HTTP_]}"
 	PAT_CALL="$(jq -r ".mycall" $PAT_CONFIG)"
@@ -202,6 +156,11 @@ EOF
 	PAT_HTTP_PORT="$(jq -r ".http_addr" $PAT_CONFIG | cut -d: -f2)"
 	PAT_TELNET_PORT="$(jq -r ".telnet.listen_addr" $PAT_CONFIG | cut -d: -f2)"
 	PAT_LOCATOR="$(jq -r ".locator" $PAT_CONFIG)"
+	PAT_ARDOPPORT="$(jq -r ".ardop.addr" $PAT_CONFIG | cut -d: -f2)"
+	PAT_ARQ_BW_FORCED="$(jq -r ".ardop.arq_bandwidth.Forced" $PAT_CONFIG)"
+	PAT_ARQ_BW_MAX="$(jq -r ".ardop.arq_bandwidth.Max" $PAT_CONFIG)"
+	PAT_BEACON_INTERVAL="$(jq -r ".ardop.beacon_interval" $PAT_CONFIG)"
+	PAT_CW_ID="$(jq -r ".ardop.cwid_enabled" $PAT_CONFIG)"
 }
 
 function timeStamp () {
@@ -211,14 +170,14 @@ function timeStamp () {
 	done >$PIPEDATA
 }
 
-function killDirewolf () {
-	# $1 is the direwolf PID
-   if pgrep ^direwolf | grep -q $1 2>/dev/null
+function killARDOP () {
+	# $1 is the ardop PID
+   if pgrep ^piardopc | grep -q $1 2>/dev/null
 	then
 		kill $1 >/dev/null 2>&1
-		echo -e "\n\nDirewolf stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
+		echo -e "\n\npiardopc stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
 	else
-		echo -e "\n\nDirewolf was already stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
+		echo -e "\n\npiardopc was already stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
 	fi
 }
 
@@ -244,24 +203,22 @@ SCRIPT_ID="$(ScriptInfo | grep script_id | tr -s ' ' | cut -d' ' -f3)"
 SCRIPT_HEADSIZE=$(grep -sn "^# END_OF_HEADER" ${0} | head -1 | cut -f1 -d:)
 VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)" 
 
-TITLE="Direwolf TNC Monitor and Configuration $VERSION"
-CONFIG_FILE="$HOME/direwolf_tnc.conf"
-MESSAGE="Direwolf Configuration"
+TITLE="ARDOP Monitor and Configuration $VERSION"
+CONFIG_FILE="$HOME/ardop.conf"
+MESSAGE="ARDOP Configuration"
 
 ID="${RANDOM}"
 
-AX25PORT="wl2k"
-AX25PORTFILE="/etc/ax25/axports"
 PAT_CONFIG="$HOME/.wl2k/config.json"
 
 RETURN_CODE=0
-DIREWOLF="$(command -v direwolf) -p -t 0 -d u"
+ARDOP="$(command -v piardopc)"
 #PAT="$(command -v pat) --log /dev/stdout -l ax25,telnet http"
-PAT="$(command -v pat) -l ax25,telnet http"
+PAT="$(command -v pat) -l ardop,telnet http"
 
 PIPE=$TMPDIR/pipe
 mkfifo $PIPE
-exec 3<> $PIPE
+exec 8<> $PIPE
 
 #============================
 #  PARSE OPTIONS WITH GETOPTS
@@ -336,7 +293,7 @@ shift $((${OPTIND} - 1)) ## shift options
 pidof -o %PPID -x $(basename "$0") >/dev/null && exit 1
 
 # Check for required apps.
-for A in yad pat jq sponge rigctld
+for A in yad pat jq sponge rigctld piardopc
 do 
 	command -v $A >/dev/null 2>&1 || Die "$A is required but not installed."
 done
@@ -344,7 +301,7 @@ done
 # If this is the first time running this script, don't attempt to start Direwolf
 # or pat until user configures both.
 if [[ -s $PAT_CONFIG && -s $CONFIG_FILE ]]
-then # Direwolf and pat configuration files exist
+then # ARDOP and pat configuration files exist
 	if [[ $(jq -r ".mycall" $PAT_CONFIG) == "" ||  ${F[_ADEVICE_CAPTURE_]} == "null" ]]
 	then # Config files present, but not configured
 		FIRST_RUN=true
@@ -363,8 +320,8 @@ then
 	echo -n "" | pat configure >/dev/null 2>&1
 fi
 
-export -f setTNCpatDefaults loadpatDefaults
-export load_pat_defaults_cmd='@bash -c "setTNCpatDefaults; loadpatDefaults"'
+export -f setARDOPpatDefaults loadpatDefaults
+export load_pat_defaults_cmd='@bash -c "setARDOPpatDefaults; loadpatDefaults"'
 export PIPEDATA=$PIPE
 
 #============================
@@ -382,6 +339,7 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
+
 # Set up rig for rigctl in pat
 #RIG="$(jq -r '.hamlib_rigs | keys[] as $k | "\($k)"' $PAT_CONFIG)"
 RIG="$(jq -r .hamlib_rigs $PAT_CONFIG)"
@@ -398,104 +356,66 @@ fi
 timeStamp &
 timeStamp_PID=$!
 
-direwolf_PID=""
+ardop_PID=""
 pat_PID=""
 YAD_PIDs=()
 
 while true
 do
 	# Kill any running processes and load latest settings
-	killDirewolf $direwolf_PID
+	killARDOP $ardop_PID
 	[[ $pat_PID == "" ]] || kill $pat_PID >/dev/null 2>&1
    for P in ${YAD_PIDs[@]}
 	do
 		ps x | egrep -q "^$P" && kill $P
 	done
-	# If an unrelated pat is running, kill it too
-	#pgrep pat >/dev/null && pkill pat
-	# Kill kissattach
-   sudo pgrep kissattach >/dev/null && sudo pkill kissattach	
-	rm -f $TMPDIR/CONFIGURE_TNC.txt $TMPDIR/CONFIGURE_PAT.txt
-   rm -f /tmp/kisstnc
 	loadSettings
 	YAD_PIDs=()
 	
 	# Start the tail window tab
-	TEXT="AGW Port: <span color='blue'><b>$AGWPORT</b></span>    KISS Port: <span color='blue'><b>$KISSPORT</b></span>"
+	TEXT="ARDOP Port: <span color='blue'><b>${F[_ARDOPPORT_]}</b></span>"
 	[[ $PAT_START_HTTP == TRUE ]] && TEXT+="   pat Telnet Port: <span color='blue'><b>$PAT_TELNET_PORT</b></span>   pat Web Server: <span color='blue'><b>http://$HOSTNAME.local:$PAT_HTTP_PORT</b></span>"
 	yad --plug="$ID" --tabnum=1 \
 		--back=black --fore=yellow --selectable-labels \
 		--text-info --text-align=center --text="$TEXT" \
-		--editable --tail --center <&3 &
+		--editable --tail --center <&8 &
 	YAD_PIDs+=( $! )
 
 	# Start rigctld.  
 	if pgrep rigctld >/dev/null
 	then
-		echo "rigctld already running." >&3
+		echo "rigctld already running." >&8
 	else # Start rigctl as a dummy rig because we have no idea what rig is used.
-		echo "Starting rigctld using dummy rig..." >&3
-		$(command -v rigctld) -m 1 >&3 2>&3 &
+		echo "Starting rigctld using dummy rig..." >&8
+		$(command -v rigctld) -m 1 >&8 2>&8 &
 		RIG_PID=$!
-		echo "Done." >&3
+		echo "Done." >&8
 	fi
 
 	if [[ $FIRST_RUN == true ]]
 	then
-		echo -e "Configure Direwolf TNC and pat in the \"Configure TNC\" and \"Configure pat\" tabs,\nthen click \"Save Settings...\" button below." >&3
-	else # Not a first run.  pat and Direwolf configured so start 'em
-		# Configure /etc/ax25/axports if necessary.  This is needed in order to allocate a PTY for pat.
-		if ! grep -q "^$AX25PORT[[:space:]]*$MYCALL" $AX25PORTFILE 2>/dev/null
-		then #$AX25PORT $MYCALL entry not found
-			# Remove existing lines with $AX25PORT and any empty lines if present
-			sudo sed -i -e "s/^$AX25PORT[[:space:]].*$//g" -e '/^[[:space:]]*$/d' $AX25PORTFILE
-			# Add the entry for $MYCALL
-			echo "$AX25PORT	$MYCALL	0	255	7	Winlink" | sudo tee --append $AX25PORTFILE >/dev/null
-		fi
-		# Start Direwolf
-		[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
-		$DIREWOLF -c $DW_CONFIG >&3 2>&3 &
-		direwolf_PID=$!
-		echo -e "\n\nDirewolf TNC has started.  PID=$direwolf_PID" >&3
-
-		# Wait for Direwolf to allocate a PTY
-   	COUNTER=0
-   	MAXWAIT=8
-   	while [ $COUNTER -lt $MAXWAIT ]
-   	do # Allocate a PTY to ax25
-      	[ -L /tmp/kisstnc ] && break
-      	sleep 1
-      	let COUNTER=COUNTER+1
-   	done
-   	if [ $COUNTER -ge $MAXWAIT ]
-		then
-			Die "Direwolf failed to allocate a PTY! Aborting. Is ADEVICE set to your sound card?"
-		fi
-   	echo "Direwolf has allocated a PTY." >&3
-
-		# Start kissattach on new PTY
-   	sudo $(command -v kissattach) $(readlink -f /tmp/kisstnc) $AX25PORT >&3 2>&1
-   	[ $? -eq 0 ] || Die "kissattach failed.  Aborting."
-		KISSPARMS="-c 1 -p $AX25PORT -t $TXDELAY -l $TXTAIL -s $SLOTTIME -r $PERSIST -f n"
-		echo "Setting $(command -v kissparms) $KISSPARMS" >&3
-		sleep 2
-   	sudo $(command -v kissparms) $KISSPARMS >&3 2>&3
-   	[ $? -eq 0 ] || Die "kissparms settings failed.  Aborting."
+		echo -e "Configure ARDOP and pat in the \"Configure ARDOP\" and \"Configure pat\" tabs,\nthen click \"Save Settings...\" button below." >&8
+	else # Not a first run.  pat and ARDOP configured so start 'em
+		# Start piardopc
+		echo "Launching $ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} -p "$(echo "${F[_PTT_]}" | tr ' ' '=')"" >&8
+		$ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} -p "$(echo "${F[_PTT_]}" | tr ' ' '=')" >&8 2>&8 &
+		ardop_PID=$!
+		echo -e "\n\nARDOP has started.  PID=$ardop_PID" >&8
 
 		# Start pat
 		if [[ $PAT_START_HTTP == TRUE ]]
 		then
-			$PAT >&3 2>&3 &
+			$PAT >&8 2>&8 &
 			pat_PID=$!
 		else
 			pat_PID=""
 		fi
 	fi 
 	
-	# Set up tab for configuring Direwolf.
+	# Set up tab for configuring piardopc.
 	yad --plug="$ID" --tabnum=2 \
-  		--text="<b><big><big>Direwolf TNC Configuration</big></big></b>\n\n \
-<b><u><big>Typical Direwolf Sound Card and PTT Settings for Nexus DR-X</big></u></b>\n \
+  		--text="<b><big><big>ARDOP Configuration</big></big></b>\n\n \
+<b><u><big>Typical Sound Card and PTT Settings for Nexus DR-X</big></u></b>\n \
 <span color='blue'><b>LEFT Radio:</b></span> Use ADEVICEs \
 <b>fepi-capture-left</b> and <b>fepi-playback-left</b> and PTT <b>GPIO 12</b>.\n \
 <span color='blue'><b>RIGHT Radio:</b></span> Use ADEVICEs \
@@ -508,16 +428,11 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
   		--borders=20 \
   		--form \
 		--columns=2 \
-     	--field="<b>Call Sign</b>" "$MYCALL" \
-  	  	--field="<b>Direwolf Capture ADEVICE</b>":CB "$ADEVICE_CAPTUREs" \
-     	--field="<b>Direwolf Playback ADEVICE</b>":CB "$ADEVICE_PLAYBACKs" \
-  	  	--field="<b>Direwolf ARATE</b>":CB "$ARATEs" \
-   	--field="<b>Direwolf MODEM</b>":CB "$MODEMs" \
-   	--field="<b>Direwolf PTT</b>":CBE "$PTTs" \
-		--field="<b>Audio Stats interval (s)</b>":CB "$AUDIOSTATs" \
-   	--field="<b>AGW Port</b>":NUM "$AGWPORT!8001..8010!1!" \
-   	--field="<b>KISS Port</b>":NUM "$KISSPORT!8011..8020!1!" \
-  		--focus-field 1 > $TMPDIR/CONFIGURE_TNC.txt &
+  	  	--field="<b>ARDOP Capture ADEVICE</b>":CB "$ADEVICE_CAPTUREs" \
+     	--field="<b>ARDOP Playback ADEVICE</b>":CB "$ADEVICE_PLAYBACKs" \
+   	--field="<b>ARDOP PTT</b>":CBE "$PTTs" \
+   	--field="<b>ARDOP Port</b>":NUM "${F[_ARDOPPORT_]}!8510..8519!1!" \
+  		--focus-field 1 > $TMPDIR/CONFIGURE_ARDOP.txt &
 	YAD_PIDs+=( $! )
 
 	# Set up tab for pat configuration
@@ -536,12 +451,11 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
 		--field="Locator Code" "$PAT_LOCATOR" \
    	--field="Web Service Port":NUM "$PAT_HTTP_PORT!8040..8049!1!" \
    	--field="Telnet Service Port":NUM "$PAT_TELNET_PORT!8770..8779!1!" \
-   	--field="Start pat web service when Direwolf TNC starts":CHK "$PAT_START_HTTP" \
-   	--field="TX Delay (ms)":NUM "$TXDELAY!0..500!1!" \
-  		--field="TX Tail (ms)":NUM "$TXTAIL!0..200!10!" \
-   	--field="Persist":NUM "$PERSIST!0..255!1!" \
-		--field="Slot Time (ms)":NUM "$SLOTTIME!0..255!10!" \
-   	--field="<b>Load Default AX25 Timers</b>":FBTN "$load_pat_defaults_cmd" \
+   	--field="Forced ARQ Bandwidth":CHK "$PAT_ARQ_BW_FORCED" \
+   	--field="Max ARQ Bandwidth":NUM "$PAT_ARQ_BW_MAX!50..1000!50!" \
+   	--field="Beacon Interval (minutes)":NUM "$PAT_BEACON_INTERVAL!0..120!1!" \
+   	--field="Enable CW ID":CHK "$PAT_CW_ID" \
+   	--field="Start pat web service when ARDOP starts":CHK "$PAT_START_HTTP" \
 		--field="<b>Edit pat Connection Aliases</b>":FBTN "bash -c edit_pat_aliases.sh &" \
   		--focus-field 1 > $TMPDIR/CONFIGURE_PAT.txt &
 	YAD_PIDs+=( $! )
@@ -584,33 +498,29 @@ EOF
 	chmod +x $TMPDIR/pat_web.sh
 	
 	# Set up a notebook with the tabs.		
-	yad --title="Direwolf TNC and pat $VERSION" --text="<b><big>Direwolf TNC$AND_PAT Configuration and Operation</big></b>" \
+	yad --title="ARDOP and pat $VERSION" --text="<b><big>ARDOP$AND_PAT Configuration and Operation</big></b>" \
   		--text-align="center" --notebook --key="$ID" \
 		--posx=10 --posy=50 \
   		--buttons-layout=center \
   		--tab="Monitor" \
-  		--tab="Configure TNC" \
+  		--tab="Configure ARDOP" \
   		--tab="Configure pat" \
   		--tab="Rig Control" \
 		--width="800" --height="600" \
-  		--button="<b>Stop Direwolf$AND_PAT &#x26; Exit</b>":1 \
-  		--button="<b>Save Settings &#x26; Restart Direwolf$AND_PAT</b>":0 \
+  		--button="<b>Stop ARDOP$AND_PAT &#x26; Exit</b>":1 \
+  		--button="<b>Save Settings &#x26; Restart ARDOP$AND_PAT</b>":0 \
   		--button="<b>Open pat Web interface</b>":"bash -c $TMPDIR/pat_web.sh"
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
 		0) # Read and handle the Configure TNC tab yad output
-			[[ -s $TMPDIR/CONFIGURE_TNC.txt ]] || Die "Unexpected input from dialog"
-			IFS='|' read -r -a TF < "$TMPDIR/CONFIGURE_TNC.txt"
-			F[_CALL_]="${TF[0]^^}"
-			F[_ADEVICE_CAPTURE_]="${TF[1]}"
-			F[_ADEVICE_PLAY_]="${TF[2]}"
-			F[_ARATE_]="${TF[3]}"
-			F[_MODEM_]="${TF[4]}"
-			F[_PTT_]="${TF[5]}"
-			F[_AUDIOSTATS_]="${TF[6]}"
-			F[_AGWPORT_]="${TF[7]}"
-			F[_KISSPORT_]="${TF[8]}"
+			[[ -s $TMPDIR/CONFIGURE_ARDOP.txt ]] || Die "Unexpected input from dialog"
+			IFS='|' read -r -a TF < "$TMPDIR/CONFIGURE_ARDOP.txt"
+			F[_ADEVICE_CAPTURE_]="${TF[0]}"
+			F[_ADEVICE_PLAY_]="${TF[1]}"
+			F[_PTT_]="${TF[2]}"
+			F[_ARDOPPORT_]="${TF[3]}"
+			
 
 			# Read and handle the Configure pat tab yad output
 			[[ -s $TMPDIR/CONFIGURE_PAT.txt ]] || Die "Unexpected input from dialog"
@@ -620,12 +530,12 @@ EOF
 			PAT_LOCATOR="${TF[2]^^}"
 			PAT_HTTP_PORT="${TF[3]}"
 			PAT_TELNET_PORT="${TF[4]}"
-			F[_PAT_HTTP_]="${TF[5]}"
-			F[_TXDELAY_]="${TF[6]}"
-			F[_TXTAIL_]="${TF[7]}"
-			F[_PERSIST_]="${TF[8]}"
-			F[_SLOTTIME_]="${TF[9]}"
-
+			PAT_ARQ_BW_FORCED="${TF[5]}"
+			PAT_ARQ_BW_MAX="${TF[6]}"
+			PAT_BEACON_INTERVAL="${TF[7]}"
+			PAT_CW_ID="${TF[8]}"
+			F[_PAT_HTTP_]="${TF[9]}"
+			
 			# Update the pat config.json file with the new data.
 			cat $PAT_CONFIG | jq \
 				--arg C "$PAT_CALL" \
@@ -633,7 +543,12 @@ EOF
 				--arg H "0.0.0.0:$PAT_HTTP_PORT" \
 				--arg T "0.0.0.0:$PAT_TELNET_PORT" \
 				--arg L "$PAT_LOCATOR" \
-					'.mycall = $C | .secure_login_password = $P | .http_addr = $H | .telnet.listen_addr = $T | .locator = $L' | sponge $PAT_CONFIG
+				--arg R "127.0.0.1:${F[_ARDOPPORT_]}" \
+				--argjson F ${PAT_ARQ_BW_FORCED,,} \
+				--argjson B $PAT_ARQ_BW_MAX \
+				--argjson I $PAT_BEACON_INTERVAL \
+				--argjson D ${PAT_CW_ID,,} \
+					'.mycall = $C | .secure_login_password = $P | .http_addr = $H | .telnet.listen_addr = $T | .locator = $L | .ardop.addr =  $R | .ardop.arq_bandwidth.Max = $B | .ardop.beacon_interval = $I | .ardop.arq_bandwidth.Forced = $F | .ardop.cwid_enabled = $D' | sponge $PAT_CONFIG
 
 			# Update the yad configuration file.
 			echo "declare -gA F" > "$CONFIG_FILE"

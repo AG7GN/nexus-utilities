@@ -14,7 +14,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.2
+#-    version         ${SCRIPT_NAME} 1.0.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -22,6 +22,7 @@
 #================================================================
 #  HISTORY
 #     20200609 : Steve Magnuson : Script creation.
+#     20200718 : Steve Magnuson : Delete unused function.
 # 
 #================================================================
 #  DEBUG OPTION
@@ -91,28 +92,6 @@ function runFind () {
 	echo "2:$find_cmd"
 }
 export -f runFind
-
-function processAlias () {
-	CALL="$(echo "$1" | sed 's/^ //' | cut -d' ' -f1)"
-	FREQ="$(echo "$1" | sed 's/^ //' | cut -d' ' -f2 | sed -e 's/\.00$//' -e 's/\.//1')"
-	if jq -r .connect_aliases $PAT_CONFIG | grep ":" | tr -d '", ' | grep -q ^$CALL.*$FREQ$
-	then
-		yad --info --center --text-align=center --buttons-layout=center \
-			--text="$CALL @ $FREQ was already in aliases" --borders=20 --button="gtk-ok":0
-	else
-		cat $PAT_CONFIG | jq --arg K "$CALL" --arg V "ax25:///$CALL?freq=$FREQ" \
-			'.connect_aliases += {($K): $V}' | sponge $PAT_CONFIG
-		if [[ $? == 0 ]]
-		then
-			yad --info --center --text-align=center --buttons-layout=center \
-			--text="$CALL @ $FREQ was added to aliases" --borders=20 --button="gtk-ok":0
-		else
-			yad --info --center --text-align=center --buttons-layout=center \
-			--text="ERROR: $CALL @ $FREQ was NOT added to aliases" --borders=20 --button="gtk-ok":0
-		fi
-	fi
-}
-export -f processAlias
 
 function viewDeleteAliases () {
 	# Load existing aliases

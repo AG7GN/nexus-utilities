@@ -18,7 +18,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.3.7
+#-    version         ${SCRIPT_NAME} 1.4.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -26,6 +26,7 @@
 #================================================================
 #  HISTORY
 #     20200507 : Steve Magnuson : Script creation.
+#     20200718 : Steve Magnuson : Allow pactor, winmor, ardop aliases
 # 
 #================================================================
 #  DEBUG OPTION
@@ -84,35 +85,35 @@ function Die () {
 }
 
 function runFind () {
-	echo "5:@disable@"
+	echo "5:@disabled@"
 	PAT="pat rmslist"
-	[[ $2 == "Any" ]] || PAT+=" -b $2"
-	[[ $3 == "Any" ]] || PAT+=" -m $3"
-	[[ $4 == TRUE ]] &&  PAT+=" -s"
+	[[ $2 == "Any" ]] || PAT+=" -b $2" # Band filter
+	[[ $3 == "Any" ]] || PAT+=" -m $3" # Mode filter
+	[[ $4 == TRUE ]] &&  PAT+=" -s" # Sort by distance
 	echo -e '\f' >> "$fpipe"
 	eval $PAT | grep -i "$1" | grep -v VARA | grep -v "^callsign" | grep -v "^$" | tr -s ' ' | \
-		awk '{printf "%s\n%s\n%s\n%s\n%s\n%s %s\n%s\n",$1,$7,$2,$3,$4,$5,$6,$8}' >> "$fpipe"
+		awk '{printf "%s\n%s\n%s\n%s\n%s\n%s\n%s %s\n",$11,$1,$7,$2,$3,$4,$5,$6}' >> "$fpipe"
 	echo "5:$find_cmd"
 }
 export -f runFind
 
 function processAlias () {
-	CALL="$(echo "$1" | sed 's/^ //' | cut -d' ' -f1)"
-	FREQ="$(echo "$1" | sed 's/^ //' | cut -d' ' -f2 | sed -e 's/\.00$//' -e 's/\.//1')"
-	if jq -r .connect_aliases $PAT_CONFIG | grep ":" | tr -d '", ' | grep -q ^$CALL.*$FREQ$
-	then
+	local CALL="$(echo "$1" | sed 's/^ //' | cut -d' ' -f2)"
+	local URI="$(echo "$1" | sed 's/^ //' | sed -e 's/packet/ax25/' | cut -d' ' -f1)"
+	if jq -r '.connect_aliases | keys[] as $k | "\(.[$k])"' $PAT_CONFIG | grep -q "$URI"
+	then # Alias already present
 		yad --info --center --text-align=center --buttons-layout=center \
-			--text="$CALL @ $FREQ was already in aliases" --borders=20 --button="gtk-ok":0
-	else
-		cat $PAT_CONFIG | jq --arg K "$CALL" --arg V "ax25:///$CALL?freq=$FREQ" \
-			'.connect_aliases += {($K): $V}' | sponge $PAT_CONFIG
+			--text="$URI was already in aliases" --borders=20 --button="gtk-ok":0
+	else # Alias not in list.  Add it.
+		cat $PAT_CONFIG | jq --arg K "$CALL" --arg U "$URI" \
+			'.connect_aliases += {($K): $U}' | sponge $PAT_CONFIG
 		if [[ $? == 0 ]]
 		then
 			yad --info --center --text-align=center --buttons-layout=center \
-			--text="$CALL @ $FREQ was added to aliases" --borders=20 --button="gtk-ok":0
+			--text="$URI was added to aliases" --borders=20 --button="gtk-ok":0
 		else
 			yad --info --center --text-align=center --buttons-layout=center \
-			--text="ERROR: $CALL @ $FREQ was NOT added to aliases" --borders=20 --button="gtk-ok":0
+			--text="ERROR: $URI was NOT added to aliases" --borders=20 --button="gtk-ok":0
 		fi
 	fi
 }
@@ -277,9 +278,9 @@ YAD_PIDs+=( $! )
 
 yad --plug="$fkey" --tabnum=2 --list --grid-lines=hor --dclick-action="bash -c \"processAlias '%s'\"" \
 	--text "Search results.  Double-click a Call to add it to your pat aliases." \
-	--column="Call" --column="Frequency" --column="Location" --column="Distance" --column="Azimuth" \
-	--column="Mode" --column="Units" \
-	--search-column=1 --expand-column=1 <&4 >/dev/null &
+	--column="URI" --column="Call" --column="Frequency (MHz)" --column="Location" --column="Distance" --column="Azimuth" \
+	--column="Mode" \
+	--search-column=2 --expand-column=7 --hide-column=1 <&4 >/dev/null &
 YAD_PIDs+=( $! )
 
 yad --paned --key="$fkey" --buttons-layout=center --button="gtk-close":0 --width=700 --height=700 \
