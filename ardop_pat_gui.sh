@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.0
+#-    version         ${SCRIPT_NAME} 1.0.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -108,7 +108,7 @@ function setARDOPpatDefaults () {
 
 function loadSettings () {
 	 
-   PTTs="GPIO 12!GPIO 23!RIG 2 localhost:4532"
+   PTTs="GPIO 12!GPIO 23!rig control via pat"
 	ARDOP_CONFIG="$TMPDIR/ardop.conf"
 
 	if [ -s "$CONFIG_FILE" ]
@@ -396,9 +396,16 @@ do
 	then
 		echo -e "Configure ARDOP and pat in the \"Configure ARDOP\" and \"Configure pat\" tabs,\nthen click \"Save Settings...\" button below." >&8
 	else # Not a first run.  pat and ARDOP configured so start 'em
+		# Check what PTT was selected
+		if [[ ${F[_PTT_]} =~ GPIO ]]
+		then # Let piardopc control PTT gia GPIO
+			ARDOP_PTT="-p $(echo "${F[_PTT_]}" | tr ' ' '=')"
+		else # Let pat control PTT via rigctl
+			ARDOP_PTT=""
+		fi
 		# Start piardopc
-		echo "Launching $ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} -p "$(echo "${F[_PTT_]}" | tr ' ' '=')"" >&8
-		$ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} -p "$(echo "${F[_PTT_]}" | tr ' ' '=')" >&8 2>&8 &
+		echo "Launching $ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} $ARDOP_PTT" >&8
+		$ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} $ARDOP_PTT >&8 2>&8 &
 		ardop_PID=$!
 		echo -e "\n\nARDOP has started.  PID=$ardop_PID" >&8
 
@@ -452,7 +459,7 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
    	--field="Web Service Port":NUM "$PAT_HTTP_PORT!8040..8049!1!" \
    	--field="Telnet Service Port":NUM "$PAT_TELNET_PORT!8770..8779!1!" \
    	--field="Forced ARQ Bandwidth":CHK "$PAT_ARQ_BW_FORCED" \
-   	--field="Max ARQ Bandwidth":NUM "$PAT_ARQ_BW_MAX!50..1000!50!" \
+   	--field="Max ARQ Bandwidth":NUM "$PAT_ARQ_BW_MAX!50..2000!50!" \
    	--field="Beacon Interval (minutes)":NUM "$PAT_BEACON_INTERVAL!0..120!1!" \
    	--field="Enable CW ID":CHK "$PAT_CW_ID" \
    	--field="Start pat web service when ARDOP starts":CHK "$PAT_START_HTTP" \
@@ -549,6 +556,10 @@ EOF
 				--argjson I $PAT_BEACON_INTERVAL \
 				--argjson D ${PAT_CW_ID,,} \
 					'.mycall = $C | .secure_login_password = $P | .http_addr = $H | .telnet.listen_addr = $T | .locator = $L | .ardop.addr =  $R | .ardop.arq_bandwidth.Max = $B | .ardop.beacon_interval = $I | .ardop.arq_bandwidth.Forced = $F | .ardop.cwid_enabled = $D' | sponge $PAT_CONFIG
+
+			# Did ARDOP config request rigctl for PTT? If so let pat handle it via rigctl
+			[[ ${F[_PTT_]} =~ GPIO ]] && PAT_PTT=false || PAT_PTT=true
+			cat $PAT_CONFIG | jq --argjson P $PAT_PTT '.ardop.ptt_ctrl = $P' | sponge $PAT_CONFIG  
 
 			# Update the yad configuration file.
 			echo "declare -gA F" > "$CONFIG_FILE"

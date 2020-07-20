@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ARDOP TNC and pat GUI
+GenericName=ARDOP TNC and pat GUI
+Comment=Configure and monitor ARDOP TNC and pat
+Exec=sh -c /usr/local/bin/ardop_pat_gui.sh
+Icon=/usr/share/pixmaps/CQ.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Comment[en_US]=ARDOP TNC and pat GUI
