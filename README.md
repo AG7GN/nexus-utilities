@@ -1,6 +1,6 @@
 # Hampi Utilities
 
-VERSION 2020515
+VERSION 2020721
 
 AUTHOR: Steve Magnuson, AG7GN
 
@@ -22,6 +22,10 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 [TNC script](#tnc-script)
 
 [Direwolf + pat GUI](#direwolf-and-pat-gui)
+
+[ARDOP + pat GUI](#ardop-and-pat-gui)
+
+[Rig Control Configuration GUI](#rig-control-gui)
 
 [Fldigi + Flmsg trim log scripts](#trim-scripts)
 
@@ -107,9 +111,11 @@ If `DO_NOT_DELETE_THIS_FILE` is present in the home folder, the script exits wit
 
 `test-piano.sh` allows you to test the operation of your `pianoX.sh` script by simulating what the [check-piano.sh](#check-piano-script) does when the Pi starts.  Set the piano switches as desired, then open a Terminal and run `test-piano.sh`.  The script will tell you which script will run based on which switch levers are down.  It will not actually run the `pianoX.sh` script.
 
-## Direwolf and pat gui
+## Direwolf and pat GUI
 
 `dw_pat_gui.sh` provides a GUI to configure the Direwolf TNC and [pat](https://getpat.io/) to make a functional Winlink email client on Hampi.  It also provides a monitor window that shows messages from both Direwolf and pat.
+
+If you make any changes in either of the Configure tabs, click __Restart Direwolf and pat__ to activate the changes.
 
 ### Monitor tab
 
@@ -121,17 +127,135 @@ The first 3 items are port numbers that your Pi is listening on for various conn
 
 The pat Web Server URL is what you’d use to access pat’s web server from your Pi (using the Chromium browser) or from another browser on another computer on your home network.  
 
-### Configure TNC
+### Configure TNC tab
 
 Configures Direwolf for AX25, ready to be used with remote Windows PCs via KISS or with pat on Linux via pat’s command line interface or it’s web interface.
 
-### Configure pat
+### Configure pat tab
+
+Configures the pat Winlink email client.  
+
+- Call Sign, Winlink Password, Locator Code
+	
+	These should be self explanatory.
+- Web Service Port
+	
+	The port on which `pat` will listen for traffic from the `pat` web interface.  Default is 8049.
+- Telnet Service Port
+	
+	The port on which `pat` will listen for telnet traffic.  Default is 8774.
+- Start pat web service when ARDOP starts
+
+	Checking __Start pat web service when Direwolf TNC starts__ will start `pat` with the http server enabled.  If this option is not checked, pat will not run at all.  You can then run `pat` in interactive mode by opening a Terminal and running:
+	
+		pat -l ax25 interactive
+
+- TX Delay, TX Tail, Persist, Slot time
+
+	The [AX.25 KISS protocol](http://www.ax25.net/kiss.aspx) describes these options.
+
+- Load Default AX25 Timers
+	
+	Clicking this button restores the timers to their default values.
+	
+- Edit pat Connection Aliases Button
+
+	Clicking this button brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog to make it easy to select RMS gateway stations to connect to.
+
+	`pat` has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
+
+### Rig Control tab
+
+Provides information about how `pat` uses rig control.  A __Manage Hamlib rigctld__ button is provided that will launch the [rig control script](#rig-control-gui).
+
+## ARDOP and pat gui
+
+`ardop_pat_gui.sh` provides a GUI to configure the [piardopc](http://www.cantab.net/users/john.wiseman/Documents/ARDOPC.html) TNC (which implements ARDOP version 1) and [pat](https://getpat.io/) to make a functional Winlink email client on Hampi.  It also provides a monitor window that shows messages from both piardopc and pat.
+
+If you make any changes in either of the Configure tabs, click __Restart ARDOP and pat__ to activate the changes.
+
+### Configure ARDOP tab
+
+- Audio Capture and Playback
+
+	Select your audio device for capture (audio from the radio) and pl;ayback (audio to the radio).  Use the guidance on the screen for what to select for the Nexus DR-X image.  The script makes an attempt to find and present audio devices present on the Pi.  For example, on ICOM radios like the 7100 and 73000 with built in sound cards that interface to the Pi via a USB cable, the __plughw:CARD=CODEC,DEV=0__ item is the correct choice for both capture and playback.
+- PTT
+	
+	Push-to-Talk setting.  Unless the radio uses CAT commands for PTT, the usual setting one of the GPIO selections per the guidance on the screen. You can select "rig control via pat" if you want pat to control PTT via rigctl. Your radio must be supported by Hamlib (which provides rig control) and be connected to the Pi via USB for this to work.
+- ARDOP Port
+
+	The TCP port `piardopc` listens on for commands from ARDOP clients like `pat`.  Default is 8515.
+	
+- `piardopc` Arguments (OPTIONAL)
+
+	Usually not needed.  Any arguments you supply will be passed to `piardopc`. There is no error checking, so watch the monitor window for error messages from `piardopc`. These are the available arguments:
+	
+		-l path or --logdir path   		Path for log files
+		-c device or --cat device  		Device to use for CAT Control
+		-p device or --ptt device         	Device to use for PTT control using RTS
+		-k string or --keystring string   	String (In HEX) to send to the radio to key PTT
+		-u string or --unkeystring string 	String (In HEX) to send to the radio to unkeykey PTT
+		-L use Left Channel of Soundcard in stereo mode
+		-R use Right Channel of Soundcard in stereo mode
+		CAT and RTS PTT can share the same port.
+
+	Logs are helpful for debugging, but not needed for normal operation. If you don't specify the log file pat with `-l path`, logging will be disabled.
+	
+	If you provide `-p device` as an argument, it will override the PTT setting in the GUI.
+		
+### Configure pat tab
 
 Configures the pat Winlink email client.  Clicking the __Edit pat Connection Aliases__ button brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog to make it easy to select RMS gateway stations to connect to.
 
-pat has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib]((http://hamlib.sourceforge.net/manuals/hamlib.html)), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
+pat has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
 
-If you make any changes in either of the Configure tabs, click __Restart Direwolf and pat__ to activate the changes.
+If you make any changes in either of the Configure tabs, click __Save Settings & Restart ARDOP + pat__ to activate the changes.
+
+- Call Sign, Winlink Password, Locator Code
+	
+	These should be self explanatory.
+- Web Service Port
+	
+	The port on which `pat` will listen for traffic from the `pat` web interface.  Default is 8049.
+- Start pat web service when ARDOP starts
+
+	Checking __Start pat web service when ARDOP starts__ will start `pat` with the http server enabled.  If this option is not checked, pat will not run at all.  You can then run `pat` in interactive mode by opening a Terminal and running:
+	
+		pat -l ardop interactive
+
+- Telnet Service Port
+	
+	The port on which `pat` will listen for telnet traffic.  Default is 8774.
+- Forced ARQ Bandwidth (Hz)
+
+	According to [ARDOP Overview](https://winlink.org/content/ardop_overview), The bandwidth can be forced by server, forced by client or negotiated by the server and client.  Enabling forced here makes `pat`, the ARDOP client, set the bandwidth.  Default is disabled.
+	
+- Max ARQ Bandwidth
+
+	According to [ARDOP Overview](https://winlink.org/content/ardop_overview), ARDOP is intended to operate in one of four audio bandwidths, 200 Hz, 500 Hz, 1000 Hz, and 2000 Hz. Default is 500 Hz. 
+
+- Beacon Interval (seconds)
+
+	Supposedly transmits a beacon every __x__ seconds. I can find no other information about this on the [`pat`](https://github.com/la5nta/pat/wiki/ARDOP) website.  Default is 0 (disabled?).
+
+- Enable CW ID
+
+	Enables sending your call sign via CW. I can find no other information about this on the [`pat`](https://github.com/la5nta/pat/wiki/ARDOP) website.  Default is TRUE.
+
+- Edit pat Connection Aliases Button
+
+	Clicking this button brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog to make it easy to select RMS gateway stations to connect to.
+
+	`pat` has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
+
+
+### Rig Control tab
+
+Provides information about how `pat` uses rig control.  A __Manage Hamlib rigctld__ button is provided that will launch the [rig control script](#rig-control-gui).
+
+## Rig Control GUI
+
+Provides a way to configure [Hamlib's](https://hamlib.github.io) `rigctld` for use with `pat` and other applications.
 
 ## TNC Script
 

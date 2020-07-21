@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.3
+#-    version         ${SCRIPT_NAME} 1.0.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -500,10 +500,10 @@ do
 	# Start the monitor tab
 	[[ $FIRST_RUN == true ]] && MODE_MESSAGE="" || MODE_MESSAGE="${F[_APRSMODE_]}"
 	TEXT="<big><b>Direwolf $MODE_MESSAGE APRS Monitor</b></big>"
-	yad --plug="$ID" --tabnum=1 --text="$TEXT" --editable --show-uri --show-cursor \
+	yad --plug="$ID" --tabnum=1 --text="$TEXT" --show-uri --show-cursor \
 		--back=black --fore=yellow \
 		--text-info --text-align=center \
-		--editable --tail --center <&6 &
+		--tail --center <&6 &
 	YAD_PIDs+=( $! )
 
 	if [[ $FIRST_RUN == true ]]

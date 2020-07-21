@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.1
+#-    version         ${SCRIPT_NAME} 1.0.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -99,17 +99,15 @@ function setARDOPpatDefaults () {
    D[2]="null" # Audio playback interface (ADEVICE)
    D[3]="GPIO 23" # GPIO PTT (BCM pin)
    D[4]="8515" # ARDOP Port
-#   D[5]="FALSE" # Forced ARQ bandwidth
-#   D[6]="500" # Max ARQ bandwidth
-#   D[7]="0" # Beacon Interval
-#   D[8]="TRUE" # CW ID Enabled
-#   D[9]="FALSE" # Enable pat HTTP server
+   D[5]="FALSE" # Enable pat HTTP server
+   D[6]="-l /dev/null/" # Optional piardopc arguments
 }
 
 function loadSettings () {
 	 
    PTTs="GPIO 12!GPIO 23!rig control via pat"
 	ARDOP_CONFIG="$TMPDIR/ardop.conf"
+	PAT_ARQ_BW_MAXs="200!500!1000!2000"
 
 	if [ -s "$CONFIG_FILE" ]
 	then # There is a config file
@@ -124,6 +122,7 @@ function loadSettings () {
    	echo "F[_PTT_]='${D[3]}'" >> "$CONFIG_FILE"
    	echo "F[_ARDOPPORT_]='${D[4]}'" >> "$CONFIG_FILE"
    	echo "F[_PAT_HTTP_]='${D[5]}'" >> "$CONFIG_FILE"
+   	echo "F[_ARDOP_ARGS_]='${D[6]}'" >> "$CONFIG_FILE"
    	source "$CONFIG_FILE"
 	fi
 	if pgrep pulseaudio >/dev/null 2>&1
@@ -159,6 +158,12 @@ function loadSettings () {
 	PAT_ARDOPPORT="$(jq -r ".ardop.addr" $PAT_CONFIG | cut -d: -f2)"
 	PAT_ARQ_BW_FORCED="$(jq -r ".ardop.arq_bandwidth.Forced" $PAT_CONFIG)"
 	PAT_ARQ_BW_MAX="$(jq -r ".ardop.arq_bandwidth.Max" $PAT_CONFIG)"
+	if [[ $PAT_ARQ_BW_MAXs =~ $PAT_ARQ_BW_MAX ]]
+	then
+		PAT_ARQ_BW_MAXs="$(echo $PAT_ARQ_BW_MAXs | sed -e "s/$PAT_ARQ_BW_MAX/\^$PAT_ARQ_BW_MAX/")"
+	else
+		PAT_ARQ_BW_MAXs="$(echo $PAT_ARQ_BW_MAXs | sed -e "s/500/\^500/")"
+	fi
 	PAT_BEACON_INTERVAL="$(jq -r ".ardop.beacon_interval" $PAT_CONFIG)"
 	PAT_CW_ID="$(jq -r ".ardop.cwid_enabled" $PAT_CONFIG)"
 }
@@ -378,7 +383,7 @@ do
 	yad --plug="$ID" --tabnum=1 \
 		--back=black --fore=yellow --selectable-labels \
 		--text-info --text-align=center --text="$TEXT" \
-		--editable --tail --center <&8 &
+		--tail --center <&8 &
 	YAD_PIDs+=( $! )
 
 	# Start rigctld.  
@@ -404,10 +409,14 @@ do
 			ARDOP_PTT=""
 		fi
 		# Start piardopc
-		echo "Launching $ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} $ARDOP_PTT" >&8
-		$ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} $ARDOP_PTT >&8 2>&8 &
+		# If no piardopc logging specified as an argument, send logs to /dev/null
+		[[ ${F[_ARDOP_ARGS_]} =~ -l ]] || F[_ARDOP_ARGS_]+=" -l /dev/null/"
+		# If PTT is specified as an argument, override PTT setting in GUI
+		[[ ${F[_ARDOP_ARGS_]} =~ -p ]] && ARDOP_PTT=""
+		echo "Starting $ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} ${F[_ARDOP_ARGS_]} $ARDOP_PTT" >&8
+		$ARDOP ${F[_ARDOPPORT_]} ${F[_ADEVICE_CAPTURE_]} ${F[_ADEVICE_PLAY_]} ${F[_ARDOP_ARGS_]} $ARDOP_PTT >&8 2>&8 &
 		ardop_PID=$!
-		echo -e "\n\nARDOP has started.  PID=$ardop_PID" >&8
+		echo -e "\nARDOP has started.  PID=$ardop_PID" >&8
 
 		# Start pat
 		if [[ $PAT_START_HTTP == TRUE ]]
@@ -418,29 +427,42 @@ do
 			pat_PID=""
 		fi
 	fi 
-	
+
+	ARG_INFO="piardopc arguments are usually not needed, but if you want to use them:\n \
+-l path or --logdir path          Path for log files\n \
+-c device or --cat device         Device to use for CAT Control\n \
+-p device or --ptt device         Device to use for PTT control using RTS\n \
+-k string or --keystring string   String (In HEX) to send to the radio to key PTT\n \
+-u string or --unkeystring string String (In HEX) to send to the radio to unkeykey PTT\n \
+-L use Left Channel of Soundcard in stereo mode\n \
+-R use Right Channel of Soundcard in stereo mode\n\n \
+"
 	# Set up tab for configuring piardopc.
 	yad --plug="$ID" --tabnum=2 \
   		--text="<b><big><big>ARDOP Configuration</big></big></b>\n\n \
 <b><u><big>Typical Sound Card and PTT Settings for Nexus DR-X</big></u></b>\n \
-<span color='blue'><b>LEFT Radio:</b></span> Use ADEVICEs \
+<span color='blue'><b>LEFT Radio:</b></span> Use \
 <b>fepi-capture-left</b> and <b>fepi-playback-left</b> and PTT <b>GPIO 12</b>.\n \
-<span color='blue'><b>RIGHT Radio:</b></span> Use ADEVICEs \
+<span color='blue'><b>RIGHT Radio:</b></span> Use \
 <b>fepi-capture-right</b> and <b>fepi-playback-right</b> and PTT <b>GPIO 23</b>.\n\n \
-Click the <b>Save Settings...</b> button below after you make your changes.\n\n" \
+Click the <b>Save Settings...</b> button below after you make your changes.\n" \
   		--item-separator="!" \
 		--separator="|" \
   		--text-align=center \
   		--align=right \
   		--borders=20 \
   		--form \
-		--columns=2 \
-  	  	--field="<b>ARDOP Capture ADEVICE</b>":CB "$ADEVICE_CAPTUREs" \
-     	--field="<b>ARDOP Playback ADEVICE</b>":CB "$ADEVICE_PLAYBACKs" \
-   	--field="<b>ARDOP PTT</b>":CBE "$PTTs" \
+		--columns=1 \
+  	  	--field="<b>Audio Capture Device</b>":CB "$ADEVICE_CAPTUREs" \
+     	--field="<b>Audio Playback Device</b>":CB "$ADEVICE_PLAYBACKs" \
+   	--field="<b>PTT</b>":CB "$PTTs" \
    	--field="<b>ARDOP Port</b>":NUM "${F[_ARDOPPORT_]}!8510..8519!1!" \
+   	--field="<b>piardopc</b> command arguments\n(OPTIONAL - usually not needed)" "${F[_ARDOP_ARGS_]}" \
   		--focus-field 1 > $TMPDIR/CONFIGURE_ARDOP.txt &
 	YAD_PIDs+=( $! )
+
+#   	--field="<b>piardopc</b> argument information:":TXT "$ARG_INFO" \
+
 
 	# Set up tab for pat configuration
 	yad --plug="$ID" --tabnum=3 \
@@ -457,12 +479,12 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
 		--field="Winlink Password":H "$PAT_PASSWORD" \
 		--field="Locator Code" "$PAT_LOCATOR" \
    	--field="Web Service Port":NUM "$PAT_HTTP_PORT!8040..8049!1!" \
+   	--field="Start pat web service when ARDOP starts":CHK "$PAT_START_HTTP" \
    	--field="Telnet Service Port":NUM "$PAT_TELNET_PORT!8770..8779!1!" \
    	--field="Forced ARQ Bandwidth":CHK "$PAT_ARQ_BW_FORCED" \
-   	--field="Max ARQ Bandwidth":NUM "$PAT_ARQ_BW_MAX!50..2000!50!" \
-   	--field="Beacon Interval (minutes)":NUM "$PAT_BEACON_INTERVAL!0..120!1!" \
+   	--field="Max ARQ Bandwidth (Hz)":CB "$PAT_ARQ_BW_MAXs" \
+   	--field="Beacon Interval (seconds)\n0 = disabled":NUM "$PAT_BEACON_INTERVAL!0..3600!1!" \
    	--field="Enable CW ID":CHK "$PAT_CW_ID" \
-   	--field="Start pat web service when ARDOP starts":CHK "$PAT_START_HTTP" \
 		--field="<b>Edit pat Connection Aliases</b>":FBTN "bash -c edit_pat_aliases.sh &" \
   		--focus-field 1 > $TMPDIR/CONFIGURE_PAT.txt &
 	YAD_PIDs+=( $! )
@@ -527,6 +549,7 @@ EOF
 			F[_ADEVICE_PLAY_]="${TF[1]}"
 			F[_PTT_]="${TF[2]}"
 			F[_ARDOPPORT_]="${TF[3]}"
+			F[_ARDOP_ARGS_]="${TF[4]}"
 			
 
 			# Read and handle the Configure pat tab yad output
@@ -536,12 +559,12 @@ EOF
 			PAT_PASSWORD="${TF[1]}"
 			PAT_LOCATOR="${TF[2]^^}"
 			PAT_HTTP_PORT="${TF[3]}"
-			PAT_TELNET_PORT="${TF[4]}"
-			PAT_ARQ_BW_FORCED="${TF[5]}"
-			PAT_ARQ_BW_MAX="${TF[6]}"
-			PAT_BEACON_INTERVAL="${TF[7]}"
-			PAT_CW_ID="${TF[8]}"
-			F[_PAT_HTTP_]="${TF[9]}"
+			F[_PAT_HTTP_]="${TF[4]}"
+			PAT_TELNET_PORT="${TF[5]}"
+			PAT_ARQ_BW_FORCED="${TF[6]}"
+			PAT_ARQ_BW_MAX="${TF[7]}"
+			PAT_BEACON_INTERVAL="${TF[8]}"
+			PAT_CW_ID="${TF[9]}"
 			
 			# Update the pat config.json file with the new data.
 			cat $PAT_CONFIG | jq \

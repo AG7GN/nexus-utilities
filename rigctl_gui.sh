@@ -14,7 +14,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.3
+#-    version         ${SCRIPT_NAME} 1.0.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -336,13 +336,25 @@ do
 	then # rigctld already running
 		# Determine rig ID of running rigctld process
 		ID="$(cat /proc/$(pidof rigctld)/cmdline | tr -d '\0' | tr '-' '\n' | egrep "^m[0-9]{1,4}" | sed -e 's/^m//')"
+		case $ID in
+			1|2|4) # Hamlib and FLRig "rigs" don't use a serial port
+				PORTSPEED_MSG=""
+				;;
+	 		*) # All(?) of the others require a serial port
+				PORT="$(cat /proc/$(pidof rigctld)/cmdline | tr '\0' '~' | sed -e 's/~-/\n-/g' | tr '~' ' ' | grep "^-r" | cut -d' ' -f2)"
+				[[ $PORT == "" ]] && PORT="PORT NOT CONFIGURED"
+				SPEED="$(cat /proc/$(pidof rigctld)/cmdline | tr '\0' '~' | sed -e 's/~-/\n-/g' | tr '~' ' ' | grep "^-s" | cut -d' ' -f2)"
+				[[ $SPEED == "" ]] && SPEED="SPEED NOT CONFIGURED"
+				PORTSPEED_MSG="on ${PORT##*/} @ $SPEED"
+				;;
+		esac
 		# Find the rig make and model from that ID
 		RIG="$(getRig $ID)"
-		STATE="<big><b><span color='green'>rigctld is RUNNING for $RIG</span></b></big> \n \
+		STATE="<b><span color='green'><big>rigctld is RUNNING for $RIG</big>\n$PORTSPEED_MSG</span></b> \n \
 <b>Change the rig by searching/selecting a different rig below, or click 'Save...' to restart rigctld with $RIG</b>"
 	else # rigctld not running
 		RIG="$(echo ${F[_RIG_]} | cut -d'|' -f2,3 | tr '|' ' ')"
-		STATE="<big><b><span color='red'>rigctld is NOT RUNNING.</span></b></big>\n<b>Configured rig is <span color='blue'>$RIG.</span> Change the rig by searching/selecting a different rig below, or click 'Save...' to start rigctld with $RIG</b>"
+		STATE="<big><b><span color='red'>rigctld is NOT RUNNING</span></b></big>\n<b>Configured rig is <span color='blue'>$RIG.</span> Change the rig by searching/selecting a different rig below, or click 'Save...' to start rigctld with $RIG</b>"
 	fi
 	yad --plug="$fkey" --tabnum=1 --text-align=center \
 	   --text="<big><b>Configure Hamlib Rig Control (rigctld)</b></big>\n$STATE\n \
@@ -370,7 +382,8 @@ Hamlib and FLRig models don't use the Serial Port or Speed settings.  Set them t
   		--borders=20 \
 		--posx=30 --posy=70 \
 		--title="$TITLE" --window-icon="system-search" \
-		--button="<b>Leave rigctld as-is &#x26; Exit</b>":2 \
+		--button="<b>Leave rigctld as-is &#x26; Exit</b>":3 \
+		--button="<b>Stop rigctld &#x26; Exit</b>":2 \
 		--button="<b>Stop rigctld</b>":1 \
 		--button="<b>Save Changes &#x26; [Re]start rigctld</b>":0
 	RETURN_CODE=$?	
@@ -408,6 +421,10 @@ Hamlib and FLRig models don't use the Serial Port or Speed settings.  Set them t
 			;;
 		1) # Stop rigctld
 			pkill -x rigctld
+			;;
+		2) # Stop rigctld and exit
+			pkill -x rigctld
+			break
 			;;
 		*) # Leave rigctld as-is and exit 
 			break

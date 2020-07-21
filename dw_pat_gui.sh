@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.6.1
+#-    version         ${SCRIPT_NAME} 1.6.2
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -426,7 +426,7 @@ do
 	yad --plug="$ID" --tabnum=1 \
 		--back=black --fore=yellow --selectable-labels \
 		--text-info --text-align=center --text="$TEXT" \
-		--editable --tail --center <&3 &
+		--tail --center <&3 &
 	YAD_PIDs+=( $! )
 
 	# Start rigctld.  

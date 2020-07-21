@@ -18,7 +18,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.4.2
+#-    version         ${SCRIPT_NAME} 1.4.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -105,8 +105,8 @@ function processAlias () {
 	then # Alias already present
 		yad --info --center --text-align=center --buttons-layout=center \
 			--text="$URI was already in aliases" --borders=20 --button="gtk-ok":0
-	else # Alias not in list.  Add it.
-		cat $PAT_CONFIG | jq --arg K "$CALL@$FREQ" --arg U "$URI" \
+	else # Alias not in list.  Add it.  Key (alias name) is of the form CALL.MODE@FREQ
+		cat $PAT_CONFIG | jq --arg K "$CALL.${URI%%:*}@$FREQ" --arg U "$URI" \
 			'.connect_aliases += {($K): $U}' | sponge $PAT_CONFIG
 		if [[ $? == 0 ]]
 		then
@@ -128,7 +128,7 @@ function viewDeleteAliases () {
 		ALIASES="$(jq -r .connect_aliases $PAT_CONFIG | egrep -v "telnet|{|}" | \
 				  sed 's/^ /FALSE|/' | tr -d ' ",' | sed 's/:/|/1' | tr '|' '\n')"
 		RESULT="$(yad --title="View/remove aliases" --list --mouse --borders=10 \
-				--height=400 --width=500 --text-align=center \
+				--height=400 --width=550 --text-align=center \
 				--text "<b>Your current pat connection aliases are listed below.</b>\n \
 Check the ones you want to remove.\n" \
 				--checklist --grid-lines=hor --auto-kill --column="Pick" --column="Call@Freq" --column="Connect URI" \
@@ -177,7 +177,7 @@ VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)"
 TITLE="Find RMS Stations $VERSION"
 PAT_CONFIG="$HOME/.wl2k/config.json"
 export PAT_CONFIG=$PAT_CONFIG
-export find_cmd='@bash -c "runFind %1 %2 %3 %6"'
+export find_cmd='@bash -c "runFind %1 %2 %3 %4"'
 export view_remove_cmd='bash -c "viewDeleteAliases"'
 export fpipe=$(mktemp -u --tmpdir find.XXXXXXXX)
 mkfifo "$fpipe"
@@ -280,9 +280,9 @@ connection alias list\n<span color='blue'>If you make changes: Restart pat + TNC
 	 --field="Search string" "${DEFAULT_SEARCH_STRING:0:4}" \
 	 --field="Band":CB "$BANDs" \
 	 --field="Mode":CB "$MODEs" \
+	 --field="Sort results by distance (Uncheck to sort by callsign)":CHK TRUE \
 	 --field="gtk-find":FBTN "$find_cmd" \
-	 --field="<b>View/edit current pat connection aliases</b>":FBTN "$view_remove_cmd &" \
-	 --field="Sort results by distance (Uncheck to sort by callsign)":CHK TRUE >/dev/null &
+	 --field="<b>View/delete saved pat connection aliases</b>":FBTN "$view_remove_cmd &" >/dev/null &
 YAD_PIDs+=( $! )
 
 yad --plug="$fkey" --tabnum=2 --list --grid-lines=hor --dclick-action="bash -c \"processAlias '%s'\"" \
