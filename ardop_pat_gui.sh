@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.4
+#-    version         ${SCRIPT_NAME} 1.0.6
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -317,13 +317,21 @@ else # No configuration files exist
 	FIRST_RUN=true
 fi
 
-# Check for pat's config.json.  Create it if necessary
-if ! [[ -s $PAT_CONFIG ]]
-then
+# Check for pat's config file, config.json.  Create it if missing or corrupted.
+RESULT="$(jq . $PAT_CONFIG 2>/dev/null)"
+if [[ $RESULT == "" ]]
+then # config.json missing or corrupted.  Make a new one.
+	[[ -f $PAT_CONFIG ]] && rm $PAT_CONFIG
 	cd $HOME
 	export EDITOR=ed
 	echo -n "" | pat configure >/dev/null 2>&1
 fi
+
+# Set up pat for rigctl in config.json
+cat $PAT_CONFIG | jq \
+   '.hamlib_rigs += {"network": {"address": "localhost:4532", "network": "tcp"}}' | sponge $PAT_CONFIG
+# Add the network Hamlib rig to the ardop section
+cat $PAT_CONFIG | jq --arg R "network" '.ardop.rig = $R' | sponge $PAT_CONFIG
 
 export -f setARDOPpatDefaults loadpatDefaults
 export load_pat_defaults_cmd='@bash -c "setARDOPpatDefaults; loadpatDefaults"'
@@ -343,20 +351,6 @@ set -o errexit
 $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
-
-
-# Set up rig for rigctl in pat
-#RIG="$(jq -r '.hamlib_rigs | keys[] as $k | "\($k)"' $PAT_CONFIG)"
-RIG="$(jq -r .hamlib_rigs $PAT_CONFIG)"
-if [[ $RIG == "{}" ]]
-then # No rigs configured.  Make a network Hamlib rig
-   cat $PAT_CONFIG | jq \
-         '.hamlib_rigs += {"network": {"address": "localhost:4532", "network": "tcp"}}' | sponge $PAT_CONFIG
-   # Add the network Hamlib rig to the ax25, winmor, ardop, pactor sections
-   cat $PAT_CONFIG | jq \
-      --arg R "network" \
-      '.ax25.rig = $R | .winmor.rig = $R | .ardop.rig = $R | .pactor.rig = $R' | sponge $PAT_CONFIG
-fi
 
 timeStamp &
 timeStamp_PID=$!
