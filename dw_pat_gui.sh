@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.6.4
+#-    version         ${SCRIPT_NAME} 1.6.5
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -26,6 +26,10 @@
 #     20200507 : Steve Magnuson : Bug fixes
 #     20200719 : Steve Magnuson : Improved handling of pat rigctl
 #                                 settings
+#     20200726 : Steve Magnuson : Added time stamps to Direwolf
+#                                 traffic logged events & modem
+#											 options expanded to 
+#                                 300,1200,2400,4800,9600
 # 
 #================================================================
 #  DEBUG OPTION
@@ -115,7 +119,7 @@ function setTNCpatDefaults () {
 
 function loadSettings () {
 	 
-	MODEMs="1200!9600"
+	MODEMs="300!1200!2400!4800!9600"
    ARATEs="48000!96000"
    PTTs="GPIO 12!GPIO 23!RIG 2 localhost:4532"
 	DW_CONFIG="$TMPDIR/direwolf.conf"
@@ -222,6 +226,15 @@ function killDirewolf () {
 	fi
 }
 
+function getRig() {
+   # Arg1: Hamlib ID of rig.  Function returns rig manufacturer and name
+	LINE="$($(command -v rigctl) -l | grep -v "^ Rig" | egrep "^[[:space:]]*$1")"
+	N="$(trim "${LINE:2:4}")"
+	M="$(trim "${LINE:8:23}")"
+  	O="$(trim "${LINE:31:24}")"
+	echo "$M $O"
+}
+
 #============================
 #  FILES AND VARIABLES
 #============================
@@ -255,7 +268,8 @@ AX25PORTFILE="/etc/ax25/axports"
 PAT_CONFIG="$HOME/.wl2k/config.json"
 
 RETURN_CODE=0
-DIREWOLF="$(command -v direwolf) -p -t 0 -d u"
+# Direwolf does not allow embedded spaces in timestamp format string -T
+DIREWOLF="$(command -v direwolf) -p -t 0 -d u -T "%Y/%m/%d_%H:%M:%S""
 #PAT="$(command -v pat) --log /dev/stdout -l ax25,telnet http"
 PAT="$(command -v pat) -l ax25,telnet http"
 

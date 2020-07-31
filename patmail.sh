@@ -5,7 +5,7 @@
 #% SYNOPSIS
 #+   ${SCRIPT_NAME} [-hv] 
 #+   ${SCRIPT_NAME} TO SUBECT TRANSPORT
-#+   ${SCRIPT_NAME} [-l FILE] [-f FILE] TO SUBECT TRANSPORT
+#+   ${SCRIPT_NAME} [-d DIRECTORY] [-l FILE] [-f FILE] TO SUBECT TRANSPORT
 #%
 #% DESCRIPTION
 #%   This script allows sending Winlink messages via the command line or script.
@@ -15,20 +15,20 @@
 #% OPTIONS
 #%    -h, --help                  Print this help
 #%    -v, --version               Print script information
+#%    -d, --dir=FILE              Path to directory containing config.json file
+#%                                and mailbox directory. Default: $HOME/.wl2k
 #%    -l FILE, --log=FILE         Send pat diagnostic output to FILE.  FILE will be 
-#%                                overwritten if it exists.  
-#%                                To send output to stdout, use /dev/stdout.
-#%                                Default: /dev/null
+#%                                overwritten if it exists. To send output to stdout,
+#%                                use /dev/stdout. Default: /dev/null
 #%    -f FILE, --file=FILE        Attach file to message where file is full path to
-#%                                file.  To attach multiple files, use multiple -f FILE,
-#%                                one per attached file.
+#%                                file.  To attach multiple files, use multiple -f FILE
+#%                                arguments, one per attached file.
 #% 
 #% COMMANDS (All 3 COMMANDS are required)
 #%    TO                          One or more recipient email addresses 
-#%                                (comma separated).
-#%                                Winlink email addresses (CALL@winlink.org)
-#%                                do not need to include '@winlink.org', just the 
-#%                                call sign.
+#%                                (comma separated). Winlink email addresses 
+#%                                (CALL@winlink.org) do not need to include 
+#%                                '@winlink.org', just the call sign.
 #%                                
 #%    SUBJECT                     Email subject enclosed in "double quotes".
 #%
@@ -67,7 +67,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.3.4
+#-    version         ${SCRIPT_NAME} 2.4.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -77,6 +77,7 @@
 #     20190920 : Steve Magnuson : Script creation
 #     20200204 : Steve Magnuson : Added script template
 #     20200227 : Steve Magnuson : Added option to send pat log text to a file or stdout
+#     20200730 : Steve Magnuson : Added ability to specify pat config & mailbox folder
 # 
 #================================================================
 #  DEBUG OPTION
@@ -157,15 +158,16 @@ VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)"
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':f:l:hv-:'
+SCRIPT_OPTS=':d:f:l:hv-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
 	[version]=v
-	[log]=l
+	[dir]=d
 	[file]=f
+	[log]=l
 )
 
 declare -a ATTACHMENTS=()
@@ -216,11 +218,14 @@ do
 			ScriptInfo version
 			exit 0
 			;;
-		l)
-			EVENT_LOG="$OPTARG"
+		d)
+			PAT_DIR="$OPTARG"
 			;;
 		f)
 			ATTACHMENTS+=("$OPTARG")
+			;;
+		l)
+			EVENT_LOG="$OPTARG"
 			;;
 		:) 
 			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
@@ -252,30 +257,35 @@ $DEBUG && set -x
 PAT="$(command -v pat)" 
 [[ $? == 0 ]] || Die "pat winlink client is not installed."
 UNIX2DOS="$(command -v unix2dos)"
-[[ $UNIX2DOS == "" ]] && Die "dos2unix tools are not installed."
+[[ $? == 0 ]] || Die "dos2unix tools are not installed."
 
-PATDIR="$HOME/.wl2k"
-CALL="$(cat $PATDIR/config.json | grep "\"mycall\":" | tr -d ' ",' | cut -d: -f2)"
-[[ $CALL == "" ]] && Die "Could not obtain call sign from $PATDIR/config.json.  Is pat configured?"
-OUTDIR="$PATDIR/mailbox/$CALL/out"
+PAT_DIR="${PAT_DIR:-$HOME/.wl2k}" # Use default directory if none specified
+[[ -d "$PAT_DIR" ]] || Die "Directory $PAT_DIR does not exist or is not a directory."
+PAT_CONFIG="$PAT_DIR/config.json"
+MBOX="$PAT_DIR/mailbox"
 EVENT_LOG="${EVENT_LOG:-/dev/null}"
+
+CALL="$(cat $PAT_CONFIG | grep "\"mycall\":" | tr -d ' ",' | cut -d: -f2)"
+[[ $CALL == "" ]] && Die "Could not obtain call sign from $PAT_CONFIG.  Is pat configured?"
+OUTDIR="$MBOX/$CALL/out"
 
 TO="$1"
 SUBJECT="$2"
 
-[[ $TO =~ "," ]] || TO="$TO\n"
+[[ $TO =~ "," ]] || TO="$TO\n" # There's only one recipient, so append \n
 
+# Compose an empty email message
 export EDITOR=ed
 TFILE="${TMPDIR}/message"
 HEADER="$CALL\n$TO\n\n$SUBJECT"
-echo -e "$HEADER" | $PAT compose 2>/dev/null 1> $TFILE
+echo -e "$HEADER" | $PAT --config $PAT_CONFIG --mbox $MBOX compose 2>/dev/null 1> $TFILE
 
 MSG="$(grep "MID:" $TFILE | tr -d ' \t' | cut -d':' -f3)" 
 [[ $MSG == "" ]] && Die "Could not find the MID (Message ID)"
 MSG="$OUTDIR/$MSG.b2f"
 sed -i -e 's/<No message body>//' $MSG
 if (( ${#ATTACHMENTS[@]} ))
-then
+then # Add attached file(s) size and name to header
 	for F in "${ATTACHMENTS[@]}"
 	do
 		if [ -s "$F" ]
@@ -289,15 +299,19 @@ then
 		fi
 	done
 fi
+# Add carriage returns to empty message (Winlink requires this)
 $UNIX2DOS -q $MSG
+# Read message text from stdin
 cat - > $TFILE
 echo >> $TFILE
+# Add carriage returns to user message (Winlink requires this)
 $UNIX2DOS -q $TFILE
+# Append message body to message and add character count to message (required by Winlink)
 COUNT="$(wc -c $TFILE | cut -d' ' -f1)"
 cat $TFILE >> $MSG
 sed -i -e "s/^Body: .*/Body: $COUNT/" $MSG
 if (( ${#ATTACHMENTS[@]} ))
-then
+then # Append file(s) to message
 	for F in "${ATTACHMENTS[@]}"
 	do
 		cat "$F" >> "$MSG"
@@ -306,6 +320,7 @@ then
 fi
 #rm $TFILE
 echo > "$EVENT_LOG"
-$PAT --send-only --event-log "$EVENT_LOG" connect $3 >> "$EVENT_LOG"
+# Send the message
+$PAT --config $PAT_CONFIG --mbox $MBOX --send-only --event-log "$EVENT_LOG" connect $3 >> "$EVENT_LOG"
 exit $?
 

@@ -186,6 +186,30 @@ function killARDOP () {
 	fi
 }
 
+function trim() {
+  # Trims leading and trailing white space from a string
+  local s2 s="$*"
+  until s2="${s#[[:space:]]}"; [ "$s2" = "$s" ]; do s="$s2"; done
+  until s2="${s%[[:space:]]}"; [ "$s2" = "$s" ]; do s="$s2"; done
+  echo "$s"
+}
+
+function getRig() {
+#   # Prints make and model of rig of currently running rigctld.
+#   if pgrep rigctld >/dev/null 2>&1
+#   then
+#   	local ID="$(cat /proc/$(pidof rigctld)/cmdline | tr -d '\0' | tr '-' '\n' | egrep "^m[0-9]{1,4}" | sed -e 's/^m//')"
+#		local LINE="$($(command -v rigctl) -l | grep -v "^ Rig" | egrep "^[[:space:]]*$ID ")"
+#		local N="$(trim "${LINE:2:4}")"
+#		local M="$(trim "${LINE:8:23}")"
+#  		local O="$(trim "${LINE:31:24}")"
+#		echo "\n<span color='green'><b>Rig Control is RUNNING for $M $O rig</b></span>"
+#	else
+#		echo "\n<span color='red'><b>Rig Control is NOT RUNNING</b></span>"
+#	fi
+   echo ""
+}
+
 #============================
 #  FILES AND VARIABLES
 #============================
@@ -373,7 +397,7 @@ do
 	
 	# Start the tail window tab
 	TEXT="ARDOP Port: <span color='blue'><b>${F[_ARDOPPORT_]}</b></span>"
-	[[ $PAT_START_HTTP == TRUE ]] && TEXT+="   pat Telnet Port: <span color='blue'><b>$PAT_TELNET_PORT</b></span>   pat Web Server: <span color='blue'><b>http://$HOSTNAME.local:$PAT_HTTP_PORT</b></span>"
+	[[ $PAT_START_HTTP == TRUE ]] && TEXT+="   pat Telnet Port: <span color='blue'><b>$PAT_TELNET_PORT</b></span>   pat Web Server: <span color='blue'><b>http://$HOSTNAME.local:$PAT_HTTP_PORT</b></span>$(getRig)"
 	yad --plug="$ID" --tabnum=1 \
 		--back=black --fore=yellow --selectable-labels \
 		--text-info --text-align=center --text="$TEXT" \
