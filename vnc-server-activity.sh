@@ -6,7 +6,7 @@
 # Usage: vnc-server-activity.sh [email-address[,email-address]...]
 #
 
-VERSION="1.1.2"
+VERSION="1.1.3"
 
 # Pat and patmail.sh must be installed.  If they are not, exit.
 command -v pat >/dev/null 2>&1 || exit 1
@@ -51,6 +51,6 @@ fi
 #   cat $OUTFILE
 #} | /usr/sbin/ssmtp $MAILTO
 
-cat $OUTFILE | sort | uniq | /usr/local/bin/patmail.sh $MAILTO "$HOSTNAME VNC Server activity for 24 hours preceding `date`" telnet
+cat $OUTFILE | sort | uniq | $(command -v patmail.sh) $MAILTO "$HOSTNAME VNC Server activity for 24 hours preceding `date`" telnet
 rm $OUTFILE
 rm $FILTERED
