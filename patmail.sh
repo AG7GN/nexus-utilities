@@ -15,7 +15,7 @@
 #% OPTIONS
 #%    -h, --help                  Print this help
 #%    -v, --version               Print script information
-#%    -d, --dir=FILE              Path to directory containing config.json file
+#%    -d, --dir=DIRECTORY         Path to directory containing config.json file
 #%                                and mailbox directory. Default: $HOME/.wl2k
 #%    -l FILE, --log=FILE         Send pat diagnostic output to FILE.  FILE will be 
 #%                                overwritten if it exists. To send output to stdout,
@@ -67,7 +67,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.4.3
+#-    version         ${SCRIPT_NAME} 2.4.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0

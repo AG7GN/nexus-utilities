@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Direwolf + pat GUI Help</title>
+<body>
+
+<h1>Direwolf + pat GUI Help</h1>
+<p>
+This program allows you to configure Direwolf and pat and monitor the output of both programs. Direwolf enables a pseudo terminal using AX.25 port 'wl2k' for the KISS protocol, which is required by pat as well as some other AX.25 programs. The AGW and KISS TCP ports are available to applications running on this Pi as well as over the network. This allows other hosts, like Windows PCs running RMS Express to use the Direwolf TNC running on this Pi. The AX.25 port 'wl2k' is available to other applications running on this Pi as well.
+</p>
+<hr>
+<h2>Table of Contents</h2>
+<a href="#mainbuttons">Buttons</a><br /><br />
+<a href="#monitor">Monitor tab</a><br />
+<a href="#tnctab">Configure TNC tab</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#dwcall">Call Sign</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#adevice">Direwolf Capture/Playback ADEVICEs</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#arate">Direwolf ARATE</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ptt">Direwolf PTT</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#stats">Audio Stats interval</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#agwport">AGW Port</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#agwport">KISS Port</a><br /><br />
+<a href="#monitor">Configure pat tab</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#patcall">Call Sign</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#password">Winlink Password</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#grid">Locator Code</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#webport">Web Service Port</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#telnetport">Web Service Port</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#startpat">Start pat web service when Direwolf TNC starts</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ax25timers">AX25 Timers (TX delay, TX tail, Persist, Slot time)</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#defaultax25timers">Load Default AX25 Timers button</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#pataliases">Edit pat Connection aliases button</a><br /><br />
+<a href="#rigcontrol">Rig Control tab</a><br />
+<hr>
+<h2 id="mainbuttons">Buttons</h2>
+<h3>Stop Direwolf + pat & Exit</h3>
+<p>
+This button has the same effect as closing the app by clicking X in the upper right corner.
+</p>
+
+<h3>Save Settings & Restart Direwolf + pat</h3>
+<p>
+The GUI will disappear for a few seconds and then reappear when it restarts.
+</p>
+
+<h3>Open pat Web Interface</h3>
+<p>
+Opens the Pi's browser and connects it to pat's web service.
+</p>
+<a href="#top">Top</a>
+<hr>
+<h2 id="monitor">Monitor tab</h2>
+<p>
+This tab displays the output of the Direwolf and pat programs. At the top of the pane are the currently configured AGW and KISS TCP ports, the AX.25 port, pat's telnet port and if pat is running, the URI you use to access the pat web interface.
+</p>
+<hr>
+
+<h2 id="tnctab">Configure TNC tab</h2>
+<p>Configuration parameters for the Direwolf TNC. When Direwolf starts, it sets up a pseudo terminal using port "wl2k" as defined in /etc/ax25/axports.</p>
+<a href="#top">Top</a>
+
+<h3 id="dwcall">Call Sign</h3>
+<p>Your call sign with no SSID</p>
+
+<h3 id="adevice">Direwolf Capture/Playback ADEVICEs</h3>
+<p>
+Sound card interface for capture and playback specific to the Nexus DR-X + Fe-Pi sound card.
+</p>
+<table rules="all" style="border-color:DarkGray;border-width:1px;border-style:solid;">
+		<tr align="center">
+			<th>ADEVICE
+            </th><th>Left Radio
+            </th><th>Right Radio
+            </th>
+		</tr>
+		<tr>
+			<td>
+				<p>Capture</p>
+         </td>
+			<td>
+				<p><b>fepi-capture-left</b></p>
+         </td>
+			<td>
+				<p><b>fepi-capture-right</b></p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p>Playback</p>
+         </td>
+			<td>
+				<p><b>fepi-playback-left</b></p>
+         </td>
+			<td>
+				<p><b>fepi-playback-right</b></p>
+         </td>
+		</tr>
+</table><br />
+<a href="#top">Top</a>
+
+<h3 id="arate">Direwolf ARATE</h3>
+<p>
+Number of audio samples per second.  Depends on the capabilities of the sound card.  The Fe-Pi supports up to 96000.
+</p>
+<a href="#top">Top</a>
+
+<h3 id="ptt">Direwolf PTT</h3>
+<p>
+The GPIO (BCM numbering) pin to use for Push To Talk.  Nexus DR-X is wired to use pin 12 for the left radio and pin 23 for the right radio.
+</p>
+<a href="#top">Top</a>
+
+<h3 id="stats">Direwolf Audio Stats</h3>
+<p>
+Print Direwolf's audio statistics every x seconds.  Set to 0 to disable printing of statistics.
+</p>
+<a href="#top">Top</a>
+
+<h3 id="stats">AGW Port</h3>
+<p>
+Start Direwolf listening for AGW connections on the specified port. Programs such as Xastir can use AGW on the same host or via a network connection to access the Direwolf TNC.
+</p>
+<a href="#top">Top</a>
+
+<h3 id="stats">KISS Port</h3>
+<p>
+Start Direwolf listening for KISS connections on the specified port. Programs such as Xastir, RMS Express and others can use KISS to access the Direwolf TNC across a network.
+</p>
+<a href="#top">Top</a>
+<hr>
+<h2 id="pattab">Configure pat tab</h2>
+<p>Configuration parameters for the pat Winlink email application.</p>
+<a href="#top">Top</a>
+
+<h3 id="patcall">Call Sign</h3>
+<p>Your call sign with no SSID as registered with winlink.org</p>
+<a href="#top">Top</a>
+
+<h3 id="password">Winlink Password</h3>
+<p>Your Winlink password as registered with winlink.org</p>
+<a href="#top">Top</a>
+
+<h3 id="grid">Location Code</h3>
+<p>Six character maidenhead grid square. See <a href="https://www.levinecentral.com/ham/grid_square.php">Amateur Radio Ham Radio Maidenhead Grid Square Locator Map</a></p>
+<a href="#top">Top</a>
+
+<h3 id="webport">Web Service Port</h3>
+<p>Port number pat uses to start it's web service. This allows you to access pat's web interface from a browser on this Pi or via a browser on a PC that is on the same network as this Pi.</p>
+<a href="#top">Top</a>
+
+<h3 id="webport">Telnet Service Port</h3>
+<p>Port number pat listens on so external applications can communicate with pat using telnet. This allows you to access pat's telnet interface from a command line on this Pi or from a PC using a suitable application that is on the same network as this Pi.</p>
+<a href="#top">Top</a>
+
+<h3 id="startpat">Start pat web service when Direwolf TNC starts</h3>
+<p>
+Checking this box will start pat's web service when this GUI is run. Alternatively, you can use pat's command line interface after starting this GUI by opening a Terminal window and running:<pre>pat interactive</pre>
+This control exists because some users might not be interested in using pat's web interface or even using pat at all. They may instead want to access Direwolf on this Pi from another computer using the AGW or KISS ports, or use various AX25 commands to interact with Direwolf.
+</p>
+<a href="#top">Top</a>
+
+<h3 id="ax25timers">TX Delay</h3>
+<p>
+The amount of time in milliseconds to wait between keying the transmitter and beginning to send data.
+</p>
+
+<h3>TX Tail</h3>
+<p>
+The amount of time in milliseconds to keep the transmitter keyed after sending the data.
+</p>
+
+<h3>Persist</h3>
+<p>
+Persistence is part of the <a href="https://en.wikipedia.org/wiki/Carrier-sense_multiple_access">CSMA</a> protocol. It represents the odds (out of 256) that the TNC will transmit within its slot time when no carrier is detected.
+</p>
+
+<h3>Slot Time</h3>
+<p>
+Slot Time is part of the <a href="https://en.wikipedia.org/wiki/Carrier-sense_multiple_access">CSMA</a> protocol. It is the delay in milliseconds that the TNC waits before checking whether it can transmit.
+</p>
+<a href="#top">Top</a>
+
+<h3 id="defaultax25timers">Load Default AX25 Timers button</h3>
+<p>
+Clicking this button restores the default values for TX Delay, TX Tail, Persist and Slot Time.
+</p>
+<a href="#top">Top</a>
+
+<h3 id="pataliases">Edit pat Connection aliases button</h3>
+<p>
+Clicking this button opens another program that allows you to set the aliases (shortcuts) used in the pat web interface.
+</p>
+<a href="#top">Top</a>
+<hr>
+
+<h2 id="rigcontrol">Rig Control tab</h2>
+<p>
+pat uses Rig Control, which is part of <a href="https://github.com/Hamlib/Hamlib/wiki">Hamlib</a>. Pat uses Rig Control to QSY supported radios. It only implements the ability to change a supported rig's frequency, however. It does not implement any other rig control functions. This tab presents information about rig control and a button that when clicked opens a program that allows you to manage rig control.
+</p>
+
+</body>
+</html>
+

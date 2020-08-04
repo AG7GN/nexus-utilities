@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.6.5
+#-    version         ${SCRIPT_NAME} 1.6.6
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -387,6 +387,7 @@ cat $PAT_CONFIG | jq --arg R "network" '.ax25.rig = $R' | sponge $PAT_CONFIG
 
 export -f setTNCpatDefaults loadpatDefaults
 export load_pat_defaults_cmd='@bash -c "setTNCpatDefaults; loadpatDefaults"'
+export click_dw_pat_help_cmd='bash -c "xdg-open /usr/local/share/hampi/dw_pat_gui_help.html"'
 export PIPEDATA=$PIPE
 
 #============================
@@ -430,8 +431,8 @@ do
 	YAD_PIDs=()
 	
 	# Start the tail window tab
-	TEXT="AGW Port: <span color='blue'><b>$AGWPORT</b></span>    KISS Port: <span color='blue'><b>$KISSPORT</b></span>"
-	[[ $PAT_START_HTTP == TRUE ]] && TEXT+="   pat Telnet Port: <span color='blue'><b>$PAT_TELNET_PORT</b></span>   pat Web Server: <span color='blue'><b>http://$HOSTNAME.local:$PAT_HTTP_PORT</b></span>"
+	TEXT="<b>TNC PORTS:</b>   AGW=<span color='blue'><b>$AGWPORT</b></span>    KISS=<span color='blue'><b>$KISSPORT</b></span>    AX.25=<span color='blue'><b>$AX25PORT</b></span>"
+	[[ $PAT_START_HTTP == TRUE ]] && TEXT+="     <b>pat PORTS:</b> telnet=<span color='blue'><b>$PAT_TELNET_PORT</b></span>   web=<span color='blue'><b>http://$HOSTNAME.local:$PAT_HTTP_PORT</b></span>"
 	yad --plug="$ID" --tabnum=1 \
 		--back=black --fore=yellow --selectable-labels \
 		--text-info --text-align=center --text="$TEXT" \
@@ -604,7 +605,8 @@ EOF
 		--width="800" --height="600" \
   		--button="<b>Stop Direwolf$AND_PAT &#x26; Exit</b>":1 \
   		--button="<b>Save Settings &#x26; Restart Direwolf$AND_PAT</b>":0 \
-  		--button="<b>Open pat Web interface</b>":"bash -c $TMPDIR/pat_web.sh"
+  		--button="<b>Open pat Web interface</b>":"bash -c $TMPDIR/pat_web.sh" \
+  		--button="<b>Help</b>":"$click_dw_pat_help_cmd"
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
