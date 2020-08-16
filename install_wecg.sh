@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.0"
+VERSION="1.0.1"
 
 # This script installs the scripts and desktop files that customize a Nexus DR-X 
 # Raspberry Pi so it can be used for remote access by WECG members.
@@ -83,14 +83,15 @@ mv TM-D710G.xml $HOME/.fldigi/rigs/
 sudo mv *.sh /usr/local/bin/
 for K in start stop kill
 do
-	sed -e "s/_HOME_/$HOME/g" -e "s/_SIDE_/$SIDE/g" \
+	cp flapps_$K.template flapps_$K.desktop
+	sed -i -e "s/_HOME_/\/home\/$USER/g" -e "s/_SIDE_/$SIDE/g" \
 		-e "s/_FLDIGI_FREQ_/$FLDIGI_FREQ/g" -e "s/_RESTORE_APP_/$RESTORE_APP/g" \
-		-e "s/_RESTORE_FREQ_/$RESTORE_FREQ/g" flapps_$K.template > flapps_$K.desktop
+		-e "s/_RESTORE_FREQ_/$RESTORE_FREQ/g" flapps_$K.desktop
 done
 sudo mv *.desktop /usr/local/share/applications/
 echo >&2 "Done."
 echo >&2
-echo >&2 "Installation complete. Opening browser to online instructions for next step."
-xdg-open https://github.com/AG7GN/wecg/readme.md &
+echo >&2 "Installation complete. Opening browser to online instructions for next steps."
+xdg-open https://github.com/AG7GN/wecg/blob/master/README.md >/dev/null 2>&1 &
 exit 0
 
