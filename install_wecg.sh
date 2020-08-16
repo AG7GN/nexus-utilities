@@ -1,13 +1,15 @@
 #!/bin/bash
 
-VERSION="1.0.1"
+VERSION="1.0.2"
 
 # This script installs the scripts and desktop files that customize a Nexus DR-X 
 # Raspberry Pi so it can be used for remote access by WECG members.
 # 
 
 function Usage () {
-
+	
+	echo "Version $VERSION"
+	echo
 	echo "$(basename $0) installs scripts and files to make a Nexus DR-X Pi suitable"
 	echo "for remote access by WECG members. Only WECG administrators should use this"
 	echo "script on Pis that are designated for use by WECG members and that have"
