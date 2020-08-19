@@ -67,7 +67,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.4.4
+#-    version         ${SCRIPT_NAME} 2.4.5
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -245,7 +245,7 @@ shift $((${OPTIND} - 1)) ## shift options
 trap SafeExit EXIT INT TERM
 
 # Exit on error. Append '||true' when you run the script if you expect an error.
-set -o errexit
+#set -o errexit
 
 # Check Syntax if set
 $SYNTAX && set -n
