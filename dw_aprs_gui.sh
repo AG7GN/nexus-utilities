@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.4
+#-    version         ${SCRIPT_NAME} 1.0.5
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -46,12 +46,13 @@ Optnum=$#
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
    #pkill "^direwolf"
-   kill $timeStamp_PID >/dev/null 2>&1
+   #kill $timeStamp_PID >/dev/null 2>&1
    kill $direwolf_PID >/dev/null 2>&1
    for P in ${YAD_PIDs[@]}
 	do
 		kill $P >/dev/null 2>&1
 	done
+	echo "quit" >&6
 	rm -f $PIPE
 }
 
@@ -300,21 +301,22 @@ EOF
 
 }
 
-function timeStamp () {
-	while sleep 60
-	do
-		echo -e "\nTIMESTAMP: $(date)" 
-	done >$PIPEDATA
-}
+#function timeStamp () {
+#   exec 6<> $PIPEDATA
+#	while sleep 60
+#	do
+#		echo -e "\nTIMESTAMP: $(date)" 
+#	done >&6
+#}
 
 function killDirewolf () {
 	# $1 is the direwolf PID
    if pgrep ^direwolf | grep -q $1 2>/dev/null
 	then
 		kill $1 >/dev/null 2>&1
-		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >&6
 	else
-		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
+		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >&6
 	fi
 }
 
@@ -452,7 +454,7 @@ fi
 export -f setDefaults loadAPRSDefaults killDirewolf
 export load_aprs_defaults_cmd='@bash -c "setDefaults; loadAPRSDefaults"'
 export click_aprs_help_cmd='bash -c "xdg-open /usr/local/share/hampi/aprs_help.html"'
-export PIPEDATA=$PIPE
+#export PIPEDATA=$PIPE
 
 #============================
 #  MAIN SCRIPT
@@ -462,7 +464,7 @@ export PIPEDATA=$PIPE
 trap SafeExit EXIT INT TERM SIGINT
 
 # Exit on error. Append '||true' when you run the script if you expect an error.
-set -o errexit
+#set -o errexit
 
 # Check Syntax if set
 $SYNTAX && set -n
@@ -483,7 +485,8 @@ do
 
 	# Kill any running processes and load latest settings
 	killDirewolf $direwolf_PID
-   for P in ${YAD_PIDs[@]} $timeStamp_PID
+#   for P in ${YAD_PIDs[@]} $timeStamp_PID
+   for P in ${YAD_PIDs[@]}
 	do
 		ps x | egrep -q "^$P" && kill $P
 	done
@@ -493,10 +496,6 @@ do
 	loadSettings $CONFIG_FILE
 	YAD_PIDs=()
 	
-   # Start the Time Stamper function
-	timeStamp &
-   timeStamp_PID=$!
-
 	# Start the monitor tab
 	[[ $FIRST_RUN == true ]] && MODE_MESSAGE="" || MODE_MESSAGE="${F[_APRSMODE_]}"
 	TEXT="<big><b>Direwolf $MODE_MESSAGE APRS Monitor</b></big>"
@@ -505,6 +504,10 @@ do
 		--text-info --text-align=center \
 		--tail --center <&6 &
 	YAD_PIDs+=( $! )
+
+   # Start the Time Stamper function
+	#timeStamp &
+   #timeStamp_PID=$!
 
 	if [[ $FIRST_RUN == true ]]
 	then

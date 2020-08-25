@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.6.6
+#-    version         ${SCRIPT_NAME} 1.6.7
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -50,7 +50,7 @@ Optnum=$#
 
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-   kill $timeStamp_PID >/dev/null 2>&1
+   #kill $timeStamp_PID >/dev/null 2>&1
    kill $direwolf_PID >/dev/null 2>&1
    kill $pat_PID >/dev/null 2>&1
 	kill $RIG_PID >/dev/null 2>&1
@@ -208,21 +208,21 @@ EOF
 	PAT_LOCATOR="$(jq -r ".locator" $PAT_CONFIG)"
 }
 
-function timeStamp () {
-	while sleep 60
-	do
-		echo -e "\nTIMESTAMP: $(date)" 
-	done >$PIPEDATA
-}
+#function timeStamp () {
+#	while sleep 60
+#	do
+#		echo -e "\nTIMESTAMP: $(date)" 
+#	done >$PIPEDATA
+#}
 
 function killDirewolf () {
 	# $1 is the direwolf PID
    if pgrep ^direwolf | grep -q $1 2>/dev/null
 	then
 		kill $1 >/dev/null 2>&1
-		echo -e "\n\nDirewolf stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
+		echo -e "\n\nDirewolf stopped.  Click \"Save Settings...\" button below to restart." >&3
 	else
-		echo -e "\n\nDirewolf was already stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
+		echo -e "\n\nDirewolf was already stopped.  Click \"Save Settings...\" button below to restart." >&3
 	fi
 }
 
@@ -388,7 +388,7 @@ cat $PAT_CONFIG | jq --arg R "network" '.ax25.rig = $R' | sponge $PAT_CONFIG
 export -f setTNCpatDefaults loadpatDefaults
 export load_pat_defaults_cmd='@bash -c "setTNCpatDefaults; loadpatDefaults"'
 export click_dw_pat_help_cmd='bash -c "xdg-open /usr/local/share/hampi/dw_pat_gui_help.html"'
-export PIPEDATA=$PIPE
+#export PIPEDATA=$PIPE
 
 #============================
 #  MAIN SCRIPT
@@ -398,15 +398,15 @@ export PIPEDATA=$PIPE
 trap SafeExit EXIT INT TERM
 
 # Exit on error. Append '||true' when you run the script if you expect an error.
-set -o errexit
+#set -o errexit
 
 # Check Syntax if set
 $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-timeStamp &
-timeStamp_PID=$!
+#timeStamp &
+#timeStamp_PID=$!
 
 direwolf_PID=""
 pat_PID=""
