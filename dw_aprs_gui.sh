@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.5
+#-    version         ${SCRIPT_NAME} 1.0.6
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -481,7 +481,8 @@ do
 	# Have direwolf allocate a pty
 	#DIREWOLF="$(command -v direwolf) -p -t 0 -d u"
 	# No pty
-	DIREWOLF="$(command -v direwolf) -t 0 -d u"
+	# Direwolf does not allow embedded spaces in timestamp format string -T
+	DIREWOLF="$(command -v direwolf) -t 0 -d u -T "%Y/%m/%d_%H:%M:%S""
 
 	# Kill any running processes and load latest settings
 	killDirewolf $direwolf_PID
