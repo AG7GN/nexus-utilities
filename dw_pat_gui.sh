@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.6.7
+#-    version         ${SCRIPT_NAME} 1.6.9
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -50,7 +50,7 @@ Optnum=$#
 
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-   #kill $timeStamp_PID >/dev/null 2>&1
+   kill $clearTextInfo_PID >/dev/null 2>&1
    kill $direwolf_PID >/dev/null 2>&1
    kill $pat_PID >/dev/null 2>&1
 	kill $RIG_PID >/dev/null 2>&1
@@ -208,21 +208,26 @@ EOF
 	PAT_LOCATOR="$(jq -r ".locator" $PAT_CONFIG)"
 }
 
-#function timeStamp () {
-#	while sleep 60
-#	do
-#		echo -e "\nTIMESTAMP: $(date)" 
-#	done >$PIPEDATA
-#}
+function clearTextInfo () {
+	# Arguments: $1 = sleep time.
+	# Send FormFeed character every $1 minutes to clear yad text-info
+	local TIMER=$1 
+	while sleep $TIMER
+	do
+		#echo -e "\nTIMESTAMP: $(date)" 
+		echo -e "\f"
+		echo "$(date) Cleared monitor window. Window is cleared every $TIMER."
+	done >$PIPEDATA
+}
 
 function killDirewolf () {
 	# $1 is the direwolf PID
    if pgrep ^direwolf | grep -q $1 2>/dev/null
 	then
 		kill $1 >/dev/null 2>&1
-		echo -e "\n\nDirewolf stopped.  Click \"Save Settings...\" button below to restart." >&3
+		echo -e "\n\nDirewolf stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
 	else
-		echo -e "\n\nDirewolf was already stopped.  Click \"Save Settings...\" button below to restart." >&3
+		echo -e "\n\nDirewolf was already stopped.  Click \"Save Settings...\" button below to restart." >$PIPEDATA
 	fi
 }
 
@@ -269,7 +274,7 @@ PAT_CONFIG="$HOME/.wl2k/config.json"
 
 RETURN_CODE=0
 # Direwolf does not allow embedded spaces in timestamp format string -T
-DIREWOLF="$(command -v direwolf) -p -t 0 -d u -T "%Y/%m/%d_%H:%M:%S""
+DIREWOLF="$(command -v direwolf) -p -t 0 -d u -T "%Y%m%d_%H:%M:%S""
 #PAT="$(command -v pat) --log /dev/stdout -l ax25,telnet http"
 PAT="$(command -v pat) -l ax25,telnet http"
 
@@ -388,7 +393,7 @@ cat $PAT_CONFIG | jq --arg R "network" '.ax25.rig = $R' | sponge $PAT_CONFIG
 export -f setTNCpatDefaults loadpatDefaults
 export load_pat_defaults_cmd='@bash -c "setTNCpatDefaults; loadpatDefaults"'
 export click_dw_pat_help_cmd='bash -c "xdg-open /usr/local/share/hampi/dw_pat_gui_help.html"'
-#export PIPEDATA=$PIPE
+export PIPEDATA=$PIPE
 
 #============================
 #  MAIN SCRIPT
@@ -405,8 +410,8 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-#timeStamp &
-#timeStamp_PID=$!
+#clearTextInfo &
+#clearTextInfo_PID=$!
 
 direwolf_PID=""
 pat_PID=""
@@ -417,7 +422,7 @@ do
 	# Kill any running processes and load latest settings
 	killDirewolf $direwolf_PID
 	[[ $pat_PID == "" ]] || kill $pat_PID >/dev/null 2>&1
-   for P in ${YAD_PIDs[@]}
+   for P in $clearTextInfo_PID ${YAD_PIDs[@]} 
 	do
 		ps x | egrep -q "^$P" && kill $P
 	done
@@ -436,8 +441,11 @@ do
 	yad --plug="$ID" --tabnum=1 \
 		--back=black --fore=yellow --selectable-labels \
 		--text-info --text-align=center --text="$TEXT" \
-		--tail --center <&3 &
+		--tail --listen --center <&3 &
 	YAD_PIDs+=( $! )
+
+	clearTextInfo 60m &
+   clearTextInfo_PID=$!
 
 	# Start rigctld.  
 	if pgrep rigctld >/dev/null

@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.6
+#-    version         ${SCRIPT_NAME} 1.0.7
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -46,7 +46,7 @@ Optnum=$#
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
    #pkill "^direwolf"
-   #kill $timeStamp_PID >/dev/null 2>&1
+   kill $clearTextInfo_PID >/dev/null 2>&1
    kill $direwolf_PID >/dev/null 2>&1
    for P in ${YAD_PIDs[@]}
 	do
@@ -301,22 +301,26 @@ EOF
 
 }
 
-#function timeStamp () {
-#   exec 6<> $PIPEDATA
-#	while sleep 60
-#	do
-#		echo -e "\nTIMESTAMP: $(date)" 
-#	done >&6
-#}
+function clearTextInfo () {
+	# Arguments: $1 = sleep time.
+	# Send FormFeed character every $1 minutes to clear yad text-info
+	local TIMER=$1 
+	while sleep $TIMER
+	do
+		#echo -e "\nTIMESTAMP: $(date)" 
+		echo -e "\f"
+		echo "$(date) Cleared monitor window. Window is cleared every $TIMER."
+	done >$PIPEDATA
+}
 
 function killDirewolf () {
 	# $1 is the direwolf PID
    if pgrep ^direwolf | grep -q $1 2>/dev/null
 	then
 		kill $1 >/dev/null 2>&1
-		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >&6
+		echo -e "\n\nDirewolf stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
 	else
-		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >&6
+		echo -e "\n\nDirewolf was already stopped.  Click \"Restart...\" button below to restart." >$PIPEDATA
 	fi
 }
 
@@ -454,7 +458,7 @@ fi
 export -f setDefaults loadAPRSDefaults killDirewolf
 export load_aprs_defaults_cmd='@bash -c "setDefaults; loadAPRSDefaults"'
 export click_aprs_help_cmd='bash -c "xdg-open /usr/local/share/hampi/aprs_help.html"'
-#export PIPEDATA=$PIPE
+export PIPEDATA=$PIPE
 
 #============================
 #  MAIN SCRIPT
@@ -471,7 +475,7 @@ $SYNTAX && set -n
 # Run in debug mode, if set
 $DEBUG && set -x 
 
-timeStamp_PID=""
+clearTextInfo_PID=""
 direwolf_PID=""
 YAD_PIDs=()
 
@@ -482,12 +486,12 @@ do
 	#DIREWOLF="$(command -v direwolf) -p -t 0 -d u"
 	# No pty
 	# Direwolf does not allow embedded spaces in timestamp format string -T
-	DIREWOLF="$(command -v direwolf) -t 0 -d u -T "%Y/%m/%d_%H:%M:%S""
+	DIREWOLF="$(command -v direwolf) -t 0 -d u -T "%Y%m%dT%H:%M:%S""
 
 	# Kill any running processes and load latest settings
 	killDirewolf $direwolf_PID
-#   for P in ${YAD_PIDs[@]} $timeStamp_PID
-   for P in ${YAD_PIDs[@]}
+#   for P in ${YAD_PIDs[@]} $clearTextInfo_PID
+   for P in $clearTextInfo_PID ${YAD_PIDs[@]} 
 	do
 		ps x | egrep -q "^$P" && kill $P
 	done
@@ -497,19 +501,20 @@ do
 	loadSettings $CONFIG_FILE
 	YAD_PIDs=()
 	
-	# Start the monitor tab
+		# Start the monitor tab
 	[[ $FIRST_RUN == true ]] && MODE_MESSAGE="" || MODE_MESSAGE="${F[_APRSMODE_]}"
 	TEXT="<big><b>Direwolf $MODE_MESSAGE APRS Monitor</b></big>"
-	yad --plug="$ID" --tabnum=1 --text="$TEXT" --show-uri --show-cursor \
-		--back=black --fore=yellow \
+	yad --plug="$ID" --tabnum=1 --text="$TEXT" --back=black --fore=yellow \
 		--text-info --text-align=center \
-		--tail --center <&6 &
+		--tail --listen --center <&6 &
+	#MONITOR_YAD_PID=$!
+	#YAD_PIDs+=( $MONITOR_YAD_PID )
 	YAD_PIDs+=( $! )
+	#tail -F --pid=$MONITOR_YAD_PID -q -n 30 $LOGFILE 2>/dev/null | cat -v >&6 & 
 
-   # Start the Time Stamper function
-	#timeStamp &
-   #timeStamp_PID=$!
-
+	clearTextInfo 15m &
+   clearTextInfo_PID=$!
+   
 	if [[ $FIRST_RUN == true ]]
 	then
 		echo -e "\n\nDirewolf was not started because APRS is not configured.\nConfigure it in the \"Configure APRS\" tab, then click the \"Restart...\" button below." >&6
@@ -519,7 +524,7 @@ do
 		cat $DW_CONFIG | grep -v "^$" >&6
 		echo >&6
 		[[ ${F[_AUDIOSTATS_]} == 0 ]] || DIREWOLF+=" -a ${F[_AUDIOSTATS_]}"
-		$DIREWOLF -c $DW_CONFIG >&6 2>&6 &
+		$DIREWOLF -c $DW_CONFIG >&6 2>&1 &
 		direwolf_PID=$!
 		echo -e "\n\nDirewolf APRS has started. PID=$direwolf_PID" >&6
 	fi
@@ -606,17 +611,18 @@ do
 	# Save the previous piano script autostart setting
 	PREVIOUS_AUTOSTART="${F[_BOOTSTART_]}"
 
-	# Set up a notebook with the 3 tabs.		
+	# Set up a notebook with the 2 tabs.		
 	#yad --title="$TITLE" --text="<b><big>Direwolf APRS Monitor and Configuration</big></b>" \
 	yad --title="$TITLE" \
-  		--text-align="center" --notebook --key="$ID" \
+  		--text-align="center" --notebook --key="$ID" --window-icon=logviewer \
 		--posx=10 --posy=45 --width=1100 --height=700 \
   		--buttons-layout=center \
   		--tab="Monitor APRS" \
   		--tab="Configure APRS" \
   		--button="<b>Stop Direwolf APRS &#x26; Exit</b>":1 \
   		--button="<b>Stop Direwolf APRS</b>":"bash -c 'killDirewolf $direwolf_PID'" \
-  		--button="<b>Restart Direwolf APRS</b>":0
+  		--button="<b>Restart Direwolf APRS</b>":0 
+
 	RETURN_CODE=$?
 
 	case $RETURN_CODE in
