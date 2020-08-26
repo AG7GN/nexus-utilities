@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.6.9
+#-    version         ${SCRIPT_NAME} 1.7.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -93,9 +93,9 @@ function Die () {
 }
 
 function loadpatDefaults () {
-   for I in $(seq 7 10)
+   for I in $(seq 10 13)
    do # I is the field number.  D[$I] is the default value
-      echo "${I}:${D[$I]}"
+      echo "${I}:${D[$((I-3))]}"
    done
 }
 
@@ -205,7 +205,10 @@ EOF
 	PAT_PASSWORD="$(jq -r ".secure_login_password" $PAT_CONFIG)"
 	PAT_HTTP_PORT="$(jq -r ".http_addr" $PAT_CONFIG | cut -d: -f2)"
 	PAT_TELNET_PORT="$(jq -r ".telnet.listen_addr" $PAT_CONFIG | cut -d: -f2)"
+	PAT_TELNET_PASSWD="$(jq -r ".telnet.password" $PAT_CONFIG)"
 	PAT_LOCATOR="$(jq -r ".locator" $PAT_CONFIG)"
+	PAT_BEACON_INTERVAL="$(jq -r ".ax25.beacon.every" $PAT_CONFIG)"
+	PAT_BEACON_MESSAGE="$(jq -r ".ax25.beacon.message" $PAT_CONFIG)"
 }
 
 function clearTextInfo () {
@@ -554,6 +557,9 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
 		--field="Locator Code" "$PAT_LOCATOR" \
    	--field="Web Service Port":NUM "$PAT_HTTP_PORT!8040..8049!1!" \
    	--field="Telnet Service Port":NUM "$PAT_TELNET_PORT!8770..8779!1!" \
+   	--field="Telnet Service Password\n(default&#x3A; no password)" "$PAT_TELNET_PASSWD" \
+   	--field="Beacon Interval (s)\n(0 disables beacon)":NUM "$PAT_BEACON_INTERVAL!0..7200!1!" \
+   	--field="Beacon Message" "$PAT_BEACON_MESSAGE" \
    	--field="Start pat web service when Direwolf TNC starts":CHK "$PAT_START_HTTP" \
    	--field="TX Delay (ms)":NUM "$TXDELAY!0..500!1!" \
   		--field="TX Tail (ms)":NUM "$TXTAIL!0..200!10!" \
@@ -639,11 +645,14 @@ EOF
 			PAT_LOCATOR="${TF[2]^^}"
 			PAT_HTTP_PORT="${TF[3]}"
 			PAT_TELNET_PORT="${TF[4]}"
-			F[_PAT_HTTP_]="${TF[5]}"
-			F[_TXDELAY_]="${TF[6]}"
-			F[_TXTAIL_]="${TF[7]}"
-			F[_PERSIST_]="${TF[8]}"
-			F[_SLOTTIME_]="${TF[9]}"
+			PAT_TELNET_PASSWD="${TF[5]}"
+			PAT_BEACON_INTERVAL="${TF[6]}"
+			PAT_BEACON_MESSAGE="${TF[7]}"
+			F[_PAT_HTTP_]="${TF[8]}"
+			F[_TXDELAY_]="${TF[9]}"
+			F[_TXTAIL_]="${TF[10]}"
+			F[_PERSIST_]="${TF[11]}"
+			F[_SLOTTIME_]="${TF[12]}"
 
 			# Update the pat config.json file with the new data.
 			cat $PAT_CONFIG | jq \
@@ -651,8 +660,11 @@ EOF
 				--arg P "$PAT_PASSWORD" \
 				--arg H "0.0.0.0:$PAT_HTTP_PORT" \
 				--arg T "0.0.0.0:$PAT_TELNET_PORT" \
+				--arg A "$PAT_TELNET_PASSWD" \
 				--arg L "$PAT_LOCATOR" \
-					'.mycall = $C | .secure_login_password = $P | .http_addr = $H | .telnet.listen_addr = $T | .locator = $L' | sponge $PAT_CONFIG
+				--argjson I $PAT_BEACON_INTERVAL \
+				--arg M "$PAT_BEACON_MESSAGE" \
+					'.mycall = $C | .secure_login_password = $P | .http_addr = $H | .telnet.listen_addr = $T | .telnet.password = $A |.locator = $L | .ax25.beacon.every = $I | .ax25.beacon.message = $M' | sponge $PAT_CONFIG
 
 			# Update the yad configuration file.
 			echo "declare -gA F" > "$CONFIG_FILE"

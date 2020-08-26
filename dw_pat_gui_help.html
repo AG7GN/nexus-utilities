@@ -26,6 +26,9 @@ This program allows you to configure Direwolf and pat and monitor the output of 
 	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#grid">Locator Code</a><br />
 	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#webport">Web Service Port</a><br />
 	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#telnetport">Telnet Service Port</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#telnetpasswd">Telnet Service Password</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#beaconinterval">AX25 Beacon Interval</a><br />
+	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#beaconmessage">AX25 Beacon Message</a><br />
 	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#startpat">Start pat web service when Direwolf TNC starts</a><br />
 	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ax25timers">AX25 Timers (TX delay, TX tail, Persist, Slot time)</a><br />
 	&nbsp;&nbsp;&nbsp;&nbsp;<a href="#defaultax25timers">Load Default AX25 Timers button</a><br />
@@ -150,6 +153,22 @@ Start Direwolf listening for KISS connections on the specified port. Programs su
 
 <h3 id="telnetport">Telnet Service Port</h3>
 <p>Port number pat listens on so external applications can communicate with pat using telnet. This allows you to access pat's telnet interface from a command line on this Pi or from a PC using a suitable application that is on the same network as this Pi.</p>
+<a href="#top">Top</a>
+
+<h3 id="telnetpasswd">Telnet Service Password</h3>
+<p>When pat is running with the telnet service enabled, users connecting to pat must provide this password. The default is no password.</p>
+<a href="#top">Top</a>
+
+<h3 id="telnetpasswd">Telnet Service Password</h3>
+<p>When pat is running with the telnet service enabled, users connecting to pat must provide this password. The default is no password.</p>
+<a href="#top">Top</a>
+
+<h3 id="beaconinterval">AX25 Beacon Interval</h3>
+<p>When pat is running, your radio will beacon an IDENT message periodically, so other hams know you are capable of P2P. Default is 3600 seconds. Set it to 0 to disable beacons.</p>
+<a href="#top">Top</a>
+
+<h3 id="beaconmessage">AX25 Beacon Message</h3>
+<p>When pat is running, your radio will beacon an IDENT message periodically, so other hams know you are capable of P2P. This text will be sent as part of the beacon. Default = "Winlink P2P"</p>
 <a href="#top">Top</a>
 
 <h3 id="startpat">Start pat web service when Direwolf TNC starts</h3>
