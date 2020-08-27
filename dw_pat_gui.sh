@@ -277,7 +277,7 @@ PAT_CONFIG="$HOME/.wl2k/config.json"
 
 RETURN_CODE=0
 # Direwolf does not allow embedded spaces in timestamp format string -T
-DIREWOLF="$(command -v direwolf) -p -t 0 -d u -T "%Y%m%d_%H:%M:%S""
+DIREWOLF="$(command -v direwolf) -p -t 0 -d u -T "%Y%m%dT%H:%M:%S""
 #PAT="$(command -v pat) --log /dev/stdout -l ax25,telnet http"
 PAT="$(command -v pat) -l ax25,telnet http"
 
