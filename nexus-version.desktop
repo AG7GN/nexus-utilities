@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Nexus Release Info
+GenericName=Nexus Release Info
+Comment=Print Nexus release information
+Exec=sh -c /usr/local/bin/nexus-version.sh
+Icon=/usr/share/raspberrypi-artwork/raspitr.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Comment[en_US]=Nexus Release Info
