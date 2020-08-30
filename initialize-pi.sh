@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.17.0"
+VERSION="1.17.1"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -193,6 +193,16 @@ for F in $D/*-left.template $D/*-right.template
 do
    sudo sed -e "s/_LEFT_RADIO_/Left Radio/" -e "s/_RIGHT_RADIO_/Right Radio/g" $F > ${F%.*}.desktop
 done
+
+# Remove other config files
+rm -f $HOME/ardop_tnc.conf
+rm -f $HOME/direwolf_aprs.conf
+rm -f $HOME/ardop.conf
+rm -f $HOME/ardop_tnc.conf
+rm -f $HOME/ardop_tnc.conf
+rm -f $HOME/direwolf_tnc.conf
+rm -f $HOME/rmsgw.conf
+rm -f $HOME/rigctld.conf
 
 # Reset pat configuration
 if [ -f $HOME/.wl2k/config.json ]
