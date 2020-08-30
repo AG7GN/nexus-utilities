@@ -9,7 +9,7 @@
 #%   This script provides a GUI to add aliases to pat's config.json
 #%   file by making selections from the output of 'pat rmslist'.  
 #%   These aliases are available in pat's web interface.
-#%   This script is designed to work on the Hampi image.
+#%   This script is designed to work on the Nexus image.
 #%   This script requires these packages: jq moreutils.
 #%
 #% OPTIONS

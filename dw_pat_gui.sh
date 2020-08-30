@@ -7,7 +7,7 @@
 #%
 #% DESCRIPTION
 #%   This script provides a GUI to configure and start/stop
-#%   Direwolf and pat.  It is designed to work on the Hampi image.
+#%   Direwolf and pat.  It is designed to work on the Nexus image.
 #%
 #% OPTIONS
 #%    -h, --help                  Print this help
@@ -395,7 +395,7 @@ cat $PAT_CONFIG | jq --arg R "network" '.ax25.rig = $R' | sponge $PAT_CONFIG
 
 export -f setTNCpatDefaults loadpatDefaults
 export load_pat_defaults_cmd='@bash -c "setTNCpatDefaults; loadpatDefaults"'
-export click_dw_pat_help_cmd='bash -c "xdg-open /usr/local/share/hampi/dw_pat_gui_help.html"'
+export click_dw_pat_help_cmd='bash -c "xdg-open /usr/local/share/nexus/dw_pat_gui_help.html"'
 export PIPEDATA=$PIPE
 
 #============================

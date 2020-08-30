@@ -8,7 +8,7 @@
 #% DESCRIPTION
 #%   This script provides a GUI to configure and start/stop
 #%   piardop2, pat and gARIM.  It is designed to work on the 
-#%   Hampi image.
+#%   Nexus image.
 #%
 #% OPTIONS
 #%    -h, --help                  Print this help

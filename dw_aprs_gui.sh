@@ -8,7 +8,7 @@
 #% DESCRIPTION
 #%   This script provides a GUI to configure and start/stop
 #%   Direwolf as an iGate, Digipeater or both.  
-#%   It is designed to work on the Hampi image.
+#%   It is designed to work on the Nexus image.
 #%
 #% OPTIONS
 #%    -h, --help                  Print this help
@@ -457,7 +457,7 @@ fi
 
 export -f setDefaults loadAPRSDefaults killDirewolf
 export load_aprs_defaults_cmd='@bash -c "setDefaults; loadAPRSDefaults"'
-export click_aprs_help_cmd='bash -c "xdg-open /usr/local/share/hampi/aprs_help.html"'
+export click_aprs_help_cmd='bash -c "xdg-open /usr/local/share/nexus/aprs_help.html"'
 export PIPEDATA=$PIPE
 
 #============================

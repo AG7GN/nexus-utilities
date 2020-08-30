@@ -1,10 +1,10 @@
-# Hampi Utilities
+# Nexus Utilities
 
-VERSION 2020721
+VERSION 20200830
 
 AUTHOR: Steve Magnuson, AG7GN
 
-This is a collection of utilities for the Hampi image.  These scripts will only work on the Hampi image.   
+This is a collection of utilities for the Nexus image.  These scripts will only work on the Nexus image.   
 Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) board.
 
 [Check Piano script](#check-piano-script)
@@ -51,7 +51,7 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 ### Install
 
 - Click __Raspberry > Hamradio > Update Pi and Ham Apps__.
-- Check __hampi-utilities__, click __OK__.
+- Check __nexus-utilities__, click __OK__.
 
 ## Check Piano script
 
@@ -113,7 +113,7 @@ If `DO_NOT_DELETE_THIS_FILE` is present in the home folder, the script exits wit
 
 ## Direwolf and pat GUI
 
-`dw_pat_gui.sh` provides a GUI to configure the Direwolf TNC and [pat](https://getpat.io/) to make a functional Winlink email client on Hampi.  It also provides a monitor window that shows messages from both Direwolf and pat.
+`dw_pat_gui.sh` provides a GUI to configure the Direwolf TNC and [pat](https://getpat.io/) to make a functional Winlink email client on Nexus DR-X.  It also provides a monitor window that shows messages from both Direwolf and pat.
 
 If you make any changes in either of the Configure tabs, click __Restart Direwolf and pat__ to activate the changes.
 
@@ -121,7 +121,7 @@ If you make any changes in either of the Configure tabs, click __Restart Direwol
 
 Shows the output of the Direwolf TNC and [pat](https://github.com/la5nta/pat/wiki) applications.  Near the top of the Monitor tab window, you’ll see a row that looks something like this:
 
-`AGW Port: 8001    KISS Port: 8011   pat Telnet Port: 8770   pat Web Server: http://hampi-ag7gn.local:8040`
+`AGW Port: 8001    KISS Port: 8011   pat Telnet Port: 8770   pat Web Server: http://nexus-ag7gn.local:8040`
 
 The first 3 items are port numbers that your Pi is listening on for various connections from other clients.  Use the KISS port, for example, if you have Windows PCs running Winlink Express on the same network as your Pi.
 
@@ -162,7 +162,7 @@ Configures the pat Winlink email client.
 
 	Clicking this button brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog to make it easy to select RMS gateway stations to connect to.
 
-	`pat` has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
+	`pat` has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Nexus DR-X. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
 
 ### Rig Control tab
 
@@ -170,7 +170,7 @@ Provides information about how `pat` uses rig control.  A __Manage Hamlib rigctl
 
 ## ARDOP and pat gui
 
-`ardop_pat_gui.sh` provides a GUI to configure the [piardopc](http://www.cantab.net/users/john.wiseman/Documents/ARDOPC.html) TNC (which implements ARDOP version 1) and [pat](https://getpat.io/) to make a functional Winlink email client on Hampi.  It also provides a monitor window that shows messages from both piardopc and pat.
+`ardop_pat_gui.sh` provides a GUI to configure the [piardopc](http://www.cantab.net/users/john.wiseman/Documents/ARDOPC.html) TNC (which implements ARDOP version 1) and [pat](https://getpat.io/) to make a functional Winlink email client on Nexus DR-X.  It also provides a monitor window that shows messages from both piardopc and pat.
 
 If you make any changes in either of the Configure tabs, click __Restart ARDOP and pat__ to activate the changes.
 
@@ -207,7 +207,7 @@ If you make any changes in either of the Configure tabs, click __Restart ARDOP a
 
 Configures the pat Winlink email client.  Clicking the __Edit pat Connection Aliases__ button brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog to make it easy to select RMS gateway stations to connect to.
 
-pat has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
+pat has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Nexus DR-X. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
 
 If you make any changes in either of the Configure tabs, click __Save Settings & Restart ARDOP + pat__ to activate the changes.
 
@@ -246,7 +246,7 @@ If you make any changes in either of the Configure tabs, click __Save Settings &
 
 	Clicking this button brings up a window that allows you to search for RMS gateway stations (the output of the `pat rmslist` command) and add them to pat's connection alias list.  These aliases are available in a dropdown in the pat web interface __Connection__ dialog to make it easy to select RMS gateway stations to connect to.
 
-	`pat` has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Hampi. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
+	`pat` has a restriction in that if you include a frequency in an connection alias, you must also run `rigctld` while running pat. [Hamlib](https://hamlib.github.io), which provides `rigctld`, is already installed in Nexus DR-X. If you don't already run rigctl, this configuration gui will configure `rigctld` to use a "dummy" rig to fool pat into thinking it's talking to your radio via `rigctld`.  Note that when `rigctld` is used with a "dummy" radio, you must manually set your radio to the desired frequency.
 
 
 ### Rig Control tab
@@ -316,7 +316,7 @@ To change it to trim log entries older than 2 weeks ago rather than yesterday, t
 
 `shutdown_button.py` monitors the shutdown button found on the DigiLink REV DS and [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html) boards.  It reboots the Pi if the button is pressed more than 2 but less than 5 seconds, or shuts down the Pi if the button is pressed for more than 5 seconds.
 
-Your Hampi image already has the systemd service file for the shutdown script installed and enabled.  No further action is required to enable it, but __for documentation purposes only__, here's how to enable the service manually:
+Your Nexus DR-X image already has the systemd service file for the shutdown script installed and enabled.  No further action is required to enable it, but __for documentation purposes only__, here's how to enable the service manually:
 
 - As sudo, create a file called `/etc/systemd/system/shutdown_button.service` with the following text:
 
@@ -357,11 +357,11 @@ These files are stored in `/usr/local/share/applications` and are used as templa
 
 ## Edit Desktop Text script
 
-`edit-desktop.sh` allows you to edit the default Nexus DR-X desktop background, which was introduced in Hampi version 20191214. 
+`edit-desktop.sh` allows you to edit the default Nexus DR-X desktop background, which was introduced in Nexus DR-X version 20191214. 
 
 If your image is older than 20191214 and you want to install the customizable Nexus desktop background, you must do run these commands in the Terminal before you can run the new 'Edit Desktop Background Text’ script (__NOTE: This will REPLACE your current desktop background__):
 
-	cp /usr/local/src/hampi/desktop-items-0.conf $HOME/.config/pcmanfm/LXDE-pi/
+	cp /usr/local/src/nexus/desktop-items-0.conf $HOME/.config/pcmanfm/LXDE-pi/
 	pcmanfm --reconfigure
 
 After you start the script (__Raspberry > Preferences > Edit Desktop Background Text__), enter the text you want to display and optionally check the box to show your Pi's host name, then click __OK__.  The script won't close until you Cancel, so click __Cancel__ when you're satisfied with your new desktop.
