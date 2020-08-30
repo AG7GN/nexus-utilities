@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.7.0
+#-    version         ${SCRIPT_NAME} 1.7.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -427,7 +427,7 @@ do
 	[[ $pat_PID == "" ]] || kill $pat_PID >/dev/null 2>&1
    for P in $clearTextInfo_PID ${YAD_PIDs[@]} 
 	do
-		ps x | egrep -q "^$P" && kill $P
+		kill $P >/dev/null 2>&1
 	done
 	# If an unrelated pat is running, kill it too
 	#pgrep pat >/dev/null && pkill pat

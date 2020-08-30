@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.7
+#-    version         ${SCRIPT_NAME} 1.0.8
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -493,7 +493,7 @@ do
 #   for P in ${YAD_PIDs[@]} $clearTextInfo_PID
    for P in $clearTextInfo_PID ${YAD_PIDs[@]} 
 	do
-		ps x | egrep -q "^$P" && kill $P
+		kill $P >/dev/null 2>&1
 	done
 	rm -f $TMPDIR/CONFIGURE_APRS.txt
 	
