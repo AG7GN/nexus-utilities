@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.16.9"
+VERSION="1.17.0"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -154,6 +154,16 @@ echo "Restore defaults for RMS Gateway" >> "$INIT_DONE_FILE"
 [ -f /etc/ax25/direwolf.conf ] && sudo rm -f /etc/ax25/direwolf.conf
 [ -f $HOME/rmsgw.conf ] && rm -f $HOME/rmsgw.conf
 id -u rmsgw >/dev/null 2>&1 && sudo crontab -u rmsgw -r 2>/dev/null
+SCRIPT="$(command -v rmsgw-activity.sh)"
+PAT_DIR="$HOME/.wl2kgw"
+PAT="$(command -v pat) --config $PAT_DIR/config.json --mbox $PAT_DIR/mailbox --send-only --event-log /dev/null connect telnet"
+CLEAN="find $PAT_DIR/mailbox/*/sent -type f -mtime +30 -exec rm -f {} \;"
+# remove old style pat cron job, which used the default config.json pat configuration
+OLDPAT="$(command -v pat) --send-only --event-log /dev/null connect telnet"
+cat <(fgrep -i -v "$OLDPAT" <(sudo crontab -u $USER -l)) | sudo crontab -u $USER -
+cat <(fgrep -i -v "$SCRIPT" <(sudo crontab -u $USER -l)) | sudo crontab -u $USER -
+cat <(fgrep -i -v "$PAT" <(sudo crontab -u $USER -l)) | sudo crontab -u $USER -
+cat <(fgrep -i -v "$CLEAN" <(sudo crontab -u $USER -l)) | sudo crontab -u $USER -
 
 #rm -rf $DIR/.flrig/
 #rm -rf $DIR/.fldigi/
@@ -187,14 +197,15 @@ done
 # Reset pat configuration
 if [ -f $HOME/.wl2k/config.json ]
 then
-	sed -i -e 's/"mycall": .*",$/"mycall": "",/' \
-		-e 's/"secure_login_password": .*",$/"secure_login_password": "",/' \
-		-e 's/"locator": .*",$/"locator": "",/' $HOME/.wl2k/config.json
-	rm -f $HOME/.wl2k/config.json~
-	rm -rf $HOME/.wl2k/mailbox/*
-	> $HOME/.wl2k/eventlog.json
-	> $HOME/.wl2k/pat.log
-	echo "Delete pat configuration" >> "$INIT_DONE_FILE"
+	rm -f $HOME/.wl2k/config.json*
+#	sed -i -e 's/"mycall": .*",$/"mycall": "",/' \
+#		-e 's/"secure_login_password": .*",$/"secure_login_password": "",/' \
+#		-e 's/"locator": .*",$/"locator": "",/' $HOME/.wl2k/config.json
+#	rm -f $HOME/.wl2k/config.json~
+#	rm -rf $HOME/.wl2k/mailbox/*
+#	> $HOME/.wl2k/eventlog.json
+#	> $HOME/.wl2k/pat.log
+#	echo "Delete pat configuration" >> "$INIT_DONE_FILE"
 fi
 
 # Reset Desktop image
