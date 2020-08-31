@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.17.3"
+VERSION="1.17.4"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -195,14 +195,6 @@ do
 done
 
 # Remove other config files, except for tnc-*.conf
-#rm -f $HOME/ardop_tnc.conf
-#rm -f $HOME/direwolf_aprs.conf
-#rm -f $HOME/ardop.conf
-#rm -f $HOME/ardop_tnc.conf
-#rm -f $HOME/ardop_tnc.conf
-#rm -f $HOME/direwolf_tnc.conf
-#rm -f $HOME/rmsgw.conf
-#rm -f $HOME/rigctld.conf
 for F in $HOME/*.conf
 do
 	[[ $F =~ $HOME/tnc ]] || rm -f $F
@@ -218,10 +210,7 @@ done
 rm -f $HOME/Downloads/*
 
 # Reset pat configuration
-rm -f $HOME/.wl2k/config.json*
-rm -rf $HOME/.wl2k/mailbox/*
-> $HOME/.wl2k/eventlog.json
-> $HOME/.wl2k/pat.log
+rm -rf $HOME/.wl2k
 rm -rf $HOME/.wl2kgw
 
 # Reset Desktop image
