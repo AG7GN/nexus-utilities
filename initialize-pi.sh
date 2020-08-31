@@ -194,15 +194,28 @@ do
    sudo sed -e "s/_LEFT_RADIO_/Left Radio/" -e "s/_RIGHT_RADIO_/Right Radio/g" $F > ${F%.*}.desktop
 done
 
-# Remove other config files
-rm -f $HOME/ardop_tnc.conf
-rm -f $HOME/direwolf_aprs.conf
-rm -f $HOME/ardop.conf
-rm -f $HOME/ardop_tnc.conf
-rm -f $HOME/ardop_tnc.conf
-rm -f $HOME/direwolf_tnc.conf
-rm -f $HOME/rmsgw.conf
-rm -f $HOME/rigctld.conf
+# Remove other config files, except for tnc-*.conf
+#rm -f $HOME/ardop_tnc.conf
+#rm -f $HOME/direwolf_aprs.conf
+#rm -f $HOME/ardop.conf
+#rm -f $HOME/ardop_tnc.conf
+#rm -f $HOME/ardop_tnc.conf
+#rm -f $HOME/direwolf_tnc.conf
+#rm -f $HOME/rmsgw.conf
+#rm -f $HOME/rigctld.conf
+for F in $HOME/*.conf
+do
+	[[ $F =~ $HOME/tnc ]] || rm -f $F
+done
+
+# Remove piano scripts except the example 
+for F in $HOME/piano*
+do 
+	[[ $F =~ example$ ]] || rm -f $F
+done
+
+# Remove Downloads content
+rm -f $HOME/Downloads/*
 
 # Reset pat configuration
 if [ -f $HOME/.wl2k/config.json ]
