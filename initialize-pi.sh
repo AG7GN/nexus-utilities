@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.17.1"
+VERSION="1.17.2"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
