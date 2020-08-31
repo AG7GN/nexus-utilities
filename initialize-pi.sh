@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.17.2"
+VERSION="1.17.3"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -218,18 +218,11 @@ done
 rm -f $HOME/Downloads/*
 
 # Reset pat configuration
-if [ -f $HOME/.wl2k/config.json ]
-then
-	rm -f $HOME/.wl2k/config.json*
-#	sed -i -e 's/"mycall": .*",$/"mycall": "",/' \
-#		-e 's/"secure_login_password": .*",$/"secure_login_password": "",/' \
-#		-e 's/"locator": .*",$/"locator": "",/' $HOME/.wl2k/config.json
-#	rm -f $HOME/.wl2k/config.json~
-#	rm -rf $HOME/.wl2k/mailbox/*
-#	> $HOME/.wl2k/eventlog.json
-#	> $HOME/.wl2k/pat.log
-#	echo "Delete pat configuration" >> "$INIT_DONE_FILE"
-fi
+rm -f $HOME/.wl2k/config.json*
+rm -rf $HOME/.wl2k/mailbox/*
+> $HOME/.wl2k/eventlog.json
+> $HOME/.wl2k/pat.log
+rm -rf $HOME/.wl2kgw
 
 # Reset Desktop image
 if [ -f $HOME/.config/pcmanfm/LXDE-pi/desktop-items-0.conf ]
