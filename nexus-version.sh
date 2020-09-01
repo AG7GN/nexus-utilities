@@ -2,9 +2,13 @@
 
 # Script to print Nexus version and other info
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 
-[ -s /boot/nexus.txt ] || exit 0
+if [ ! -s /boot/nexus.txt ]
+then
+	echo "NEXUS_VERSION=unknown" > /tmp/nexus.txt
+	sudo mv /tmp/nexus.txt /boot/nexus.txt
+fi
 
 source /boot/nexus.txt
 
