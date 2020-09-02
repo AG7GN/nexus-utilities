@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.7.1
+#-    version         ${SCRIPT_NAME} 1.8.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -115,6 +115,7 @@ function setTNCpatDefaults () {
    D[12]="8001" # AGW Port
    D[13]="8010"  # KISS Port
    D[14]="FALSE" # Enable pat HTTP server
+   D[15]="disabled" # Disable piano switch autostart
 }
 
 function loadSettings () {
@@ -146,6 +147,7 @@ function loadSettings () {
    	echo "F[_AGWPORT_]='${D[12]}'" >> "$CONFIG_FILE"
    	echo "F[_KISSPORT_]='${D[13]}'" >> "$CONFIG_FILE"
    	echo "F[_PAT_HTTP_]='${D[14]}'" >> "$CONFIG_FILE"
+   	echo "F[_BOOTSTART_]='${D[15]}'" >> "$CONFIG_FILE" # Autostart APRS on boot
    	source "$CONFIG_FILE"
 	fi
 
@@ -199,6 +201,10 @@ MODEM ${F[_MODEM_]}
 AGWPORT ${F[_AGWPORT_]}
 KISSPORT ${F[_KISSPORT_]}
 EOF
+
+	BOOTSTARTs="disabled!none!1!12!13!14!123!124!134!1234!2!23!234!24!3!34!4"
+	[[ $BOOTSTARTs =~ ${F[_BOOTSTART_]} && ${F[_BOOTSTART_]} =~ ^(none|[1-4]{1,4})$ ]] && BOOTSTARTs="$(echo "$BOOTSTARTs" | sed "s/!${F[_BOOTSTART_]}/!\^${F[_BOOTSTART_]}/1")" || BOOTSTARTs="^$BOOTSTARTs" 
+
 
 	PAT_START_HTTP="${F[_PAT_HTTP_]}"
 	PAT_CALL="$(jq -r ".mycall" $PAT_CONFIG)"
@@ -538,8 +544,12 @@ Click the <b>Save Settings...</b> button below after you make your changes.\n\n"
 		--field="<b>Audio Stats interval (s)</b>":CB "$AUDIOSTATs" \
    	--field="<b>AGW Port</b>":NUM "$AGWPORT!8001..8010!1!" \
    	--field="<b>KISS Port</b>":NUM "$KISSPORT!8011..8020!1!" \
+   	--field="Autostart TNC when these\npiano switch levers are <b>ON</b>:":CB "$BOOTSTARTs" \
   		--focus-field 1 > $TMPDIR/CONFIGURE_TNC.txt &
 	YAD_PIDs+=( $! )
+
+	# Save the previous piano script autostart setting
+	PREVIOUS_AUTOSTART="${F[_BOOTSTART_]}"
 
 	# Set up tab for pat configuration
 	yad --plug="$ID" --tabnum=3 \
@@ -636,6 +646,7 @@ EOF
 			F[_AUDIOSTATS_]="${TF[6]}"
 			F[_AGWPORT_]="${TF[7]}"
 			F[_KISSPORT_]="${TF[8]}"
+			F[_BOOTSTART_]="${TF[9]}"
 
 			# Read and handle the Configure pat tab yad output
 			[[ -s $TMPDIR/CONFIGURE_PAT.txt ]] || Die "Unexpected input from dialog"
@@ -678,6 +689,23 @@ EOF
 			else
 				FIRST_RUN=false
 			fi
+			# Make autostart piano switch script if necessary
+			if [[ ${F[_BOOTSTART_]} == "disabled" ]]
+			then # Disable autostart
+				[[ $PREVIOUS_AUTOSTART =~ none ]] && SWITCHES="" || SWITCHES="$PREVIOUS_AUTOSTART" 
+				# Save previous piano script if it exists
+				[[ -s $HOME/piano${SWITCHES}.sh ]] && mv -f $HOME/piano${SWITCHES}.sh $HOME/piano${SWITCHES}.sh.$(date '+%Y%m%d') 
+	 		else # Enable autostart
+				if [[ ${F[_BOOTSTART_]} != $PREVIOUS_AUTOSTART ]]
+				then # Previous autostart was not the same as the requested autostart
+					[[ $PREVIOUS_AUTOSTART =~ none ]] && SWITCHES="" || SWITCHES="$PREVIOUS_AUTOSTART" 
+					# Save previous piano script if it exists
+					[[ -s $HOME/piano${SWITCHES}.sh ]] && mv -f $HOME/piano${SWITCHES}.sh $HOME/piano${SWITCHES}.sh.$(date '+%Y%m%d') 
+					[[ ${F[_BOOTSTART_]} =~ none ]] && SWITCHES="" || SWITCHES="${F[_BOOTSTART_]}" 
+					echo -e "#!/bin/bash\nsleep 5\n$(command -v $(basename $0)) >/dev/null 2>&1" > $HOME/piano${SWITCHES}.sh
+					chmod +x $HOME/piano${SWITCHES}.sh
+				fi
+			fi		
 			;;
 		*) # User click Exit button or closed window. 
 			break
