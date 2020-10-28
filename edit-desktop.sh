@@ -8,7 +8,7 @@
 #% DESCRIPTION
 #%   This script allows you to edit the text on the default Nexus DR-X Desktop.
 #%   You can, for example add your call sign and select whether or not to include
-#%   the Pi's hostname.
+#%   the Pi's hostname and Pi model.
 #%
 #% OPTIONS
 #%    -h, --help                  Print this help
@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.1.8
+#-    version         ${SCRIPT_NAME} 1.2.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -95,6 +95,38 @@ CONFIG_FILE="$HOME/desktop-text.conf"
 PICTURE_DIR="$HOME/Pictures"
 DEFAULT_BACKGROUND_IMAGE="$PICTURE_DIR/NexusDeskTop.jpg"
 MESSAGE="Enter the text you want displayed below.\nDon't use any single or double quotation marks."
+
+declare -A MODELS
+MODELS[a02082]="1GB RAM"
+MODELS[a020d3]="1GB RAM"
+MODELS[a22082]="1GB RAM"
+MODELS[a32082]="1GB RAM"
+MODELS[a52082]="1GB RAM"
+MODELS[a22083]="1GB RAM"
+MODELS[a32082]="1GB RAM"
+MODELS[a220a0]="1GB RAM"
+MODELS[a02100]="1GB RAM"
+MODELS[a03111]="1GB RAM"
+MODELS[b03111]="2GB RAM"
+MODELS[b03112]="2GB RAM"
+MODELS[c03111]="4GB RAM"
+MODELS[c03112]="4GB RAM"
+MODELS[d03114]="8GB RAM"
+#MODELS[a02082]="1GB RAM Manufacturer: Sony UK"
+#MODELS[a020d3]="1GB RAM Manufacturer: Sony UK"
+#MODELS[a22082]="1GB RAM Manufacturer: Embest"
+#MODELS[a32082]="1GB RAM Manufacturer: Sony Japan"
+#MODELS[a52082]="1GB RAM Manufacturer: Stadium"
+#MODELS[a22083]="1GB RAM Manufacturer: Embest"
+#MODELS[a32082]="1GB RAM Manufacturer: Sony Japan"
+#MODELS[a220a0]="1GB RAM Manufacturer: Embest"
+#MODELS[a02100]="1GB RAM Manufacturer: Sony UK"
+#MODELS[a03111]="1GB RAM Manufacturer: Sony UK"
+#MODELS[b03111]="2GB RAM Manufacturer: Sony UK"
+#MODELS[b03112]="2GB RAM Manufacturer: Sony UK"
+#MODELS[c03111]="4GB RAM Manufacturer: Sony UK"
+#MODELS[c03112]="4GB RAM Manufacturer: Sony UK"
+#MODELS[d03114]="8GB RAM Manufacturer: Sony UK"
 
 #============================
 #  PARSE OPTIONS WITH GETOPTS
@@ -203,6 +235,11 @@ else # Set some default values in a new config file
    source "$CONFIG_FILE"
 fi
 
+MODEL="$(egrep "^Model" /proc/cpuinfo | sed -e 's/ //;s/\t//g' | cut -d: -f2)"
+REVISION="$(egrep "^Revision" /proc/cpuinfo | sed -e 's/ //;s/\t//g' | cut -d: -f2)"
+SERIAL="$(egrep "^Serial" /proc/cpuinfo | sed -e 's/ //;s/\t//g' | cut -d: -f2)"
+[[ -z $MODEL ]] && INFO ="" || INFO="$MODEL with ${MODELS[$REVISION]}"
+
 while true
 do
 	ANS=""
@@ -218,7 +255,7 @@ $MESSAGE</b>\n" \
    	--borders=20 \
    	--form \
    	--field="Background Text" "$TEXT" \
-   	--field="Include Hostname":CHK $SHOW_HOSTNAME \
+   	--field="Include Hostname and Pi model":CHK $SHOW_HOSTNAME \
    	--focus-field 1 \
 	)"
 
@@ -241,9 +278,13 @@ $MESSAGE</b>\n" \
 
 	if [[ $SHOW_HOSTNAME == "TRUE" ]]
 	then
-   	$(command -v convert) $DEFAULT_BACKGROUND_IMAGE -gravity south -pointsize 20 -fill white -annotate 0 $(hostname) -gravity south -pointsize 75 -fill white -annotate +0+25 "$TEXT" $TARGET
+		$(command -v convert) $DEFAULT_BACKGROUND_IMAGE \
+        -gravity south -pointsize 20 -fill yellow -annotate 0 $(hostname) \
+        -gravity south -pointsize 18 -fill white -annotate +0+25 "$INFO" \
+        -gravity south -pointsize 75 -fill yellow -annotate +0+40 "$TEXT" $TARGET
 	else
-		$(command -v convert) $DEFAULT_BACKGROUND_IMAGE -gravity south -pointsize 75 -fill white -annotate +0+25 "$TEXT" $TARGET
+		$(command -v convert) $DEFAULT_BACKGROUND_IMAGE \
+		-gravity south -pointsize 75 -fill yellow -annotate +0+25 "$TEXT" $TARGET
 	fi
 	$(command -v pcmanfm) --set-wallpaper="$TARGET"
 done
