@@ -67,7 +67,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.4.5
+#-    version         ${SCRIPT_NAME} 2.4.6
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -264,6 +264,13 @@ PAT_DIR="${PAT_DIR:-$HOME/.wl2k}" # Use default directory if none specified
 PAT_CONFIG="$PAT_DIR/config.json"
 MBOX="$PAT_DIR/mailbox"
 EVENT_LOG="${EVENT_LOG:-/dev/null}"
+[[ -w $EVENT_LOG ]] || EVENT_LOG="/dev/null"
+if [[ -d $PAT_DIR ]]
+then
+	LOG_FILE="$PAT_DIR/pat.log"
+else
+	LOG_FILE="/dev/null"
+fi
 
 CALL="$(cat $PAT_CONFIG | grep "\"mycall\":" | tr -d ' ",' | cut -d: -f2)"
 [[ $CALL == "" ]] && Die "Could not obtain call sign from $PAT_CONFIG.  Is pat configured?"
@@ -278,7 +285,7 @@ SUBJECT="$2"
 export EDITOR=ed
 TFILE="${TMPDIR}/message"
 HEADER="$CALL\n$TO\n\n$SUBJECT"
-echo -e "$HEADER" | $PAT --config $PAT_CONFIG --mbox $MBOX compose 2>/dev/null 1> $TFILE
+echo -e "$HEADER" | $PAT --config "$PAT_CONFIG" --log "$LOG_FILE" --event-log "$EVENT_LOG" --mbox $MBOX compose 2>/dev/null 1> $TFILE
 
 MSG="$(grep "MID:" $TFILE | tr -d ' \t' | cut -d':' -f3)" 
 [[ $MSG == "" ]] && Die "Could not find the MID (Message ID)"
@@ -321,6 +328,6 @@ fi
 #rm $TFILE
 echo > "$EVENT_LOG"
 # Send the message
-$PAT --config $PAT_CONFIG --mbox $MBOX --send-only --event-log "$EVENT_LOG" connect $3 >> "$EVENT_LOG"
+$PAT --config $PAT_CONFIG --mbox $MBOX --send-only --log "$LOG_FILE" --event-log "$EVENT_LOG" connect $3 >> "$EVENT_LOG"
 exit $?
 
