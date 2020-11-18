@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.2"
+VERSION="1.0.3"
 
 # This script installs the scripts and desktop files that customize a Nexus DR-X 
 # Raspberry Pi so it can be used for remote access by WECG members.
@@ -66,7 +66,7 @@ esac
 
 # Get the files 
 echo >&2 "Retrieving WECG files and scripts..."
-cd /usr/local/src/hampi
+cd /usr/local/src/nexus
 rm -rf wecg
 git clone https://github.com/AG7GN/wecg
 [[ $? == 0 ]] || Die "FAILED.  Aborting installation."
