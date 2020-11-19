@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.3"
+VERSION="1.0.4"
 
 # This script installs the scripts and desktop files that customize a Nexus DR-X 
 # Raspberry Pi so it can be used for remote access by WECG members.
@@ -44,7 +44,7 @@ function Die () {
 
 # Validate input
 RE="^[0-9]+([.][0-9]+)?$"
-[[ $2 =~ $RE && $4 =~ $RE ]] || Die "One or both frequencies supplied are not numbers"
+[[ $2 =~ $RE && $4 =~ $RE ]] || Die "ERROR: One or both frequencies supplied are not numbers"
 FLDIGI_FREQ="$2"
 RESTORE_FREQ="$4"
 case ${1,,} in
@@ -52,7 +52,7 @@ case ${1,,} in
 		SIDE="${1,,}"
 		;;
 	*)
-		Die "First argument must be left or right"
+		Die "ERROR: First argument must be left or right"
 		;;
 esac
 case ${3,,} in
@@ -60,7 +60,7 @@ case ${3,,} in
 		RESTORE_APP="${3,,}"
 		;;
 	*)
-		Die "First argument must be left or right"
+		Die "ERROR: First argument must be left or right"
 		;;
 esac
 
