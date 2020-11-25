@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
 #
 #
-VERSION="1.0.1"
+VERSION="1.0.2"
 #cp -f nexus-utilities/nexus-utilities.version /usr/local/src/nexus/
 cp -f nexus-utilities/*.conf /usr/local/src/nexus/
 cp -f nexus-utilities/*.html /usr/local/share/nexus
 cp -f nexus-utilities/*.jpg $HOME/Pictures/
 cp -f nexus-utilities/*.example $HOME/
 sudo cp -f nexus-utilities/*.sh /usr/local/bin/
+sudo cp -f nexus-utilities/shutdown_button.py /usr/local/sbin/
+sudo cp -f nexus-utilities/check-piano.sh /usr/local/sbin/
 sudo cp -f nexus-utilities/*.py /usr/local/bin/
 sudo cp -f nexus-utilities/*.desktop /usr/local/share/applications/
 sudo cp -f nexus-utilities/*.template /usr/local/share/applications/
+# Check for presence of system LXDE-pi autostart and insert check-piano.sh if not 
+# already present
+AUTOSTART="/etc/xdg/lxsession/LXDE-pi/autostart"
+if [ -s $AUTOSTART ] 
+then
+	if ! grep -q check-piano.sh $AUTOSTART 2>/dev/null
+	then
+		sudo sed -i '/@pcmanfm .*/a @bash \/usr\/local\/sbin\/check-piano.sh' $AUTOSTART
+	fi
+fi
+
