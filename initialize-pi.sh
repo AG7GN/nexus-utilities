@@ -224,6 +224,22 @@ then
 	fi
 fi
 
+# Check for RTC dtoverlay
+echo "Adding RTC dtoverlay if needed"
+if ! grep -q "^dtoverlay=i2c-rtc,ds3231" /boot/config.txt
+then
+	echo "# Enable ds3231 Real Time Clock (RTC)"  | sudo tee --append /boot/config.txt
+	echo "dtoverlay=i2c-rtc,ds3231" | sudo tee --append /boot/config.txt
+fi
+
+# Adding audio dtoverlay
+echo "Adding audio card dtoverlays if needed"
+if ! grep -q "^dtoverlay=fe-pi-audio" /boot/config.txt
+then
+	echo "# Enable Fe Pi audio card"  | sudo tee --append /boot/config.txt
+	echo "dtoverlay=fe-pi-audio" | sudo tee --append /boot/config.txt
+fi
+
 # Clear Terminal history
 echo "" > $HOME/.bash_history && history -c
 echo "Delete shell history" >> "$INIT_DONE_FILE"
