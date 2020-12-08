@@ -2,8 +2,9 @@
 Name=Flarq (_RIGHT_RADIO_)
 GenericName=Fldigi ARQ Utility
 Comment=Amateur Radio Data Transfer with ARQ
-Exec=flarq -ti "Flarq (_RIGHT_RADIO_)" --arq-server-port 7323 
+Exec=flarq -ti "Flarq (_RIGHT_RADIO_)" --arq-server-port 7323
 Icon=flarq
 Terminal=false
 Type=Application
 Categories=HamRadio;
+Name[en_US]=Flarq (_RIGHT_RADIO_)

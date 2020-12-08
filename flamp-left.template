@@ -2,7 +2,7 @@
 Name=flamp
 GenericName=Amateur Multicast Protocol Client/Server
 Comment=Amateur Radio Communications
-Exec=flamp --config-dir /home/pi/.nbems-left/FLAMP -ti "FLAMP (_LEFT_RADIO_)"
+Exec=flamp --config-dir /home/pi/.nbems-left -ti "FLAMP (_LEFT_RADIO_)"
 Icon=flamp
 Terminal=false
 Type=Application
