@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Start RX Monitor
+GenericName=Amateur Radio Digital Modem
+Comment=Amateur Radio Sound Card Communications
+Exec=sh -c 'pactl load-module module-loopback source="fepi-capture" sink="system-audio-playback"'
+Icon=/usr/share/icons/nuoveXT2/32x32/status/stock_volume.png
+Terminal=false
+Type=Application
+Categories=HamRadio;
+Name[en_US]=Start Radio RX Monitor
