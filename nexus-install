@@ -14,9 +14,9 @@ sudo cp -f nexus-utilities/*.py /usr/local/bin/
 sudo cp -f nexus-utilities/*.desktop /usr/local/share/applications/
 sudo cp -f nexus-utilities/*.template /usr/local/share/applications/
 cp -f nexus-utilities/NexusDeskTop.jpg $HOME/Pictures/
-mkdir -p $HOME/.config/pcmanfm/LXDE-pi
-cp -f nexus-utilities/desktop-items-0.conf $HOME/.config/pcmanfm/LXDE-pi/
-pcmanfm --reconfigure
+#mkdir -p $HOME/.config/pcmanfm/LXDE-pi
+#cp -f nexus-utilities/desktop-items-0.conf $HOME/.config/pcmanfm/LXDE-pi/
+#pcmanfm --reconfigure
 
 # Check for presence of system LXDE-pi autostart and insert check-piano.sh if not 
 # already present
