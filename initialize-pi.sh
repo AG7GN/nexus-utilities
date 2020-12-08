@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.17.4"
+VERSION="1.17.5"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -49,7 +49,20 @@ rm -f $DIR/.ssh/authorized_keys
 rm -f $DIR/.ssh/id_*
 rm -f $DIR/.ssh/*~
 
+echo "Clean home folder" >> "$INIT_DONE_FILE"
 rm -f $DIR/*~
+rm -rf $DIR/.putty
+rm -rf $DIR/.thumbnails
+rm -rf $DIR/.cache
+rm -rf $DIR/Documents/*
+rm -rf $DIR/Downloads/*
+rm -rf $DIR/Music/*
+rm -rf $DIR/Public/*
+rm -rf $DIR/Templates/*
+rm -rf $DIR/Videos/*
+rm -rf $HOME/.wl2k
+rm -rf $HOME/.wl2kgw
+
 
 echo "Remove Fldigi suite logs and messages and personalized data" >> "$INIT_DONE_FILE"
 DIRS=".nbems .nbems-left .nbems-right"
@@ -78,7 +91,7 @@ do
 	rm -f $DIR/$D/ARQ/mail/sent/*
 	if [ -f $DIR/$D/FLMSG.prefs ]
 	then
-		sed -i -e 's/^mycall:.*/mycall:N0ONE/' \
+		sed -i -e 's/^mycall:.*/mycall:/' \
 				 -e 's/^mytel:.*/mytel:/' \
 				 -e 's/^myname:.*/myname:/' \
 				 -e 's/^myaddr:.*/myaddr:/' \
@@ -109,7 +122,7 @@ do
 	rm -f $DIR/$D/wrap/*
 	if [ -f $DIR/$D/fldigi_def.xml ]
 	then
-		sed -i -e 's/<MYCALL>.*<\/MYCALL>/<MYCALL>N0ONE<\/MYCALL>/' \
+		sed -i -e 's/<MYCALL>.*<\/MYCALL>/<MYCALL><\/MYCALL>/' \
 		       -e 's/<MYQTH>.*<\/MYQTH>/<MYQTH><\/MYQTH>/' \
 		       -e 's/<MYNAME>.*<\/MYNAME>/<MYNAME><\/MYNAME>/' \
 		       -e 's/<MYLOC>.*<\/MYLOC>/<MYLOC><\/MYLOC>/' \
@@ -205,13 +218,6 @@ for F in $HOME/piano*
 do 
 	[[ $F =~ example$ ]] || rm -f $F
 done
-
-# Remove Downloads content
-rm -f $HOME/Downloads/*
-
-# Reset pat configuration
-rm -rf $HOME/.wl2k
-rm -rf $HOME/.wl2kgw
 
 # Reset Desktop image
 if [ -f $HOME/.config/pcmanfm/LXDE-pi/desktop-items-0.conf ]
