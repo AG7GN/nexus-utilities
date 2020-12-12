@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #
-VERSION="1.0.2"
+VERSION="1.0.3"
 #cp -f nexus-utilities/nexus-utilities.version /usr/local/src/nexus/
 cp -f nexus-utilities/*.conf /usr/local/src/nexus/
 cp -f nexus-utilities/*.html /usr/local/share/nexus
@@ -29,4 +29,5 @@ then
 		sudo sed -i '/@pcmanfm .*/a @bash \/usr\/local\/sbin\/check-piano.sh' $AUTOSTART
 	fi
 fi
+exit 0
 
