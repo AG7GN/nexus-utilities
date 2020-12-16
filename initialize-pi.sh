@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.17.5"
+VERSION="1.17.6"
 
 #
 # Script to generate new VNC server and SSH server keys at boot time if a certain 
@@ -250,10 +250,10 @@ fi
 echo "" > $HOME/.bash_history && history -c
 echo "Delete shell history" >> "$INIT_DONE_FILE"
 
-# Expand the filesystem if it is < 8 GB 
+# Expand the filesystem if it is < 10 GB 
 echo "Expand filesystem if needed" >> "$INIT_DONE_FILE"
 PARTSIZE=$( df | sed -n '/root/{s/  */ /gp}' | cut -d ' ' -f2 )
-THRESHOLD=$((8 * 1024 * 1024))
+THRESHOLD=$((10 * 1024 * 1024))
 (( $PARTSIZE < $THRESHOLD )) && sudo raspi-config --expand-rootfs >> "$INIT_DONE_FILE"
 
 echo "Raspberry Pi initialization complete" >> "$INIT_DONE_FILE"
