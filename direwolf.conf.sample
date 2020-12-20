@@ -1,0 +1,24 @@
+# Template for a custom direwolf configuration file for use with Nexus image
+# Lines beginning with # are comments.
+
+# Uncomment (remove the #) from the following 2 lines to use the left radio
+#PTT GPIO 12
+#ADEVICE fepi-capture-left fepi-playback-left
+
+# Uncomment (remove the #) from the following 2 lines to use the right radio
+#PTT GPIO 23
+#ADEVICE fepi-capture-right fepi-playback-right
+
+ACHANNELS 1
+CHANNEL 0
+ARATE 96000
+
+# Change the following as needed
+MODEM 1200
+AGWPORT 0
+KISSPORT 0
+
+# Change the callsign to your own (append an SSID if appropriate)
+MYCALL N0CALL-1
+
+# Add additional direwolf parameters below as required
