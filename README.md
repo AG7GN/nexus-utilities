@@ -45,6 +45,8 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 
 [VNC Server Activity Reporting script](#vnc-server-activity-script)
 
+[USB Device Manager](#usb-device-manager-script)
+
 
 ## Installation
 
@@ -387,4 +389,34 @@ Before running the script, you must specify the recipient's email address(es) by
 You can execute this script automatically via cron.  The following example will run it once per day and report on the previous 24-hour's VNC connections.  This example will run at 3 minutes after midnight every day:
 
 	3 0 * * *   /usr/local/bin/vnc-server-activity.sh 2>&1 >/dev/null
+
+## USB Device Manager script
+
+`usb_control.py` allows you to "virtually" plug/unplug *most* USB devices remotely by using the `bind` and `unbind` feature in Linux. This can be handy when you need to remotely re-mount a USB drive or remove/insert a USB-serial or other USB adapter.
+
+The script can be run in 2 ways: From the command line or via a GUI. If no arguments are supplied, the script attempts to start in GUI mode. 
+
+In GUI mode, the script will list the USB devices it finds. It will not list USB hubs, but it will list devices connected to hubs. Clicking on a device in the list toggles that device's state. The states are __Enabled__ (bound) or __Disabled__ (unbound). It will detect when devices are physically inserted or removed and  automatically update the device list.
+
+If you run `usb_control.py` from the command line with the `-b` or `-u` options, the script will search for a device containing the string you supply. It will search the USB ID and the Tag (product description) for your string. If found, it'll enable (bind) if you supplied `-b` or disable (unbind) if you supplied `-u`. If you run it with the `-l` option, it will list the non-hub USB devices it finds.
+ 
+Run `usb_control.py -h` to see the 
+command line options:
+
+	usage: usb_control.py [-h] [-v] [-l] [-b STRING] [-u STRING]
+
+	USB Device Control
+
+	optional arguments:
+	  -h, --help            show this help message and exit
+	  -v, --version         show program's version number and exit
+	  -l, --list            List available USB devices
+	  -b STRING, --bind STRING
+				bind (enable) a usb device containing STRING (case-
+				insensitive) in 'lsusb' output ID or Tag fields
+	  -u STRING, --unbind STRING
+				unbind (disable) a usb device containing STRING (case-
+				insensitive) in 'lsusb' output ID or Tag fields
+
+
 
