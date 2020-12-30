@@ -1,6 +1,6 @@
 # Nexus Utilities
 
-VERSION 20200830
+VERSION 20201230
 
 AUTHOR: Steve Magnuson, AG7GN
 
