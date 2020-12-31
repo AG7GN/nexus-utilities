@@ -12,7 +12,7 @@ __author__ = "Steve Magnuson AG7GN"
 __copyright__ = "Copyright 2020, Steve Magnuson"
 __credits__ = ["Steve Magnuson"]
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Steve Magnuson"
 __email__ = "ag7gn@arrl.net"
 __status__ = "Production"
@@ -319,9 +319,16 @@ if __name__ == "__main__":
     if arg_info.list:
         dev_list = get_usb_devices()
         if dev_list:
-            from tabulate import tabulate
-            print(tabulate(dev_list, headers=["ID", "Tag", "Device", "State"]))
-            sys.exit(0)
+            try:
+                from tabulate import tabulate
+            except ModuleNotFoundError:
+                print("Python 'tabulate' module required. Run 'sudo "
+                      "apt update && sudo apt install python3-tabulate' "
+                      "to install it.", file=sys.stderr)
+                sys.exit(1)
+            else:
+                print(tabulate(dev_list, headers=["ID", "Tag", "Device", "State"]))
+                sys.exit(0)
         else:
             print("No USB devices found", file=sys.stderr)
             sys.exit(0)
