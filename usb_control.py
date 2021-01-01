@@ -12,7 +12,7 @@ __author__ = "Steve Magnuson AG7GN"
 __copyright__ = "Copyright 2020, Steve Magnuson"
 __credits__ = ["Steve Magnuson"]
 __license__ = "GPL"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __maintainer__ = "Steve Magnuson"
 __email__ = "ag7gn@arrl.net"
 __status__ = "Production"
@@ -28,7 +28,8 @@ class UsbWindow(object):
     label_font = (None, 11, 'bold')
     button_font = (None, 12, 'bold')
     max_label_width = 350
-    min_window_width = max_label_width + 35
+    window_padding = 35
+    min_window_width = max_label_width + window_padding
     max_window_height = 380
 
     def __init__(self, master):
@@ -44,7 +45,8 @@ class UsbWindow(object):
         self.header = ["ID", "Tag", "Device", "State"]
         self.label_frame = tk.Frame(master=master, borderwidth=5)
         self.label_frame.pack(side='top', fill='both', padx=5, pady=5, expand=True)
-        s = """Click on a USB device to toggle enable/disable state.
+        s = """Click on a device to toggle state.
+Empty list means no devices found.
 (Enabled = bound, Disabled = unbound)"""
         msg = tk.Label(master=self.label_frame,
                        wraplength=self.max_label_width,
@@ -149,7 +151,8 @@ class UsbWindow(object):
         self.master.update()
         x = self.master.winfo_width()
         y = self.master.winfo_height()
-        window_width = max([tree_width + 35, self.min_window_width])
+        window_width = max([tree_width + self.window_padding,
+                            self.min_window_width])
         if x != window_width:
             self.master.geometry(f"{window_width}x{y}")
 
@@ -217,26 +220,42 @@ def get_usb_devices() -> list:
     device_re = re.compile("Bus\\s+(?P<bus>\\d+)\\s+"
                            "Device\\s+(?P<device>\\d+).+"
                            "ID\\s(?P<id>\\w+:\\w+)\\s(?P<tag>.+)$", re.I)
-    df = subprocess.check_output("lsusb").decode('utf-8')
     devices = []
+    try:
+        df = subprocess.check_output("lsusb").decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return devices
     for i in df.split('\n'):
+        hub = True  # Assume device is a hub
         if i:
             info = device_re.match(i)
             if info:
                 dinfo = info.groupdict()
-                if " hub" not in dinfo['tag'].casefold():
-                    _bus = dinfo.pop('bus')
-                    _device = dinfo.pop('device')
-                    cmd = f"grep -l {_bus}/{_device} /sys/bus/usb/devices/*/uevent 2>/dev/null | tail -1"
+                _bus = dinfo.pop('bus')
+                _device = dinfo.pop('device')
+                # See if the device is a hub. Ignore it if it is
+                cmd = f"sudo lsusb -D /dev/bus/usb/{_bus}/{_device} 2>/dev/null | grep -qi 'bDeviceClass.*Hub'"
+                try:
+                    subprocess.check_output(cmd, shell=True).decode('utf-8')
+                except subprocess.CalledProcessError:
+                    hub = False  # Did not find 'Hub' in 'nDeviceClass'
+                if hub:  # Device is a hub, so skip it.
+                    continue
+                cmd = f"grep -l {_bus}/{_device} /sys/bus/usb/devices/*/uevent 2>/dev/null | tail -1"
+                try:
                     product = subprocess.check_output(cmd, shell=True).decode('utf-8')
-                    if product:
-                        _p = product.split('/')[5]
-                        if os.path.islink(f"/sys/bus/usb/drivers/usb/{_p}"):
-                            status = "Enabled"
-                        else:
-                            status = 'Disabled'
-                        devices.append((dinfo['id'], dinfo['tag'],
-                                        _p, status))
+                except subprocess.CalledProcessError as e:
+                    print(f"ERROR: {e}", file=sys.stderr)
+                    continue
+                if product:
+                    _p = product.split('/')[5]
+                    if os.path.islink(f"/sys/bus/usb/drivers/usb/{_p}"):
+                        status = "Enabled"
+                    else:
+                        status = 'Disabled'
+                    devices.append((dinfo['id'], dinfo['tag'],
+                                    _p, status))
     return devices
 
 
@@ -274,7 +293,7 @@ def find_usb_device(_device_string: str, _action: str) -> bool:
     devices = get_usb_devices()
     if devices:
         for d in devices:
-            if _device_string in d[0] or \
+            if _device_string.casefold() in d[0].casefold() or \
                     _device_string.casefold() in d[1].casefold():
                 if (_action == "bind" and d[3] == "Enabled") or \
                         (_action == "unbind" and d[3] == "Disabled"):
@@ -301,7 +320,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--version', action='version',
                         version=f"Version: {__version__}")
     parser.add_argument("-l", "--list", action='store_true',
-                        help="List available USB devices")
+                        help="list available non-hub USB devices")
     parser.add_argument("-b", "--bind",
                         type=str, metavar="STRING",
                         help="bind (enable) a usb device containing "
@@ -314,7 +333,7 @@ if __name__ == "__main__":
                              "output ID or Tag fields")
     arg_info = parser.parse_args()
     if not sys.platform.startswith('linux'):
-        print(f"This application only works on Linux", file=sys.stderr)
+        print(f"ERROR: This application only works on Linux", file=sys.stderr)
         sys.exit(1)
     if arg_info.list:
         dev_list = get_usb_devices()
@@ -322,7 +341,7 @@ if __name__ == "__main__":
             try:
                 from tabulate import tabulate
             except ModuleNotFoundError:
-                print("Python 'tabulate' module required. Run 'sudo "
+                print("ERROR: Python3 'tabulate' module required. Run 'sudo "
                       "apt update && sudo apt install python3-tabulate' "
                       "to install it.", file=sys.stderr)
                 sys.exit(1)
@@ -330,7 +349,7 @@ if __name__ == "__main__":
                 print(tabulate(dev_list, headers=["ID", "Tag", "Device", "State"]))
                 sys.exit(0)
         else:
-            print("No USB devices found", file=sys.stderr)
+            print("No non-hub USB devices found", file=sys.stderr)
             sys.exit(0)
     if arg_info.bind:
         answer = find_usb_device(arg_info.bind, "bind")
