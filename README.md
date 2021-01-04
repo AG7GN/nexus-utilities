@@ -347,7 +347,61 @@ Your Nexus DR-X image already has the systemd service file for the shutdown scri
 
 ## Radio Monitor script
 
-`radio-monitor.py` monitors the TX/RX status of your radios via the GPIO pins (BCM 12 for the left radio and BCM 23 for the right radio).  The associated Hamradio menu item is in the `radio-monitor.desktop` file.
+`radio-monitor.py` monitors the TX/RX status of your radios via the GPIO pins.  The associated Hamradio menu item is in the `radio-monitor.desktop` file. By default, it monitors BCM GPIO pin 12 for the left radio and BCM GPIO pin 23 for the right radio. You can change these as well as the text color, and background color for TX and RX states from the command line. For options, run `radio-monitor.py -h` in Terminal to see this output:
+
+	usage: radio-monitor.py [-h] [-v] 
+				[--left_gpio LEFT_GPIO]
+				[--right_gpio RIGHT_GPIO]
+				[--left_text_color {white,black,red,green,blue,cyan,yellow,magenta}]
+				[--left_bg_rx_color {white,black,red,green,blue,cyan,yellow,magenta}]
+				[--left_bg_tx_color {white,black,red,green,blue,cyan,yellow,magenta}]
+				[--right_text_color {white,black,red,green,blue,cyan,yellow,magenta}]
+				[--right_bg_rx_color {white,black,red,green,blue,cyan,yellow,magenta}]
+				[--right_bg_tx_color {white,black,red,green,blue,cyan,yellow,magenta}]
+
+	TX/RX Status
+
+	optional arguments:
+	  -h, --help            show this help message and exit
+	  -v, --version         show program's version number and exit
+	  --left_gpio LEFT_GPIO
+				Left radio PTT GPIO (BCM numbering) 
+				(default: 12)
+	  --right_gpio RIGHT_GPIO
+				Right radio PTT GPIO (BCM numbering) 
+				(default: 23)
+	  --left_text_color {white,black,red,green,blue,cyan,yellow,magenta}
+				Text color for left radio indicator 
+				(default: yellow)
+	  --left_bg_rx_color {white,black,red,green,blue,cyan,yellow,magenta}
+				Background color for left radio RX indicator 
+				(default: green)
+	  --left_bg_tx_color {white,black,red,green,blue,cyan,yellow,magenta}
+				Background color for left radio TX indicator 
+				(default: blue)
+	  --right_text_color {white,black,red,green,blue,cyan,yellow,magenta}
+				Text color for right radio indicator 
+				(default: yellow)
+	  --right_bg_rx_color {white,black,red,green,blue,cyan,yellow,magenta}
+				Background color for right radio RX indicator
+				(default: green)
+	  --right_bg_tx_color {white,black,red,green,blue,cyan,yellow,magenta}
+				Background color for right radio TX indicator
+				(default: red)
+
+To change the way the script runs when launched from the __Hamradio__ menu: 
+
+- Click __Raspberry > Hamradio__, then right-click on __Radio_PTT_Monitor__
+- Click __Properties__. 
+- Select the __Desktop Entry__ tab. 
+
+	As an example, say you want to change the RX background color for the right radio to black and the TX background of the left radio to red. Change the contents of the __Command:__ field to:
+
+		/usr/local/bin/radio-monitor.py --right_bg_rx_color=black --left_bg_tx_color=red
+	
+- Click __OK__
+
+Note that editing a menu item in this way will create a new `.desktop` file in your `$HOME/.local/share/applications` folder with the same name as the system `.desktop` file in `/usr/local/share/applications` folder. Your local menu item will take precedence over the system file.
 
 ## Piano Script example
 
