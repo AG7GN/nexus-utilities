@@ -347,7 +347,7 @@ Your Nexus DR-X image already has the systemd service file for the shutdown scri
 
 ## Radio Monitor script
 
-`radio-monitor.py` monitors the TX/RX status of your radios via the GPIO pins.  The associated Hamradio menu item is in the `radio-monitor.desktop` file. By default, it monitors BCM GPIO pin 12 for the left radio and BCM GPIO pin 23 for the right radio. You can change these as well as the text color, and background color for TX and RX states from the command line. For options, run `radio-monitor.py -h` in Terminal to see this output:
+`radio-monitor.py` monitors the TX/RX status of your radios via the GPIO pins.  The associated Hamradio menu item is in the `radio-monitor.desktop` file. By default, it monitors BCM GPIO pin 12 for the left radio and BCM GPIO pin 23 for the right radio PTT status. You can change these as well as the text color, and background color for TX and RX states from the command line. For options, run `radio-monitor.py -h` in Terminal to see this output:
 
 	usage: radio-monitor.py [-h] [-v] 
 				[--left_gpio LEFT_GPIO]
