@@ -401,7 +401,7 @@ To change the way the script runs when launched from the __Hamradio__ menu:
 	
 - Click __OK__
 
-Note that editing a menu item in this way will create a new `.desktop` file in your `$HOME/.local/share/applications` folder with the same name as the system `.desktop` file in `/usr/local/share/applications` folder. Your local menu item will take precedence over the system file.
+Note that editing a menu item in this way will create a new `.desktop` file in your `$HOME/.local/share/applications` folder with the same name as the system `.desktop` file in `/usr/local/share/applications` folder. Your local menu file will take precedence over the system file.
 
 ## Piano Script example
 
