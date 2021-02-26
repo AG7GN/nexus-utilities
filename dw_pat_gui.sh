@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.8.0
+#-    version         ${SCRIPT_NAME} 1.8.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -442,6 +442,12 @@ do
 	rm -f $TMPDIR/CONFIGURE_TNC.txt $TMPDIR/CONFIGURE_PAT.txt
    rm -f /tmp/kisstnc
 	loadSettings
+	
+	if [[ ${F[_ADEVICE_CAPTURE_]} == "null" || ${F[_ADEVICE_PLAY_]} == "null" ]]
+	then
+		yad --center --title="Direwolf TNC and pat $VERSION" --borders=10 --text "<big><b>Audio device(s) are not set!</b></big>\nClick <b>Continue</b> below, then select the <b>Configure TNC</b> tab to select audio devices and PTT settings." --text-align=center --button="Continue":0 --buttons-layout=center
+	fi
+	
 	YAD_PIDs=()
 	
 	# Start the tail window tab

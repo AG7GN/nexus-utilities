@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.8
+#-    version         ${SCRIPT_NAME} 1.0.9
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -499,6 +499,11 @@ do
 	
 	# Retrieve saved settings or defaults if there are no saved settings
 	loadSettings $CONFIG_FILE
+	if [[ ${F[_ADEVICE_CAPTURE_]} == "null" || ${F[_ADEVICE_PLAY_]} == "null" ]]
+	then
+		yad --center --title="$TITLE" --borders=10 --text "<big><b>Audio device(s) are not set!</b></big>\nClick <b>Continue</b> below, then select the <b>Configure TNC</b> tab to select audio devices and PTT settings." --text-align=center --button="Continue":0 --buttons-layout=center
+	fi
+
 	YAD_PIDs=()
 	
 		# Start the monitor tab
