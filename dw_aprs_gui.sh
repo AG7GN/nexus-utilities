@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.1.0
+#-    version         ${SCRIPT_NAME} 2.1.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -720,7 +720,7 @@ do
 	#yad --title="$TITLE" --text="<b><big>Direwolf APRS Monitor and Configuration</big></b>" \
 	yad --title="$TITLE" \
   		--text-align="center" --notebook --key="$ID" --window-icon=logviewer \
-		--posx=$POSX --posy=$POSY --width=$WIDTH --no-focus \
+		--posx=$POSX --posy=$POSY --width=$WIDTH \
   		--buttons-layout=center \
   		--tab="Direwolf Status" \
   		--tab="Configure APRS" \
