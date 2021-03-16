@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.1.1
+#-    version         ${SCRIPT_NAME} 2.1.2
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -140,22 +140,22 @@ function upgradeSettings () {
 	# Upgrades older configurations that didn't have the full and fill-in digipeat options
 	# Old modes were: APRSMODEs="Digipeater~iGate (RX Only)~iGate (TX+RX)~Digipeater + iGate"
 	# New modes are: APRSMODEs="Custom~Full Digipeater~Fill-in Digipeater~iGate (RX Only)~iGate~Full Digipeater + iGate~Fill-in Digipeater + iGate"
-	sed -i -e "s/F[_APRSMODE_]='Digipeater'/F[_APRSMODE_]='Fill-in Digipeater'/" \
-	       -e "s/F[_APRSMODE_]='Digipeater + iGate'/F[_APRSMODE_]='Fill-in Digipeater + iGate'/" \
-	       -e "s/F[_APRSMODE_]='iGate (TX+RX)'/F[_APRSMODE_]='iGate'/" \
-	       -e "/F[_LOC_]/d" \
-	       -e "/F[_GRID_]/d" \
-	       -e "/F[_DIGIPEATDELAY_]/d" \
-	       -e "/F[_DIGIPEATEVERY_]/d" \
-	       -e "/F[_IGTXLIMIT1_]/d" \
-          -e "/F[_IGTXLIMIT5_]/d" \
-          -e "/F[_FILTER_]/d" \
-          -e "/F[_SERVER_]/d" \
-          -e "/F[_IGFILTER_]/d"\
-          -e "/F[_HOPS_]/d" \
-          -e "/F[_IGDELAY_]/d" \
-          -e "/F[_AUDIOSTATS_]/d" \
-          -e "/F[_IGEVERY_]/d" "$1"
+	sed -i -e "s/F\[_APRSMODE_\]='Digipeater'/F[_APRSMODE_]='Fill-in Digipeater'/" \
+	       -e "s/F\[_APRSMODE_\]='Digipeater + iGate'/F[_APRSMODE_]='Fill-in Digipeater + iGate'/" \
+	       -e "s/F\[_APRSMODE_\]='iGate (TX+RX)'/F[_APRSMODE_]='iGate'/" \
+	       -e "/F\[_LOC_\]/d" \
+	       -e "/F\[_GRID_\]/d" \
+	       -e "/F\[_DIGIPEATDELAY_\]/d" \
+	       -e "/F\[_DIGIPEATEVERY_\]/d" \
+	       -e "/F\[_IGTXLIMIT1_\]/d" \
+          -e "/F\[_IGTXLIMIT5_\]/d" \
+          -e "/F\[_FILTER_\]/d" \
+          -e "/F\[_SERVER_\]/d" \
+          -e "/F\[_IGFILTER_\]/d"\
+          -e "/F\[_HOPS_\]/d" \
+          -e "/F\[_IGDELAY_\]/d" \
+          -e "/F\[_AUDIOSTATS_\]/d" \
+          -e "/F\[_IGEVERY_\]/d" "$1"
 
 }
 
