@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.8.1
+#-    version         ${SCRIPT_NAME} 1.8.2
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -113,7 +113,7 @@ function setTNCpatDefaults () {
    D[10]="20" # Slot Time
    D[11]="60" # Audio Stats
    D[12]="8001" # AGW Port
-   D[13]="8010"  # KISS Port
+   D[13]="8011"  # KISS Port
    D[14]="FALSE" # Enable pat HTTP server
    D[15]="disabled" # Disable piano switch autostart
 }

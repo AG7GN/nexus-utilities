@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>APRS Parameters Help</title>
+<title>APRS Configuration Help</title>
 <body>
 
 <h1>APRS Configuration Help</h1>
+
+This script allows you to run Direwolf as an APRS digipeater (full or fill-in) and/or an iGate (TX/RX or RX only). This web page describes each of these modes and provides help configuring some APRS attribues should you want to create your own custom Direwolf APRS configuration file.
+
 <p>
 See Direwolf author WB2OSZ's <a href="https://github.com/wb2osz/direwolf/blob/master/doc/Successful-APRS-IGate-Operation.pdf">Successful APRS IGate Operation</a> for some good tips on using APRS.
 </p>
 
+<a href="#monitor">Open monitor window when [re]starting this script</a><br />
 <a href="#call">Call sign and SSID</a><br />
 <a href="#tactical">Tactical Call Sign</a><br />
 <a href="#status">Comment/Status</a><br />
-<a href="#location">Location</a><br />
-<a href="#grid">Grid Square</a><br />
 <a href="#lat">LAT</a><br />
 <a href="#log">LONG</a><br />
 <a href="#power">Power</a><br />
@@ -22,15 +24,22 @@ See Direwolf author WB2OSZ's <a href="https://github.com/wb2osz/direwolf/blob/ma
 <a href="#adevice">Direwolf Capture/Playback ADEVICEs</a><br />
 <a href="#arate">Direwolf ARATE</a><br />
 <a href="#ptt">Direwolf PTT</a><br />
-<a href="#stats">Direwolf Audio Stats</a><br />
+<a href="#agw">AGW Port</a><br />
+<a href="#kiss">KISS Port</a><br />
+<a href="#colors">Direwolf text colors</a><br />
 <a href="#auto">Autostart APRS</a><br />
 <a href="#mode">APRS Mode</a><br />
+<p>Some common APRS parameters guidance is at these links (might be helpful for creating your custom configuration file):</p>
 <a href="#igtxlimit">iGate TX Limit IGTXLIMIT</a><br />
 <a href="#server">iGate Server</a><br />
 <a href="#filter">Client Side FILTER</a><br />
 <a href="#igfilter">Server Side IGFILTER</a><br />
 <a href="#hops">Hops IGTXVIA</a><br />
 <a href="#beacon">iGate and Digipeater delay and interval settings</a><br />
+
+<h2 id="status">Open monitor window when [re]starting this script</h2>
+<p>Check this box to launch a Terminal window that will display decoded APRS messages received and sent by Direwolf. In earlier versions of this script, those messages appeared in the Status tab (used to be called Monitor APRS). Default is checked (enabled).</p>
+<a href="#top">Top</a>
 
 <h2 id="call">Call and SSID</h2>
 <p>Station call sign.  Default SSID is 0.  See <a href="http://www.aprs.org/aprs11/SSIDs.txt">APRS SSID Recommendations</a> for more information.
@@ -66,20 +75,12 @@ SSID RECOMMENDATIONS:  It is very convenient to other mobile operators or others
 <p>Short comment or status message that is sent in beacon</p>
 <a href="#top">Top</a>
 
-<h2 id="location">Location</h2>
-<p>City/town/state/province, etc.</p>
-<a href="#top">Top</a>
-
-<h2 id="grid">Grid Square</h2>
-<p>Six character maidenhead grid square.  See <a href="https://www.levinecentral.com/ham/grid_square.php">Amateur Radio Ham Radio Maidenhead Grid Square Locator Map</a></p>
-<a href="#top">Top</a>
-
 <h2 id="lat">LAT</h2>
-<p>Latitude in decimal degrees to no more than 6 decimal places.</p>
+<p>Latitude in decimal degrees to no more than 6 decimal places. Use the decimal point and not the ^ symbol to separate the decimal part.</p>
 <a href="#top">Top</a>
 
 <h2 id="long">LONG</h2>
-<p>Longitude in decimal degrees to no more than 6 decimal places.</p>
+<p>Longitude in decimal degrees to no more than 6 decimal places. Use the decimal point and not the ^ symbol to separate the decimal part.</p>
 <a href="#top">Top</a>
 
 <h2 id="power">Power</h2>
@@ -145,9 +146,21 @@ The GPIO (BCM numbering) pin to use for Push To Talk.  Nexus DR-X is wired to us
 </p>
 <a href="#top">Top</a>
 
-<h2 id="stats">Direwolf Audio Stats</h2>
+<h2 id="agw">AGW Port</h2>
 <p>
-Print Direwolf's audio statistics every x seconds.  Set to 0 to disable printing of statistics.
+Other applications (like Xastir) can access Direwolf's APRS data via an TCP/IP network connection to Direwolf's <a href="https://www.on7lds.net/42/sites/default/files/AGWPEAPI.HTM">AGW</a> port. Default is 8001
+</p>
+<a href="#top">Top</a>
+
+<h2 id="kiss">KISS Port</h2>
+<p>
+Other applications can access Direwolf's APRS data via an TCP/IP network connection to Direwolf's <a href="http://www.ax25.net/kiss.aspx">KISS</a> port. Default is 8011.
+</p>
+<a href="#top">Top</a>
+
+<h2 id="colors">Direwolf text colors</h2>
+<p>
+Direwolf prints out the APRS message text in a terminal window. This option enables colorizing the output. Direwolf comes with 5 color schemes, numbered 0 to 4 with 0 being no color. Run <pre>direwolf -t 9</pre> in a Terminal to see the different color schemes. Default is 1.
 </p>
 <a href="#top">Top</a>
 
@@ -161,11 +174,79 @@ See <a href="https://github.com/AG7GN/nexus-utilities/blob/master/README.md#chec
 </p>
 <a href="#top">Top</a>
 
-<h2 id="mode">APRS Mode</h2>
-<p>
-Choices are: iGate (RX Only), iGate (TX+RX), Digipeater (for installations without internet access) or Digitpeater + iGate.  All iGate selections require the Pi to be connected to the Internet.
-</p>
+<h2 id="mode">APRS Modes</h2>
+<p>This script provides the user with the ability to select APRS certain modes with minimal manual configuration, as well as the ability to load and run your own custom Direwolf APRS configuration.</p>
+
+<table rules="all" style="border-color:DarkGray;border-width:1px;border-style:solid;">
+		<tr align="center">
+			<th>Mode</th>
+			<th>Description</th>
+		</tr>
+		<tr>
+			<td>
+				<p><b>Custom</b></p>
+         </td>
+			<td>
+				<p>You can create a custom Direwolf APRS configuration in a text editor and load it into the script. The script will then use that configuration and ignore all the other settings in the Configure APRS tab. Note the the script does no error checking, so watch the monitor window to verify that Direwolf didn't find any problems in your configuration</p><p>You must select <b>Custom</b> for the APRS mode <i>and</i> click the <b>Select Direwolf config file (for APRS Mode Custom)</b> button to select your custom configuration file. Once selected, click <b>Save & [Re]start Direwolf APRS</b> to load your file and start Direwolf.</p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p><b>Fill-in Digipeater</b></p>
+         </td>
+			<td>
+				<p>Uses the settings in the left column to direct Direwolf to run the digipeater using:<pre>DIGIPEAT 0 0 ^WIDE1-1$ ^WIDE1-1$</pre> and will use 3 beacons:<pre>PBEACON delay=1 every=30 symbol="digi" overlay=S lat=LAT long=LONG POWER=POWER HEIGHT=HEIGHT GAIN=GAIN COMMENT="Comment/Status" via=WIDE2-2
+PBEACON delay=11 every=30 symbol="digi" overlay=S lat=LAT long=LONG POWER=POWER HEIGHT=HEIGHT GAIN=GAIN COMMENT="Comment/Status" via=WIDE1-1,WIDE2-2
+PBEACON delay=21 every=30 symbol="digi" overlay=S lat=LAT long=LONG POWER=POWER HEIGHT=HEIGHT GAIN=GAIN COMMENT="Comment/Status"</pre></p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p><b>Fill-in Digipeater + iGate</b></p>
+         </td>
+			<td>
+				<p>Uses the settings in the left column to direct Direwolf to run the digipeater the same settings as the <b>Fill-in Digipeater</b>, plus will connect to the <b>noam.aprs2.net</b>server and handle APRS traffic to/from that server.</p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p><b>Full Digipeater</b></p>
+         </td>
+			<td>
+				<p>Uses the settings in the left column to direct Direwolf to run the digipeater using:<pre>DIGIPEAT 0 0 ^WIDE[3-7]-[1-7]$ ^WIDE[12]-[12]$</pre> and will use 3 beacons:<pre>PBEACON delay=1 every=30 symbol="digi" overlay=S lat=LAT long=LONG POWER=POWER HEIGHT=HEIGHT GAIN=GAIN COMMENT="Comment/Status" via=WIDE2-2
+PBEACON delay=11 every=30 symbol="digi" overlay=S lat=LAT long=LONG POWER=POWER HEIGHT=HEIGHT GAIN=GAIN COMMENT="Comment/Status" via=WIDE1-1,WIDE2-2
+PBEACON delay=21 every=30 symbol="digi" overlay=S lat=LAT long=LONG POWER=POWER HEIGHT=HEIGHT GAIN=GAIN COMMENT="Comment/Status"</pre></p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p><b>Full Digipeater + iGate</b></p>
+         </td>
+			<td>
+				<p>Uses the settings in the left column to direct Direwolf to run the digipeater the same settings as the <b>Full Digipeater</b>, plus will connect to the <b>noam.aprs2.net</b>server and handle APRS traffic to/from that server.</p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p><b>iGate</b></p>
+         </td>
+			<td>
+				<p>Uses the settings in the left column to direct Direwolf to run as an iGate and connect to the <b>noam.aprs2.net</b> server and handle APRS traffic to/from that server. </p>
+         </td>
+		</tr>
+		<tr>
+			<td>
+				<p><b>iGate (RX only)</b></p>
+         </td>
+			<td>
+				<p><b>THIS MODE IS NOT RECOMMENDED</b> (see <a href="https://www.f4fxl.org/why-are-aprs-rx-only-igates-bad/">Why are APRS RX only iGates bad?</a>).</p><p>Uses the settings in the left column to direct Direwolf to run as an iGate and connect to the <b>noam.aprs2.net</b> server and pass APRS traffic heard via the radio to that server.</p><p>Direwolf never transmits over the radio in this mode.</p>
+         </td>
+		</tr>
+</table><br />
 <a href="#top">Top</a>
+
+
+<h1>Other common APRS parameters</h1>
 
 <h2 id="igtxlimit">iGate TX Limit /min and iGate TX Limit /5min (IGTXLIMIT)</h2>
 
