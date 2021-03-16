@@ -1,6 +1,6 @@
 # Nexus Utilities
 
-VERSION 20201230
+VERSION 20210316
 
 AUTHOR: Steve Magnuson, AG7GN
 
@@ -20,6 +20,8 @@ Some scripts are specific to the [Nexus DR-X](http://wb7fhc.com/nexus-dr-x.html)
 [Test Piano script](#test-piano-script)
 
 [TNC script](#tnc-script)
+
+[Direwolf APRS GUI](#direwolf-aprs-gui)
 
 [Direwolf + pat GUI](#direwolf-and-pat-gui)
 
@@ -112,6 +114,10 @@ If `DO_NOT_DELETE_THIS_FILE` is present in the home folder, the script exits wit
 ## Test Piano script
 
 `test-piano.sh` allows you to test the operation of your `pianoX.sh` script by simulating what the [check-piano.sh](#check-piano-script) does when the Pi starts.  Set the piano switches as desired, then open a Terminal and run `test-piano.sh`.  The script will tell you which script will run based on which switch levers are down.  It will not actually run the `pianoX.sh` script.
+
+## Direwolf APRS GUI
+
+`dw_aprs_gui.sh` provides a GUI to configure Direwolf to process APRS traffic. It can configured as a generic digipeater (fill-in or full) and/or an iGate. You can also supply your own Direwolf configuration rather than using one of the generic configurations.
 
 ## Direwolf and pat GUI
 
