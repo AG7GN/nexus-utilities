@@ -646,6 +646,7 @@ do
 				echo -e "\nExternal '$MONITOR_TITLE' running. PID=$socat_PID" >&6
 				# Position the monitor window so it's not under the configuration window
 				#bash -c "sleep 2;wmctrl -r "$MONITOR_TITLE" -e "0,$(($POSX + $WIDTH + 5)),$POSY,-1,-1"" & 
+				sleep 1
 				wmctrl -r "$MONITOR_TITLE" -e "0,$(($POSX + $WIDTH + 5)),$POSY,-1,-1"
 			fi
 		fi
