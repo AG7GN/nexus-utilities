@@ -11,6 +11,13 @@ This script allows you to run Direwolf as an APRS digipeater (full or fill-in) a
 <p>
 See Direwolf author WB2OSZ's <a href="https://github.com/wb2osz/direwolf/blob/master/doc/Successful-APRS-IGate-Operation.pdf">Successful APRS IGate Operation</a> for some good tips on using APRS.
 </p>
+<p>
+Note that you can use the output text (everything that appears in the Monitor window) in your own script by incorporating this command into your script:
+</p>
+<pre>socat udp-recv:3333,reuseaddr -</pre>
+<p>
+That command will monitor UDP port 3333, the port to which the main script writes its data, to STDOUT so you can capture the data and manipulate it as needed.
+</p>
 
 <a href="#monitor">Open monitor window when [re]starting this script</a><br />
 <a href="#call">Call sign and SSID</a><br />

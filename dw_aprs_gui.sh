@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.1.2
+#-    version         ${SCRIPT_NAME} 2.1.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -616,8 +616,8 @@ do
 			if [[ ${F[_MONITOR_]} == "TRUE" ]]
 			then
 				MONITOR_TITLE="APRS $MODE_MESSAGE Monitor"
-				lxterminal --geometry=80x30 -t "$MONITOR_TITLE" -e "socat udp-recv:$SOCAT_PORT -" &
-				echo -e "" | socat - udp-datagram:localhost:$SOCAT_PORT
+				lxterminal --geometry=80x30 -t "$MONITOR_TITLE" -e "socat udp-recv:$SOCAT_PORT,reuseaddr -" &
+				echo -e "" | socat - udp-sendto:127.255.255.255:$SOCAT_PORT,broadcast
 				# Set background color of lxterminal if necessary
 				#if [[ ${F[_COLORS_]} == 0 ]]
 				#then
@@ -627,9 +627,9 @@ do
 				#fi
 			fi
 			# Send direwolf output to the terminal we opened earlier
-			($DIREWOLF -t ${F[_COLORS_]} -c $DW_CONFIG 2>&6 | socat - udp-datagram:localhost:$SOCAT_PORT) &
+			($DIREWOLF -t ${F[_COLORS_]} -c $DW_CONFIG 2>&6 | socat - udp-sendto:127.255.255.255:$SOCAT_PORT,broadcast) &
 			direwolf_PID=$(pgrep -f "^$DIREWOLF -t ${F[_COLORS_]} -c $DW_CONFIG")
-			socat_PID=$(pgrep -f "socat udp-recv:$SOCAT_PORT -")
+			socat_PID=$(pgrep -f "socat udp-recv:$SOCAT_PORT,reuseaddr -")
 			if [[ $direwolf_PID == "" ]]
 			then
 				echo -e "\nDirewolf was *NOT* started" >&6
