@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #================================================================
 # HEADER
 #================================================================
@@ -32,16 +32,18 @@
 #%                                
 #%    SUBJECT                     Email subject enclosed in "double quotes".
 #%
-#%    TRANSPORT                   pat transport method.  For example:
+#%    TRANSPORT                   pat transport method or alias.  For example:
+#%                                   outbox
+#%                                      Don't immediately send the message. Just put 
+#%                                      it in the outbox.
 #%                                   telnet
 #%                                   ax25://portname/call-ssid
 #%                                      where portname is as defined in /etc/ax25/axports
 #%                                      and the same as the ax25 port in
-#%                                      ~/.wl2k/config.json.  This is usually 'wl2k'.
+#%                                      ~/.wl2k/config.json. This is usually 'wl2k'.
 #%
 #%                                      where call-ssid is the RMS gateway.  Example:
 #%                                      ax25://wl2k/W7ECG-10
-#%
 #%                                   Run 'pat connect help' to see more transport
 #%                                   types.
 #%
@@ -65,9 +67,13 @@
 #%
 #%      ${SCRIPT_NAME} me@example.com,W7ABC "My Important Message" ax25://wl2k/W7ECG-10 < myfile.txt 
 #%
+#%    Same as previous example, but just put message in the outgoing mailbox:
+#%
+#%      ${SCRIPT_NAME} me@example.com,W7ABC "My Important Message" outbox < myfile.txt
+#%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.4.6
+#-    version         ${SCRIPT_NAME} 2.5.0
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -278,8 +284,11 @@ OUTDIR="$MBOX/$CALL/out"
 
 TO="$1"
 SUBJECT="$2"
+DELIVERY="$3"
 
 [[ $TO =~ "," ]] || TO="$TO\n" # There's only one recipient, so append \n
+
+echo > "$EVENT_LOG"
 
 # Compose an empty email message
 export EDITOR=ed
@@ -302,7 +311,7 @@ then # Add attached file(s) size and name to header
 			sed -i "/^From: .*/i $HEADER" "$MSG"
 		else
 			rm "$MSG"
-			Die "Attachment \"$F\" empty or not found. Message not sent."
+			Die "Attachment \"$F\" empty or not found. Message not posted/sent."
 		fi
 	done
 fi
@@ -325,9 +334,12 @@ then # Append file(s) to message
 		echo -e -n "\r\n" >> "$MSG"
 	done
 fi
-#rm $TFILE
-echo > "$EVENT_LOG"
-# Send the message
-$PAT --config $PAT_CONFIG --mbox $MBOX --send-only --log "$LOG_FILE" --event-log "$EVENT_LOG" connect $3 >> "$EVENT_LOG"
-exit $?
+
+if [[ ${DELIVERY,,} != "outbox" ]]
+then  # Send the message
+	$PAT --config $PAT_CONFIG --mbox $MBOX --send-only --log "$LOG_FILE" --event-log "$EVENT_LOG" connect $DELIVERY >> $EVENT_LOG
+	exit $?
+fi
+exit
+
 
