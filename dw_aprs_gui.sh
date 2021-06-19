@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.1.3
+#-    version         ${SCRIPT_NAME} 2.1.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -113,7 +113,7 @@ function setDefaults () {
    D[1]="N0CALL"  # Call sign
    D[2]="0" # SSID
 	D[3]="" # Tactical Callsign (if set, will be used instead of MYCALL)
-   D[4]="Comment/Status" # Comment/Status
+   D[4]="Nexus DR-X" # Comment/Status
    D[5]="48.753318" # Latitude in decimal seconds
    D[6]="-122.472632" # Longitude in decimal seconds
    D[7]="10" # Rig power in watts
