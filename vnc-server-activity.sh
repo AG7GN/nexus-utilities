@@ -6,7 +6,7 @@
 # Usage: vnc-server-activity.sh [email-address[,email-address]...]
 #
 
-VERSION="1.2.0"
+VERSION="1.2.1"
 
 # Pat and patmail.sh must be installed.  If they are not, exit.
 command -v pat >/dev/null 2>&1 || exit 1
@@ -28,13 +28,13 @@ if [[ -s $FILES ]]
 then
    echo "VNC Activity" > $OUTFILE
 	grep -h Connections $FILES* 2>/dev/null 1>$FILTERED
-   if [ -s $FILTERED ]
+   if [[ -s $FILTERED ]]
    then
       while IFS= read -r LINE
       do
          D="${LINE%% $HOSTNAME*}" # Extract date from log message
          E="$(date --date="$D" +'%s')" # Convert date to epoch
-         if [ $E -gt $NOW ]
+         if (( $E > $NOW ))
          then # Now in new year.  (Log messages don't include year, so it's a problem going from December to January.)
             # Account for leap years
             date -d $(date +%Y)-02-29 >/dev/null 2>&1 && SEC_IN_YEAR=$((60 * 60 * 24 * 366)) || SEC_IN_YEAR=$((60 * 60 * 24 * 365))
@@ -65,8 +65,8 @@ FILES="/usr/share/dwagent/dwagent.log"
 if [[ -s $FILES ]]
 then
    echo -e "\nDWService Activity" >> $OUTFILE
-   grep -h session $FILES* 2>/dev/null 1>$FILTERED
-   if [ -s $FILTERED ]
+   grep -Ihs session $FILES* | grep "^[0-9]*" 2>/dev/null 1>$FILTERED
+   if [[ -s $FILTERED ]]
    then
       while IFS= read -r LINE
       do
