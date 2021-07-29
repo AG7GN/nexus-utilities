@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 
 # This script checks the status of 4 GPIO pins and runs a script corresponding
 # to those settings as described below.  This script is called by initialize-pi.sh,
@@ -8,20 +8,24 @@ VERSION="1.1.0"
 
 GPIO="$(command -v raspi-gpio)"
 
-# Array P: Array index is the ID of each individual switch in the piano switch.
-#          Array element value is the GPIO BCM number.
-P[1]=25
-P[2]=13
-P[3]=6
-P[4]=5
+function GetSwitchState () {
+	# Array P: Array index is the ID of each individual switch in the piano switch.
+	#          Array element value is the GPIO BCM number.
+	P[1]=25
+	P[2]=13
+	P[3]=6
+	P[4]=5
+	local LEVERS=""
+	for I in 1 2 3 4
+	do
+		J=$($GPIO get ${P[$I]} | cut -d' ' -f3 | cut -d'=' -f2) # State of a switch in the piano (0 or 1)
+		(( $J == 0 )) && LEVERS="$LEVERS$I"
+	done
+	echo "$LEVERS"
+}
 
 # String $PIANO will identify which levers are in the DOWN position 
-PIANO=""
-for I in 1 2 3 4
-do
-	J=$($GPIO get ${P[$I]} | cut -d' ' -f3 | cut -d'=' -f2) # State of a switch in the piano (0 or 1)
-	(( $J == 0 )) && PIANO="$PIANO$I"
-done
+PIANO="$(GetSwitchState)"
 
 # Check if the script corresponding to the piano switch setting exists and is not empty.
 #
@@ -34,7 +38,13 @@ done
 
 [[ $PIANO == "" ]] && MESSAGE="No levers are down." || MESSAGE="Levers $PIANO are down."
 
-yad --center --title="Test calling pianoX.sh script - version $VERSION" --info --borders=30 \
-    --no-wrap --text="<b>$MESSAGE $HOME/piano$PIANO.sh will run.</b>" --buttons-layout=center \
---button=Close:0
+if xset q &>/dev/null
+then
+  	yad --center --title="Test calling pianoX.sh script - version $VERSION" \
+  	--info --borders=30 --no-wrap \
+  	--text="<b>$MESSAGE $HOME/piano$PIANO.sh will run.</b>" \
+  	--buttons-layout=center --button=Close:0
+else
+	echo "$MESSAGE"
+fi
 

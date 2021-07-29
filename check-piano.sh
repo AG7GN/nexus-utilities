@@ -13,10 +13,11 @@
 #% OPTIONS
 #%    -h, --help                  Print this help
 #%    -v, --version               Print script information
+#%    -s, --state                 Print current switch state
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.0
+#-    version         ${SCRIPT_NAME} 1.2.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -28,6 +29,8 @@
 #     20200525 : Steve Magnuson : Now using raspi-gpio instead of
 #                                 gpio to be compatible with all
 #                                 versions of Pis
+#     20210719 : Steve Magnuson : Add -s option to print switch
+#                                 state
 # 
 #================================================================
 #  DEBUG OPTION
@@ -81,6 +84,22 @@ function Die () {
 	SafeExit
 }
 
+function GetSwitchState () {
+	# Array P: Array index is the ID of each individual switch in the piano switch.
+	#          Array element value is the GPIO BCM number.
+	P[1]=25
+	P[2]=13
+	P[3]=6
+	P[4]=5
+	local LEVERS=""
+	for I in 1 2 3 4
+	do
+		J=$($GPIO get ${P[$I]} | cut -d' ' -f3 | cut -d'=' -f2) # State of a switch in the piano (0 or 1)
+		(( $J == 0 )) && LEVERS="$LEVERS$I"
+	done
+	echo "$LEVERS"
+}
+
 #============================
 #  FILES AND VARIABLES
 #============================
@@ -95,24 +114,19 @@ VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)"
 
 GPIO="$(command -v raspi-gpio)"
 
-# Array P: Array index is the ID of each individual switch in the piano switch.
-#          Array element value is the GPIO BCM number.
-P[1]=25
-P[2]=13
-P[3]=6
-P[4]=5
 
 #============================
 #  PARSE OPTIONS WITH GETOPTS
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':hv-:'
+SCRIPT_OPTS=':hsv-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
+	[state]=s
 	[version]=v
 )
 
@@ -161,6 +175,18 @@ do
 			ScriptInfo version
 			exit 0
 			;;
+		s) PIANO="$(GetSwitchState)"
+			[[ $PIANO == "" ]] && MESSAGE="No levers are down." || MESSAGE="Levers $PIANO are down."
+		   if xset q &>/dev/null
+		   then
+		   	yad --center --title="Test calling pianoX.sh script - version $VERSION" \
+		   	--info --borders=30 --no-wrap \
+		   	--text="<b>$MESSAGE $HOME/piano$PIANO.sh will run.</b>" \
+		   	--buttons-layout=center --button=Close:0
+		   else
+		   	echo "$MESSAGE"
+		   fi
+			;;
 		:) 
 			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
 			;;
@@ -187,12 +213,7 @@ $SYNTAX && set -n
 $DEBUG && set -x 
 
 # String $PIANO will identify which levers are in the DOWN position 
-PIANO=""
-for I in 1 2 3 4
-do
-	J=$($GPIO get ${P[$I]} | cut -d' ' -f3 | cut -d'=' -f2) # State of a switch in the piano (0 or 1)
-	(( $J == 0 )) && PIANO="$PIANO$I"
-done
+PIANO="$(GetSwitchState)"
 
 # Check if the script corresponding to the piano switch setting exists and is not empty.
 #
