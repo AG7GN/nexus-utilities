@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.2.0
+#-    version         ${SCRIPT_NAME} 1.2.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -25,6 +25,8 @@
 #  HISTORY
 #     20191115 : Steve Magnuson : Script creation
 #     20200204 : Steve Magnuson : Added script template
+#     20210819 : Steve Magnuson : Add ability to set parameters
+#                                 without GUI
 # 
 #================================================================
 #  DEBUG OPTION
@@ -95,6 +97,7 @@ CONFIG_FILE="$HOME/desktop-text.conf"
 PICTURE_DIR="$HOME/Pictures"
 DEFAULT_BACKGROUND_IMAGE="$PICTURE_DIR/NexusDeskTop.jpg"
 MESSAGE="Enter the text you want displayed below.\nDon't use any single or double quotation marks."
+GUI=TRUE
 
 declare -A MODELS
 MODELS[a02082]="1GB RAM"
@@ -133,7 +136,7 @@ MODELS[d03114]="8GB RAM"
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':hv-:'
+SCRIPT_OPTS=':c:hv-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
@@ -179,6 +182,10 @@ do
 
 	# Finally, manage options
 	case "$OPTION" in
+	   c)
+	   	MYCALL="$OPTARG"
+			GUI=FALSE
+	   	;;
 		h) 
 			ScriptInfo full
 			exit 0
@@ -224,51 +231,60 @@ then
 	#sudo apt install -y imagemagick || Die "Could not run 'sudo apt install -y imagemagick'"
 fi
 
-if [ -s "$CONFIG_FILE" ]
-then # There is a config file
-   echo "$CONFIG_FILE found."
-   source "$CONFIG_FILE"
-else # Set some default values in a new config file
-   echo "Config file $CONFIG_FILE not found.  Creating a new one with default values."
-   echo "TEXT=\"N0ONE\"" > "$CONFIG_FILE"
-   echo "SHOW_HOSTNAME=\"TRUE\"" >> "$CONFIG_FILE"
-   source "$CONFIG_FILE"
-fi
-
 MODEL="$(egrep "^Model" /proc/cpuinfo | sed -e 's/ //;s/\t//g' | cut -d: -f2)"
 REVISION="$(egrep "^Revision" /proc/cpuinfo | sed -e 's/ //;s/\t//g' | cut -d: -f2)"
 SERIAL="$(egrep "^Serial" /proc/cpuinfo | sed -e 's/ //;s/\t//g' | cut -d: -f2)"
 [[ -z $MODEL ]] && INFO ="" || INFO="$MODEL with ${MODELS[$REVISION]}"
 
+[[ -z $MYCALL ]] && MYCALL="N0CALL"
+
+if [ -s "$CONFIG_FILE" ]
+then # There is a config file
+	echo "$CONFIG_FILE found."
+else # Set some default values in a new config file
+	echo "Config file $CONFIG_FILE not found.  Creating a new one with default values."
+	echo "TEXT=\"$N0CALL\"" > "$CONFIG_FILE"
+	echo "SHOW_HOSTNAME=\"TRUE\"" >> "$CONFIG_FILE"
+fi
+source "$CONFIG_FILE"
+
 while true
 do
-	ANS=""
-	ANS="$(yad --title="$TITLE" \
-   	--text="<b><big><big>Desktop Text Editor</big></big>\n\n \
+	if [[ $GUI == TRUE ]]
+	then
+		ANS=""
+		ANS="$(yad --title="$TITLE" \
+   		--text="<b><big><big>Desktop Text Editor</big></big>\n\n \
 $MESSAGE</b>\n" \
-   	--item-separator="!" \
-		--posx=10 --posy=50 \
-		--align=right \
-   	--buttons-layout=center \
-  		--text-align=center \
-   	--align=right \
-   	--borders=20 \
-   	--form \
-   	--field="Background Text" "$TEXT" \
-   	--field="Include Hostname and Pi model":CHK $SHOW_HOSTNAME \
-   	--focus-field 1 \
-	)"
+   		--item-separator="!" \
+			--posx=10 --posy=50 \
+			--align=right \
+   		--buttons-layout=center \
+  			--text-align=center \
+   		--align=right \
+   		--borders=20 \
+   		--form \
+   		--field="Background Text" "$TEXT" \
+   		--field="Include Hostname":CHK $SHOW_HOSTNAME \
+   		--focus-field 1 \
+		)"
 
-	[[ $? == 1 || $? == 252 ]] && Die  # User has cancelled.
+		[[ $? == 1 || $? == 252 ]] && Die  # User has cancelled.
 
-	[[ $ANS == "" ]] && Die "Unexpected input from dialog"
+		[[ $ANS == "" ]] && Die "Unexpected input from dialog"
 
-	IFS='|' read -r -a TF <<< "$ANS"
+		IFS='|' read -r -a TF <<< "$ANS"
 
-	TEXT="${TF[0]}"
-	SHOW_HOSTNAME="${TF[1]}"
-	echo "TEXT=\"$TEXT\"" > "$CONFIG_FILE"
-	echo "SHOW_HOSTNAME=\"$SHOW_HOSTNAME\"" >> "$CONFIG_FILE"
+		TEXT="${TF[0]}"
+		SHOW_HOSTNAME="${TF[1]}"
+		echo "TEXT=\"$TEXT\"" > "$CONFIG_FILE"
+		echo "SHOW_HOSTNAME=\"$SHOW_HOSTNAME\"" >> "$CONFIG_FILE"
+	else
+  		TEXT="$MYCALL"
+  		SHOW_HOSTNAME="FALSE"
+   	echo "TEXT=\"$MYCALL\"" > "$CONFIG_FILE"
+  		echo "SHOW_HOSTNAME=\"FALSE\"" >> "$CONFIG_FILE"
+	fi
 
 	[[ $TEXT == "" ]] && { $(command -v pcmanfm) --set-wallpaper="$DEFAULT_BACKGROUND_IMAGE"; continue; }
 
@@ -279,13 +295,15 @@ $MESSAGE</b>\n" \
 	if [[ $SHOW_HOSTNAME == "TRUE" ]]
 	then
 		$(command -v convert) $DEFAULT_BACKGROUND_IMAGE \
-        -gravity south -pointsize 20 -fill yellow -annotate 0 $(hostname) \
-        -gravity south -pointsize 18 -fill white -annotate +0+25 "$INFO" \
-        -gravity south -pointsize 75 -fill yellow -annotate +0+40 "$TEXT" $TARGET
+     		-gravity south -pointsize 20 -fill yellow -annotate 0 $(hostname) \
+     		-gravity south -pointsize 18 -fill white -annotate +0+25 "$INFO" \
+     		-gravity south -pointsize 75 -fill yellow -annotate +0+40 "$TEXT" $TARGET
 	else
 		$(command -v convert) $DEFAULT_BACKGROUND_IMAGE \
-		-gravity south -pointsize 75 -fill yellow -annotate +0+25 "$TEXT" $TARGET
+    		-gravity south -pointsize 18 -fill white -annotate +0+25 "$INFO" \
+			-gravity south -pointsize 75 -fill yellow -annotate +0+40 "$TEXT" $TARGET
 	fi
 	$(command -v pcmanfm) --set-wallpaper="$TARGET"
+	[[ $GUI == FALSE ]] && break
 done
 SafeExit
