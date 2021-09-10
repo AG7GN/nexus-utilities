@@ -96,11 +96,10 @@ echo >&2 "Done."
 echo >&2 "Moving files into place..."
 mv TM-D710G.xml $HOME/.fldigi/rigs/
 sudo mv *.sh /usr/local/bin/
-[[ -z $RESTORE_APP ]] && SIDE=""
-for K in start stop kill
+for K in start kill stop
 do
 	cp flapps_$K.template flapps_$K.desktop
-	[[ $K == "stop" && -z $RESTORE_APP ]] && SIDE=""
+	if [[ $K == "stop" && -z $RESTORE_APP ]] && SIDE=""
 	sed -i -e "s/_HOME_/\/home\/$USER/g" -e "s/_SIDE_/$SIDE/g" \
 		-e "s/_FLDIGI_FREQ_/$FLDIGI_FREQ/g" \
 		-e "s/_RESTORE_APP_/$RESTORE_APP/g" \
