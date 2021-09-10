@@ -46,7 +46,11 @@ function Die () {
 # Validate input
 RE="^[0-9]+([.][0-9]+)?$"
 [[ $2 =~ $RE ]] || "ERROR: Arg 2: $2 is not a frequency"
-[[ ! -z $4 ]] && [[ $4 =~ $RE ]] || Die "ERROR: Arg 4: $4 is not a frequency"
+echo "Arg1='$1', Arg2='$2', Arg3='$3', Arg4='$4'"
+if [[ ! -z $4 ]]
+then
+	[[ $4 =~ $RE ]] || Die "ERROR: Arg 4: $4 is not a frequency"
+fi
 
 FLDIGI_FREQ="$2"
 [[ ! -z $4 ]] && RESTORE_FREQ="$4" || RESTORE_FREQ=""
