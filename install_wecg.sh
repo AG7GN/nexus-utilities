@@ -99,7 +99,7 @@ sudo mv *.sh /usr/local/bin/
 for K in start kill stop
 do
 	cp flapps_$K.template flapps_$K.desktop
-	if [[ $K == "stop" && -z $RESTORE_APP ]] && SIDE=""
+	[[ $K == "stop" && -z $RESTORE_APP ]] && SIDE=""
 	sed -i -e "s/_HOME_/\/home\/$USER/g" -e "s/_SIDE_/$SIDE/g" \
 		-e "s/_FLDIGI_FREQ_/$FLDIGI_FREQ/g" \
 		-e "s/_RESTORE_APP_/$RESTORE_APP/g" \
