@@ -105,8 +105,6 @@ do
 		-e "s/_FLDIGI_FREQ_/$FLDIGI_FREQ/g" \
 		-e "s/_RESTORE_APP_/$RESTORE_APP/g" \
 		-e "s/_RESTORE_FREQ_/$RESTORE_FREQ/g" flapps_$K.desktop
-	if 
-	fi
 done
 sudo mv *.desktop /usr/local/share/applications/
 echo >&2 "Done."
