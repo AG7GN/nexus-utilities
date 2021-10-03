@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.5"
+VERSION="1.0.6"
 
 # This script installs the scripts and desktop files that customize a Nexus DR-X 
 # Raspberry Pi so it can be used for remote access by WECG members.
@@ -94,7 +94,7 @@ echo >&2 "Done."
 
 # Move files into place
 echo >&2 "Moving files into place..."
-mv TM-D710G.xml $HOME/.fldigi/rigs/
+mv TM-D710G.xml $HOME/.fldigi-${SIDE}/rigs/
 sudo mv *.sh /usr/local/bin/
 for K in start kill stop
 do
