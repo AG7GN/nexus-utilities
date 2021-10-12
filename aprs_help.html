@@ -12,19 +12,24 @@ This script allows you to run Direwolf as an APRS digipeater (full or fill-in) a
 See Direwolf author WB2OSZ's <a href="https://github.com/wb2osz/direwolf/blob/master/doc/Successful-APRS-IGate-Operation.pdf">Successful APRS IGate Operation</a> for some good tips on using APRS.
 </p>
 <p>
-Note that you can use the output text (everything that appears in the Monitor window) in your own script by incorporating this command into your script:
+Note that you can use the output text (everything that appears in the Monitor window) in your own script by incorporating one or more of these commands into your script:
 </p>
 <pre>socat udp-recv:3333,reuseaddr -</pre>
-<p>
-That command will monitor UDP port 3333, the port to which the main script writes its data, to STDOUT so you can capture the data and manipulate it as needed.
+<p>To strip the ANSI color codes, run it like this:
 </p>
+<pre>socat udp-recv:3333,reuseaddr - | sed 's/\x1b\[[0-9;]*m//g'</pre>
+<p>To strip the ANSI color codes and save the text to a file:</p>
+<pre>socat -u udp-recv:3333,reuseaddr >(sed -u 's/\x1b\[[0-9;]*m//g' > FILE)</pre>
 
+<h2>Contents</h2>
 <a href="#monitor">Open monitor window when [re]starting this script</a><br />
 <a href="#call">Call sign and SSID</a><br />
 <a href="#tactical">Tactical Call Sign</a><br />
 <a href="#status">Comment/Status</a><br />
 <a href="#lat">LAT</a><br />
-<a href="#log">LONG</a><br />
+<a href="#long">LONG</a><br />
+<a href="#location">Location</a><br />
+<a href="#grid">Grid Square</a><br />
 <a href="#power">Power</a><br />
 <a href="#haat">Antenna HAAT</a><br />
 <a href="#gain">Antenna Gain</a><br />
@@ -34,6 +39,7 @@ That command will monitor UDP port 3333, the port to which the main script write
 <a href="#agw">AGW Port</a><br />
 <a href="#kiss">KISS Port</a><br />
 <a href="#colors">Direwolf text colors</a><br />
+<a href="#log">Log File</a><br />
 <a href="#auto">Autostart APRS</a><br />
 <a href="#mode">APRS Mode</a><br />
 <p>Some common APRS parameters guidance is at these links (might be helpful for creating your custom configuration file):</p>
@@ -88,6 +94,14 @@ SSID RECOMMENDATIONS:  It is very convenient to other mobile operators or others
 
 <h2 id="long">LONG</h2>
 <p>Longitude in decimal degrees to no more than 6 decimal places. Use the decimal point and not the ^ symbol to separate the decimal part.</p>
+<a href="#top">Top</a>
+
+<h2 id="location">Location</h2>
+<p>City, State or something else to identify your location</p>
+<a href="#top">Top</a>
+
+<h2 id="grid">Grid Square</h2>
+<p>Your maidenhead grid square (4 or 6 characters)</p>
 <a href="#top">Top</a>
 
 <h2 id="power">Power</h2>
@@ -171,6 +185,12 @@ Direwolf prints out the APRS message text in a terminal window. This option enab
 </p>
 <a href="#top">Top</a>
 
+<h2 id="log">Log file</h2>
+<p>
+Specify a file to which to log APRS traffic. This file is overwritten whenever the GUI is started. Leave empty for no logging. Users can monitor this file and create their own scripts to take actions when certain APRS traffic is seen.
+</p>
+<a href="#top">Top</a>
+
 <h2 id="auto">Autostart APRS</h2>
 <p>
 Default is disabled.  If disabled, Direwolf APRS will not autostart when the Pi boots up.  Otherwise, select which levers in the piano switch you want to be in the ON (down) position.  A corresponding piano script will be created and, if the switches are in the selected postion, will autostart APRS at bootup.  If 'none' is selected, meaning all switches are in the OFF (UP) position, script piano.sh will be created and will autostart APRS provided all levers are in the UP position.  
@@ -188,6 +208,14 @@ See <a href="https://github.com/AG7GN/nexus-utilities/blob/master/README.md#chec
 		<tr align="center">
 			<th>Mode</th>
 			<th>Description</th>
+		</tr>
+		<tr>
+			<td>
+				<p><b>Monitor + Message Only</b></p>
+         </td>
+			<td>
+				<p>No iGate or digipeating enabled. Use this setting only for monitoring APRS or if you want to send messages without digipeating other traffic or using iGate</p>
+         </td>
 		</tr>
 		<tr>
 			<td>
