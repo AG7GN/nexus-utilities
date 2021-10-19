@@ -16,7 +16,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.1.5.4
+#-    version         ${SCRIPT_NAME} 2.1.6
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -49,7 +49,7 @@ Optnum=$#
 
 function TrapCleanup() {
    [[ -d "${TMPDIR}" ]] && rm -rf "${TMPDIR}/"
-   pkill -f "bash -c tail -F ${F[_LOGFILE_]}"
+   pkill -f "socat -u"
 	pkill -f "APRS Message"
    for P in $direwolf_PID $socat_PID $kissutil_PID ${YAD_PIDs[@]}
 	do
@@ -131,7 +131,7 @@ function setDefaults () {
    D[17]="8011" # KISS Port
    D[18]="0" # Direwolf text colors
    D[19]="disabled"  # Autostart APRS on boot
-	D[20]="Monitor + Message Only" # digipeat/igate operating mode
+	D[20]="Monitor Only" # digipeat/igate operating mode
 	D[21]="" # Custom configuration file
 	D[22]="TRUE" # Open monitor window at startup
 	D[23]="" # Log file destination
@@ -231,7 +231,7 @@ function loadSettings () {
    #[[ $AUDIOSTATs =~ ${F[_AUDIOSTATS_]} ]] && AUDIOSTATs="$(echo "$AUDIOSTATs" | sed "s/${F[_AUDIOSTATS_]}/\^${F[_AUDIOSTATS_]}/")"
 
 	#APRSMODEs="Digipeater~iGate (RX Only)~iGate (TX+RX)~Digipeater + iGate"
-	APRSMODEs="Monitor + Message Only~Custom~Fill-in Digipeater~Fill-in Digipeater + iGate~Full Digipeater~Full Digipeater + iGate~iGate~iGate (RX Only)"
+	APRSMODEs="Monitor Only~Custom~Fill-in Digipeater~Fill-in Digipeater + iGate~Full Digipeater~Full Digipeater + iGate~iGate~iGate (RX Only)"
 	case ${F[_APRSMODE_]} in
 		"Full Digipeater + iGate")
 			APRSMODEs="$(echo "$APRSMODEs" | sed -e "s/Full Digipeater + iGate/\^Full Digipeater + iGate/1")"
@@ -254,8 +254,8 @@ function loadSettings () {
 		"Custom")
 			APRSMODEs="$(echo "$APRSMODEs" | sed -e "s/Custom/\^Custom/1")"
 			;;
-		"Monitor + Message Only")
-			APRSMODEs="$(echo "$APRSMODEs" | sed -e "s/Monitor + Message Only/\^Monitor + Message Only/1")"
+		"Monitor Only")
+			APRSMODEs="$(echo "$APRSMODEs" | sed -e "s/Monitor Only/\^Monitor Only/1")"
 			;;
 	esac
 
@@ -391,9 +391,9 @@ function monitorMessages () {
 		local TITLE="Monitor APRS Messages to ${F[_CALL_]}"
 		(( ${F[_SSID_]} == 0 )) && MYCALL="${F[_CALL_]}" || MYCALL="${F[_CALL_]}-${F[_SSID_]}"
 		#local CMD="tail -F ${F[_LOGFILE_]} | grep -Eav '^[0-9]+,[0-9]+,.*,${MYCALL}' | grep '${F[_CALL_]}'"
-		local CMD="tail -F ${F[_LOGFILE_]} | grep --line-buffered '${F[_CALL_]}'"
+		#local CMD="tail -F ${F[_LOGFILE_]} | grep --line-buffered '${F[_CALL_]}'"
 
-		#local CMD="socat -u udp-recv:3333,reuseaddr >(sed -u 's/\x1b\[[0-9;]*m//g' | grep -Eav '^\[.* [0-9]{8}T.*\] ${F[_CALL_]}>' | sed -En '/^\[.* [0-9]{8}T.*\] .*>/,/^$/p' | sed -En '/^\[.* [0-9]{8}T.*\] .*>.*::${F[_CALL_]}.*/,/^$/p')"
+		local CMD="socat -u udp-recv:3333,reuseaddr >(sed -u 's/\x1b\[[0-9;]*m//g' | stdbuf -o0 grep -Eav '^\[.* [0-9]{8}T.*\] ${F[_CALL_]}' | sed -uEn '/^\[.* [0-9]{8}T.*\] .*>/,/^$/p' | sed -uEn '/^\[.* [0-9]{8}T.*\] .*>.*::${F[_CALL_]}.*/,/^$/p')"
 		lxterminal --geometry=80x15 -t "$TITLE" -e "$CMD" &
 	fi
 
@@ -451,24 +451,11 @@ function sendMessage () {
 		echo "STATUS_TEXT=''" >> $MSG_CACHE_FILE
 		echo "POSITION_TEXT='Station'" >> $MSG_CACHE_FILE
 	fi
-	source $MSG_CACHE_FILE
 	MESSAGE_TYPE="${1^^}"
 	MYCALL="${F[_CALL_]^^}"
 	SSID="${F[_SSID_]}"
 	GRID="${F[_GRID_]}"
 	LOC="${F[_LOC_]}"
-	if [[ -z $ADD_PATH ]]
-	then
-		APRS_PATHs="^CQ~ARISS~CQ,ARISS"
-	else
-		APRS_PATHs="^${ADD_PATH}~CQ~ARISS~CQ,ARISS"
-	fi
-	if [[ -z $MESSAGE_TEXT ]]
-	then
-		MESSAGEs="QSL & 73 ${MYCALL} in ${GRID::4}~Heard you in ${LOC} ${GRID::4}"
-	else
-		MESSAGEs="^${MESSAGE_TEXT}~QSL & 73 ${MYCALL} in ${GRID::4}~Heard you in ${LOC} ${GRID::4}"
-	fi
 	local APRS_VERSION="$(direwolf -h | grep -m1 "^Dire.*version" | tr -d '[:alpha:][:space:].')"
 	[[ ${APRS_VERSION::2} =~ ^[0-9][0-9]$ ]] || APRS_VERSION="00"
 	local APRS_PATH="APDW${APRS_VERSION::2}"
@@ -479,6 +466,19 @@ function sendMessage () {
 		FREE)
 			while true
 			do
+				source $MSG_CACHE_FILE
+				if [[ -z $ADD_PATH ]]
+				then
+					APRS_PATHs="^CQ~ARISS~CQ,ARISS~CQ,WIDE2-1"
+				else
+					APRS_PATHs="^${ADD_PATH}~CQ~ARISS~CQ,ARISS~CQ,WIDE2-1"
+				fi
+				if [[ -z $MESSAGE_TEXT ]]
+				then
+					MESSAGEs="QSL & 73 ${MYCALL} in ${GRID::4}~Heard you in ${LOC} ${GRID::4}"
+				else
+					MESSAGEs="^${MESSAGE_TEXT}~QSL & 73 ${MYCALL} in ${GRID::4}~Heard you in ${LOC} ${GRID::4}"
+				fi
 				MSG=$(yad --center --width=400 --height=100 \
 							--title="Free-form APRS Message" --text-align=center \
 							--text="$MESSAGE_GUI_TEXT" --form --item-separator='~' \
@@ -634,7 +634,9 @@ mkfifo $PIPE
 exec 6<> $PIPE
 
 MSGPATH="$TMPDIR/MESSAGES"
+RECEIVED_MESSAGES_PATH="$TMPDIR/received"
 mkdir -p $MSGPATH
+mkdir -p $RECEIVED_MESSAGES_PATH
 
 #============================
 #  PARSE OPTIONS WITH GETOPTS
@@ -866,6 +868,7 @@ do
 					echo -e "Direwolf listening on port ${F[_KISSPORT_]} for KISS connections." >&6
 					echo -e "Direwolf listening on port ${F[_AGWPORT_]} for AGW connections." >&6
 				fi
+				#KISSUTIL="$(command -v kissutil) -o $RECEIVED_MESSAGES_PATH -f $MSGPATH -h 127.0.0.1 -p ${F[_KISSPORT_]}"
 				KISSUTIL="$(command -v kissutil) -f $MSGPATH -h 127.0.0.1 -p ${F[_KISSPORT_]}"
 				echo -e "Starting $KISSUTIL" >&6
 				let COUNT=0
@@ -878,6 +881,7 @@ do
 					(( $COUNT > 5 )) && break
 				done
 				[[ -z $kissutil_PID ]] && echo -e "\nkissutil did not start!" >&6 || echo -e "\nkissutil running. PID=$kissutil_PID" >&6
+				#echo "Received messages are in $RECEIVED_MESSAGES_PATH" >&6
 			fi
 			if [[ $socat_PID != "" ]]
 			then
@@ -969,34 +973,43 @@ do
 	YAD_PIDs+=( $! )
 
 	# Start the Send Messages tab
-   yad --plug="$ID" --tabnum=3 --show-uri \
-      --item-separator="~" \
-      --separator="~" \
-      --align=right \
-      --text-align=center \
-      --borders=10 \
-      --form \
-      --scroll \
-      --columns=1 \
-      --field="<b>Compose Free-form Message</b>":FBTN "bash -c 'source $CONFIG_FILE; sendMessage FREE'" \
-      --field="<b>Compose Status Message</b>":FBTN "bash -c 'source $CONFIG_FILE; sendMessage STATUS'" \
-      --field="<b>Compose Position Message</b>":FBTN "bash -c 'source $CONFIG_FILE; sendMessage POSITION'" \
-      --field="":LBL "" \
-      --field="<span color='blue'><b>Monitor incoming messages for ${F[_CALL_]}</b></span>":FBTN "bash -c 'source $CONFIG_FILE; monitorMessages'" >/dev/null &
-	YAD_PIDs+=( $! )
+   #yad --plug="$ID" --tabnum=3 --show-uri \
+   #   --item-separator="~" \
+   #   --separator="~" \
+   #   --align=right \
+   #   --text-align=center \
+   #   --borders=10 \
+   #   --form \
+   #   --scroll \
+   #   --columns=1 \
+   #   --field="<b>Compose Free-form Message</b>":FBTN "bash -c 'source $CONFIG_FILE; sendMessage FREE'" \
+   #   --field="<b>Compose Status Message</b>":FBTN "bash -c 'source $CONFIG_FILE; sendMessage STATUS'" \
+   #   --field="<b>Compose Position Message</b>":FBTN "bash -c 'source $CONFIG_FILE; sendMessage POSITION'" \
+   #   --field="":LBL "" \
+    #  --field="<span color='blue'><b>Monitor incoming messages for ${F[_CALL_]}</b></span>":FBTN "bash -c 'source $CONFIG_FILE; monitorMessages'" >/dev/null &
+	#YAD_PIDs+=( $! )
 	
 	# Save the previous piano script autostart setting
 	PREVIOUS_AUTOSTART="${F[_BOOTSTART_]}"
 
 	# Set up a notebook with the 3 tabs.		
 	#yad --title="$TITLE" --text="<b><big>Direwolf APRS Monitor and Configuration</big></b>" \
+	#yad --title="$TITLE" \
+  	#	--text-align="center" --notebook --key="$ID" --window-icon=logviewer \
+	#	--posx=$POSX --posy=$POSY --width=$WIDTH \
+  	#	--buttons-layout=center \
+  	#	--tab="Direwolf Status" \
+  	#	--tab="Configure APRS" \
+  	#	--tab="Messaging" \
+  	#	--button="<b>Stop Direwolf APRS &#x26; Exit</b>":1 \
+  	#	--button="<b>Stop Direwolf APRS</b>":"bash -c 'killDirewolf $direwolf_PID'" \
+  	#	--button="<b>Save &#x26; [Re]start Direwolf APRS</b>":0 
 	yad --title="$TITLE" \
   		--text-align="center" --notebook --key="$ID" --window-icon=logviewer \
 		--posx=$POSX --posy=$POSY --width=$WIDTH \
   		--buttons-layout=center \
   		--tab="Direwolf Status" \
   		--tab="Configure APRS" \
-  		--tab="Messaging" \
   		--button="<b>Stop Direwolf APRS &#x26; Exit</b>":1 \
   		--button="<b>Stop Direwolf APRS</b>":"bash -c 'killDirewolf $direwolf_PID'" \
   		--button="<b>Save &#x26; [Re]start Direwolf APRS</b>":0 
