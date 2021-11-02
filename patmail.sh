@@ -21,10 +21,12 @@
 #%                                If default location, will use mailbox in 
 #%                                $HOME/.local/pat/mailbox.
 #%		-m, --mailbox=DIRECTORY  	 Override mailbox location. 
-#% 										 Default: $HOME/.local/pat/mailbox
-#%    -l FILE, --log=FILE         Send pat diagnostic output to FILE.  FILE will be 
+#% 										 Default: $HOME/.local/share/pat/mailbox
+#%    -l FILE, --log=FILE         Send pat event log output to FILE.  FILE will be 
 #%                                overwritten if it exists. To send output to stdout,
 #%                                use /dev/stdout. Default: /dev/null
+#%		-o FILE, --olog=File			 Override pat log file. 
+#%											 Default: $HOME/.local/state/pat/pat.log
 #%    -f FILE, --file=FILE        Attach file to message where file is full path to
 #%                                file.  To attach multiple files, use multiple -f FILE
 #%                                arguments, one per attached file.
@@ -78,7 +80,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.5.2
+#-    version         ${SCRIPT_NAME} 2.5.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -170,7 +172,7 @@ VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)"
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':d:f:l:m:hv-:'
+SCRIPT_OPTS=':d:f:l:m:o:hv-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
@@ -180,6 +182,7 @@ ARRAY_OPTS=(
 	[dir]=d
 	[file]=f
 	[log]=l
+	[olog]=o
 	[mailbox]=m
 )
 
@@ -243,6 +246,9 @@ do
 		m)
 			MBOX="$OPTARG"
 			;;
+		m)
+			LOG_FILE="$OPTARG"
+			;;
 		:) 
 			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
 			;;
@@ -293,9 +299,10 @@ then
 fi
 [[ -d "$PAT_DIR" ]] || Die "Directory $PAT_DIR does not exist or is not a directory."
 PAT_CONFIG="$PAT_DIR/config.json"
-[[ -d $MBOX ]] || Die "Mailbox directory $MBOX does not exist or is not a directory."
+[[ -d "$MBOX" ]] || Die "Mailbox directory $MBOX does not exist or is not a directory."
 EVENT_LOG="${EVENT_LOG:-/dev/null}"
-[[ -w $EVENT_LOG ]] || EVENT_LOG="/dev/null"
+[[ -w "$EVENT_LOG" ]] || EVENT_LOG="/dev/null"
+[[ -f "$LOG_FILE" ]] || touch "$LOG_FILE" || Die "Cannot write to log file $LOG_FILE"
 
 CALL="$(cat $PAT_CONFIG | grep "\"mycall\":" | tr -d ' ",' | cut -d: -f2)"
 [[ $CALL == "" ]] && Die "Could not obtain call sign from $PAT_CONFIG.  Is pat configured?"
