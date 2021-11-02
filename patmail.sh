@@ -5,7 +5,8 @@
 #% SYNOPSIS
 #+   ${SCRIPT_NAME} [-hv] 
 #+   ${SCRIPT_NAME} TO SUBECT TRANSPORT
-#+   ${SCRIPT_NAME} [-d DIRECTORY] [-l FILE] [-f FILE] TO SUBECT TRANSPORT
+#+   ${SCRIPT_NAME} [-d DIRECTORY] [-m DIRECTORY] [-l FILE] 
+#+                  [-f FILE] TO SUBECT TRANSPORT
 #%
 #% DESCRIPTION
 #%   This script allows sending Winlink messages via the command line or script.
@@ -17,6 +18,10 @@
 #%    -v, --version               Print script information
 #%    -d, --dir=DIRECTORY         Path to directory containing config.json file
 #%                                and mailbox directory. Default: $HOME/.config/pat
+#%                                If default location, will use mailbox in 
+#%                                $HOME/.local/pat/mailbox.
+#%		-m, --mailbox=DIRECTORY  	 Override mailbox location. 
+#% 										 Default: $HOME/.local/pat/mailbox
 #%    -l FILE, --log=FILE         Send pat diagnostic output to FILE.  FILE will be 
 #%                                overwritten if it exists. To send output to stdout,
 #%                                use /dev/stdout. Default: /dev/null
@@ -73,7 +78,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.5.1
+#-    version         ${SCRIPT_NAME} 2.5.2
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -165,7 +170,7 @@ VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)"
 #============================
   
 #== set short options ==#
-SCRIPT_OPTS=':d:f:l:hv-:'
+SCRIPT_OPTS=':d:f:l:m:hv-:'
 
 #== set long options associated with short one ==#
 typeset -A ARRAY_OPTS
@@ -175,6 +180,7 @@ ARRAY_OPTS=(
 	[dir]=d
 	[file]=f
 	[log]=l
+	[mailbox]=m
 )
 
 declare -a ATTACHMENTS=()
@@ -234,6 +240,9 @@ do
 		l)
 			EVENT_LOG="$OPTARG"
 			;;
+		m)
+			MBOX="$OPTARG"
+			;;
 		:) 
 			Die "${SCRIPT_NAME}: -$OPTARG: option requires an argument"
 			;;
@@ -271,19 +280,22 @@ then
 	if [[ -d $HOME/.config/pat ]]
 	then
 		PAT_DIR="$HOME/.config/pat"
+		[[ -d $MBOX ]] || MBOX="$HOME/.local/share/pat/mailbox"
+		LOG_FILE="$HOME/.local/state/pat/pat.log"
 	elif [[ -d $HOME/.wl2k ]]
 	then
 		PAT_DIR="$HOME/.wl2k"
+		[[ -d $MBOX ]] || MBOX="$PAT_DIR/mailbox"
+		LOG_FILE="$PAT_DIR/pat.log"
 	else
 		Die "Could not find a pat configuration. Run 'pat configure' to set up."
 	fi
 fi
 [[ -d "$PAT_DIR" ]] || Die "Directory $PAT_DIR does not exist or is not a directory."
 PAT_CONFIG="$PAT_DIR/config.json"
-MBOX="$PAT_DIR/mailbox"
+[[ -d $MBOX ]] || Die "Mailbox directory $MBOX does not exist or is not a directory."
 EVENT_LOG="${EVENT_LOG:-/dev/null}"
 [[ -w $EVENT_LOG ]] || EVENT_LOG="/dev/null"
-LOG_FILE="$PAT_DIR/pat.log"
 
 CALL="$(cat $PAT_CONFIG | grep "\"mycall\":" | tr -d ' ",' | cut -d: -f2)"
 [[ $CALL == "" ]] && Die "Could not obtain call sign from $PAT_CONFIG.  Is pat configured?"
