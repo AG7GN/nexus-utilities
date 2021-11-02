@@ -16,7 +16,7 @@
 #%    -h, --help                  Print this help
 #%    -v, --version               Print script information
 #%    -d, --dir=DIRECTORY         Path to directory containing config.json file
-#%                                and mailbox directory. Default: $HOME/.wl2k
+#%                                and mailbox directory. Default: $HOME/.config/pat
 #%    -l FILE, --log=FILE         Send pat diagnostic output to FILE.  FILE will be 
 #%                                overwritten if it exists. To send output to stdout,
 #%                                use /dev/stdout. Default: /dev/null
@@ -39,8 +39,8 @@
 #%                                   telnet
 #%                                   ax25://portname/call-ssid
 #%                                      where portname is as defined in /etc/ax25/axports
-#%                                      and the same as the ax25 port in
-#%                                      ~/.wl2k/config.json. This is usually 'wl2k'.
+#%                                      and the same as the ax25 port configured in
+#%                                      config.json. This is usually 'wl2k'.
 #%
 #%                                      where call-ssid is the RMS gateway.  Example:
 #%                                      ax25://wl2k/W7ECG-10
@@ -73,7 +73,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 2.5.0
+#-    version         ${SCRIPT_NAME} 2.5.1
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -84,6 +84,7 @@
 #     20200204 : Steve Magnuson : Added script template
 #     20200227 : Steve Magnuson : Added option to send pat log text to a file or stdout
 #     20200730 : Steve Magnuson : Added ability to specify pat config & mailbox folder
+#     20211102 : Steve Magnuson : Updated default pat config folder for pat 0.12
 # 
 #================================================================
 #  DEBUG OPTION
@@ -265,18 +266,24 @@ PAT="$(command -v pat)"
 UNIX2DOS="$(command -v unix2dos)"
 [[ $? == 0 ]] || Die "dos2unix tools are not installed."
 
-PAT_DIR="${PAT_DIR:-$HOME/.wl2k}" # Use default directory if none specified
+if [[ -z $PAT_DIR ]]
+then
+	if [[ -d $HOME/.config/pat ]]
+	then
+		PAT_DIR="$HOME/.config/pat"
+	elif [[ -d $HOME/.wl2k ]]
+	then
+		PAT_DIR="$HOME/.wl2k"
+	else
+		Die "Could not find a pat configuration. Run 'pat configure' to set up."
+	fi
+fi
 [[ -d "$PAT_DIR" ]] || Die "Directory $PAT_DIR does not exist or is not a directory."
 PAT_CONFIG="$PAT_DIR/config.json"
 MBOX="$PAT_DIR/mailbox"
 EVENT_LOG="${EVENT_LOG:-/dev/null}"
 [[ -w $EVENT_LOG ]] || EVENT_LOG="/dev/null"
-if [[ -d $PAT_DIR ]]
-then
-	LOG_FILE="$PAT_DIR/pat.log"
-else
-	LOG_FILE="/dev/null"
-fi
+LOG_FILE="$PAT_DIR/pat.log"
 
 CALL="$(cat $PAT_CONFIG | grep "\"mycall\":" | tr -d ' ",' | cut -d: -f2)"
 [[ $CALL == "" ]] && Die "Could not obtain call sign from $PAT_CONFIG.  Is pat configured?"
