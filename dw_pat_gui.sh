@@ -15,7 +15,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.8.2
+#-    version         ${SCRIPT_NAME} 1.8.3
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -30,6 +30,9 @@
 #                                 traffic logged events & modem
 #											 options expanded to 
 #                                 300,1200,2400,4800,9600
+#     20211109	: Steve Magnuson : Accomodate new config.json
+#											 location for pat versions
+#											 of 0.12 and later
 # 
 #================================================================
 #  DEBUG OPTION
@@ -279,7 +282,8 @@ ID="${RANDOM}"
 
 AX25PORT="wl2k"
 AX25PORTFILE="/etc/ax25/axports"
-PAT_CONFIG="$HOME/.wl2k/config.json"
+PAT_VERSION="$(pat version | cut -d' ' -f2)"
+[[ $PAT_VERSION =~ v0.1[01]. ]] && PAT_CONFIG="$HOME/.wl2k/config.json" || PAT_CONFIG="$HOME/.config/pat/config.json"
 
 RETURN_CODE=0
 # Direwolf does not allow embedded spaces in timestamp format string -T
