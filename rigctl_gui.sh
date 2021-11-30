@@ -14,7 +14,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.0.4
+#-    version         ${SCRIPT_NAME} 1.0.5
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -23,6 +23,8 @@
 #  HISTORY
 #     20200609 : Steve Magnuson : Script creation.
 #     20200718 : Steve Magnuson : Delete unused function.
+#     20211129 : Steve Magnuson : Updated to suppor new locations
+#											 for pat confuguration
 # 
 #================================================================
 #  DEBUG OPTION
@@ -206,7 +208,8 @@ TITLE="Hamlib Rig Control (rigctld) Configuration $VERSION"
 CONFIG_FILE="$HOME/rigctld.conf"
 MESSAGE="Hamlib rigctld Configuration"
 
-PAT_CONFIG="$HOME/.wl2k/config.json"
+PAT_VERSION="$(pat version | cut -d' ' -f2)"
+[[ $PAT_VERSION =~ v0.1[01]. ]] && PAT_CONFIG="$HOME/.wl2k/config.json" || PAT_CONFIG="$HOME/.config/pat/config.json"
 export PAT_CONFIG=$PAT_CONFIG
 export find_cmd='@bash -c "runFind "%1""'
 export view_remove_cmd='bash -c "viewDeleteAliases"'

@@ -18,7 +18,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 1.4.3
+#-    version         ${SCRIPT_NAME} 1.4.4
 #-    author          Steve Magnuson, AG7GN
 #-    license         CC-BY-SA Creative Commons License
 #-    script_id       0
@@ -27,6 +27,7 @@
 #  HISTORY
 #     20200507 : Steve Magnuson : Script creation.
 #     20200718 : Steve Magnuson : Allow pactor, winmor, ardop aliases
+#     20211129 : Steve Magnuson : Change location of pat configuration
 # 
 #================================================================
 #  DEBUG OPTION
@@ -175,7 +176,8 @@ SCRIPT_HEADSIZE=$(grep -sn "^# END_OF_HEADER" ${0} | head -1 | cut -f1 -d:)
 VERSION="$(ScriptInfo version | grep version | tr -s ' ' | cut -d' ' -f 4)" 
 
 TITLE="Find RMS Stations $VERSION"
-PAT_CONFIG="$HOME/.wl2k/config.json"
+PAT_VERSION="$(pat version | cut -d' ' -f2)"
+[[ $PAT_VERSION =~ v0.1[01]. ]] && PAT_CONFIG="$HOME/.wl2k/config.json" || PAT_CONFIG="$HOME/.config/pat/config.json"
 export PAT_CONFIG=$PAT_CONFIG
 export find_cmd='@bash -c "runFind %1 %2 %3 %4"'
 export view_remove_cmd='bash -c "viewDeleteAliases"'
